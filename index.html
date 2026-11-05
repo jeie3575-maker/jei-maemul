@@ -230,7 +230,7 @@ async function api(u, o = {}) {
 <script>
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const CATS=['오피스텔','아파트','상가','오피스','전자상가','주택·빌딩·토지'];let CAT=localStorage.cat||'오피스텔';
-let META,ROWS=[],F={danji:new Set(),kind:new Set(),avail:new Set(),adt:new Set()},SORT={k:'id',d:-1},CUR=null;
+let META,ROWS=[],F={danji:new Set(),kind:new Set(),avail:new Set(),adt:new Set()},SORT={k:'_def',d:1},CUR=null;
 const toast=t=>{const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2600)};
 const won=v=>{if(v==null||v==='')return'';v=Math.round(v);const e=Math.floor(v/10000),m=v%10000;return e&&m?`${e}억 ${m.toLocaleString()}`:e?`${e}억`:m.toLocaleString()};
 const kinds=d=>{d=(d||'').replace('매매완료','');const k=[];if(/매매|급매/.test(d))k.push('매매');if(d.includes('임대전세'))k.push('전세');if(/임대월세|반전세|단기/.test(d))k.push('월세');return k};
@@ -268,7 +268,8 @@ function renderList(){if(!META)return;ROWS.forEach(derive);renderCats();const ba
  chips($('#f-danji'),META.options.danji.filter(d=>cnt[d]),F.danji,renderList,cnt);chips($('#f-kind'),['매매','전세','월세'],F.kind,renderList);
  const ac={},tc={};base.forEach(r=>{ac[r._avail]=(ac[r._avail]||0)+1;String(r.ad_type||'').split(', ').filter(Boolean).forEach(x=>tc[x]=(tc[x]||0)+1)});
  chips($('#f-avail'),AVAIL.filter(a=>ac[a]),F.avail,renderList,ac);chips($('#f-adt'),(META.options.ad_type||[]).filter(a=>tc[a]),F.adt,renderList,tc);
- let rs=filtered();const k=SORT.k;rs.sort((a,b)=>{const x=a[k]??'',y=b[k]??'';return (x>y?1:x<y?-1:0)*SORT.d});$('#cnt').textContent=`${rs.length.toLocaleString()}건`;
+ let rs=filtered();const k=SORT.k;const cmp=(x,y)=>{x=x??'';y=y??'';if(x===''&&y!=='')return 1;if(y===''&&x!=='')return -1;return typeof x==='number'&&typeof y==='number'?x-y:String(x).localeCompare(String(y),'ko',{numeric:true})};
+ rs.sort((a,b)=>k==='_def'?(cmp(a.danji,b.danji)||cmp(a.dong,b.dong)||cmp(a.ho,b.ho)):(cmp(a[k],b[k])*SORT.d||cmp(a.danji,b.danji)||cmp(a.dong,b.dong)||cmp(a.ho,b.ho)));$('#cnt').textContent=`${rs.length.toLocaleString()}건`;
  if(!ROWS.length){$('#list').innerHTML=`<div class="empty">아직 매물이 없습니다. <b>가져오기·백업</b> 탭에서 노션 CSV를 가져오거나 <b>+ 매물 등록</b>으로 시작하세요.</div>`;return}
  $('#list').innerHTML=`<table><thead><tr>${COLS.map(([k,l])=>`<th data-k="${k}">${l}${SORT.k===k?(SORT.d>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>${rs.slice(0,1500).map(r=>`<tr data-id="${r.id}" class="g-${esc(r._avail)}">${COLS.map(([k,,t])=>{if(k==='_avail')return `<td>${avHtml(r._avail)}</td>`;if(k==='_chk')return `<td class="mut">${r._chk?r._chk.slice(2).replace(/-/g,'.'):''}</td>`;
   if(k==='_log')return `<td class="mut" title="${esc((r.log_txt||'').slice(0,300))}">${r.log_n?`💬${r.log_n} ${String(r.log_last||'').slice(2,10)}`:''}</td>`;let v=k==='_ask'?askPrice(r):r[k];if(['cur_deposit'].includes(k))v=won(v);if(k==='manki')v=r.manki?`${r.manki} ${ddHtml(r.manki)}`:'';else v=k==='_ask'?esc(v):esc(v);
