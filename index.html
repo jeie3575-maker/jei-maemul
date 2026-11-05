@@ -11,6 +11,7 @@ main{padding:14px 18px}.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:cent
 input,select,textarea{font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:#fff}
 button.b{font:inherit;padding:5px 12px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer}
 button.p{background:var(--acc);color:#fff;border-color:var(--acc)}button.d{color:var(--red)}
+.cat{font:inherit;font-size:14px;padding:6px 14px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer}.cat.on{background:#14213d;color:#fff;border-color:#14213d}.cat:disabled{opacity:.45;cursor:default}
 .chips{display:flex;gap:4px;flex-wrap:wrap}.chip{padding:3px 9px;border:1px solid var(--line);border-radius:14px;background:#fff;cursor:pointer;user-select:none}
 .chip.on{background:var(--acc);color:#fff;border-color:var(--acc)}.chip i{font-style:normal;opacity:.7;margin-left:3px}
 table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line)}
@@ -190,6 +191,7 @@ async function api(u, o = {}) {
 <span class="sp"></span><small id="info"></small></header>
 <main>
 <section id="t-list">
+ <div class="bar" id="catbar"></div>
  <div class="bar"><input id="q" placeholder="검색 (단지·동·호·임대인·연락처·비고·상담일지…)" style="width:280px">
   <div class="chips" id="f-danji"></div></div>
  <div class="bar"><div class="chips" id="f-kind"></div><span class="mut">|</span>
@@ -227,6 +229,7 @@ async function api(u, o = {}) {
  <div class="box" style="text-align:center"><h3>🏡 제이부동산 매물장</h3><p id="gate-msg" class="mut">접속 확인 중…</p></div></div>
 <script>
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const CATS=['오피스텔','아파트','상가','오피스','전자상가','주택·빌딩·토지'];let CAT=localStorage.cat||'오피스텔';
 let META,ROWS=[],F={danji:new Set(),kind:new Set(),avail:new Set(),adt:new Set()},SORT={k:'id',d:-1},CUR=null;
 const toast=t=>{const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2600)};
 const won=v=>{if(v==null||v==='')return'';v=Math.round(v);const e=Math.floor(v/10000),m=v%10000;return e&&m?`${e}억 ${m.toLocaleString()}`:e?`${e}억`:m.toLocaleString()};
@@ -251,14 +254,17 @@ function chips(el,opts,set,cb,counts){el.innerHTML=opts.map(o=>`<span class="chi
 async function load(){META=await api('/api/meta');ROWS=await api('/api/listings');$('#info').textContent=`매물 ${ROWS.length.toLocaleString()}건`;
  $('#tokinfo').innerHTML=META.notion_token?'✅ 노션 토큰이 설정되어 있습니다.':'노션 토큰이 아직 없습니다.';renderList()}
 
-function filtered(){const q=$('#q').value.trim().toLowerCase();return ROWS.filter(r=>{
+function filtered(){const q=$('#q').value.trim().toLowerCase();return ROWS.filter(r=>{if((r.category||'오피스텔')!==CAT)return false;
  if($('#f-active').checked&&!active(r))return false;if($('#f-ad').checked&&!/네이버|뱅크/.test(r.ad||''))return false;
  if(F.danji.size&&!F.danji.has(r.danji))return false;if(F.avail.size&&!F.avail.has(r._avail))return false;if(F.adt.size&&!String(r.ad_type||'').split(', ').some(x=>F.adt.has(x)))return false;if(F.kind.size&&!kinds(r.deal).some(k=>F.kind.has(k)))return false;
  if(q&&!META.fields.some(([k])=>String(r[k]??'').toLowerCase().includes(q))&&!String(r.log_txt||'').toLowerCase().includes(q))return false;return true})}
 
 const COLS=[['_avail','가능여부'],['_chk','확인일'],['danji','단지'],['dong','동'],['ho','호'],['typ','타입'],['pyeong','전용평','n'],['direction','방향'],['deal','거래유형'],['_ask','희망가'],
  ['cur_deposit','현 보증','n'],['cur_rent','현 차임','n'],['manki','만기'],['status','현상태'],['ad','광고'],['ad_type','광고타입'],['owner','임대인'],['owner_tel','임대인연락처'],['_log','상담일지'],['memo','비고']];
-function renderList(){if(!META)return;ROWS.forEach(derive);const base=ROWS.filter(r=>!$('#f-active').checked||active(r));const cnt={};base.forEach(r=>cnt[r.danji]=(cnt[r.danji]||0)+1);
+function renderCats(){const n={};ROWS.forEach(r=>{const c=r.category||'오피스텔';n[c]=(n[c]||0)+1});
+ $('#catbar').innerHTML=CATS.map(c=>`<button class="cat ${c===CAT?'on':''}" data-c="${c}" ${n[c]?'':'disabled title="아직 옮기지 않음"'}>${c} ${n[c]?n[c].toLocaleString():'—'}</button>`).join('');
+ $('#catbar').querySelectorAll('.cat').forEach(b=>b.onclick=()=>{CAT=localStorage.cat=b.dataset.c;renderList()})}
+function renderList(){if(!META)return;ROWS.forEach(derive);renderCats();const base=ROWS.filter(r=>(r.category||'오피스텔')===CAT&&(!$('#f-active').checked||active(r)));const cnt={};base.forEach(r=>cnt[r.danji]=(cnt[r.danji]||0)+1);
  chips($('#f-danji'),META.options.danji.filter(d=>cnt[d]),F.danji,renderList,cnt);chips($('#f-kind'),['매매','전세','월세'],F.kind,renderList);
  const ac={},tc={};base.forEach(r=>{ac[r._avail]=(ac[r._avail]||0)+1;String(r.ad_type||'').split(', ').filter(Boolean).forEach(x=>tc[x]=(tc[x]||0)+1)});
  chips($('#f-avail'),AVAIL.filter(a=>ac[a]),F.avail,renderList,ac);chips($('#f-adt'),(META.options.ad_type||[]).filter(a=>tc[a]),F.adt,renderList,tc);
