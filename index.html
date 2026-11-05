@@ -247,7 +247,7 @@ function filtered(){const q=$('#q').value.trim().toLowerCase();return ROWS.filte
  if(q&&!META.fields.some(([k])=>String(r[k]??'').toLowerCase().includes(q))&&!String(r.log_txt||'').toLowerCase().includes(q))return false;return true})}
 
 const COLS=[['danji','단지'],['dong','동'],['ho','호'],['typ','타입'],['pyeong','전용평','n'],['direction','방향'],['deal','거래유형'],['_ask','희망가'],
- ['cur_deposit','현 보증','n'],['cur_rent','현 차임','n'],['manki','만기'],['status','현상태'],['ad','광고'],['owner','임대인'],['_log','상담일지'],['memo','비고']];
+ ['cur_deposit','현 보증','n'],['cur_rent','현 차임','n'],['manki','만기'],['status','현상태'],['ad','광고'],['owner','임대인'],['owner_tel','임대인연락처'],['_log','상담일지'],['memo','비고']];
 function renderList(){if(!META)return;const base=ROWS.filter(r=>!$('#f-active').checked||active(r));const cnt={};base.forEach(r=>cnt[r.danji]=(cnt[r.danji]||0)+1);
  chips($('#f-danji'),META.options.danji.filter(d=>cnt[d]),F.danji,renderList,cnt);chips($('#f-kind'),['매매','전세','월세'],F.kind,renderList);
  let rs=filtered();const k=SORT.k;rs.sort((a,b)=>{const x=a[k]??'',y=b[k]??'';return (x>y?1:x<y?-1:0)*SORT.d});$('#cnt').textContent=`${rs.length.toLocaleString()}건`;
