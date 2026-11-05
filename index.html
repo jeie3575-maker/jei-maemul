@@ -20,6 +20,9 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}td.memo{max-width:260px;
 .tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:12px;background:#eef1f5;margin-right:2px}
 .t-가격다름{background:#ffebe9;color:var(--red)}.t-광고누락{background:#fff1e5;color:var(--org)}.t-장부없음{background:#fbefff;color:#8250df}
 .t-광고표시없음{background:#ddf4ff;color:#0969da}.t-일치{background:#dafbe1;color:var(--grn)}
+.av{display:inline-block;padding:0 7px;border-radius:10px;font-size:12px;font-weight:600;background:#eef1f5;color:#57606a}
+.av-가능,.av-급매가능{background:#1a7f37;color:#fff}.av-공동가능{background:#aceebb;color:#0f5323}.av-가능\?{background:#fff8c5;color:#7d4e00}.av-연락안됨{background:#ffebe9;color:#d1242f}
+tr.g-가능,tr.g-급매가능{background:#eafbea}tr.g-공동가능{background:#f3fcf3}
 .dd{font-weight:600}.dd.r{color:var(--red)}.dd.o{color:var(--org)}.mut{color:var(--mut)}
 #drawer{position:fixed;top:0;right:0;width:min(760px,100%);height:100%;background:#fff;box-shadow:-6px 0 24px #0002;transform:translateX(105%);transition:.18s;z-index:10;display:flex;flex-direction:column}
 #drawer.on{transform:none}#drawer .hd{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line)}
@@ -35,8 +38,7 @@ h3{margin:18px 0 6px;font-size:14px}.sub table{font-size:12px}.sub td,.sub th{po
 #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#14213d;color:#fff;padding:8px 16px;border-radius:8px;display:none;z-index:20}
 .empty{padding:40px;text-align:center;color:var(--mut);background:#fff;border:1px dashed var(--line);border-radius:8px}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>window.SB_URL="https://ctgaawyuwqihybxrdcgt.supabase.co";window.SB_ANON="sb_publishable_g-3Lbb_ygZL5gTvDvU06OA_HoWDzGaE";window.META={"fields": [["title", "가능여부", "text"], ["danji", "단지", "select"], ["dong", "동", "text"], ["ho", "호", "text"], ["typ", "타입", "text"], ["pyeong", "평형(전용)", "num"], ["direction", "방향", "multi"], ["deal", "거래유형", "multi"], ["sale", "매매가", "num"], ["jeonse", "전세가", "num"], ["deposit", "보증금", "num"], ["rent", "월세", "num"], ["cur_deposit", "보증(현)", "num"], ["cur_rent", "차임(현)", "num"], ["manki", "만기(년)", "date"], ["status", "현상태", "multi"], ["usage", "용도", "multi"], ["ad", "광고", "multi"], ["consult", "상담", "select"], ["owner", "임대인", "text"], ["owner_tel", "임대인연락처", "text"], ["tenant", "임차인", "text"], ["tenant_tel", "임차인연락처", "text"], ["owner_units", "임대인소유물건", "text"], ["coagent", "공동중개부동산", "text"], ["memo", "비고", "text"]], "options": {"danji": ["래미안", "써밋", "호반", "DK", "시티파크", "파크타워", "아스테리움", "에테르나인용산", "트럼프", "한강대우디오빌", "기타"], "deal": ["매매", "급매", "임대전세", "임대월세", "반전세", "단기", "예정", "지분매매", "분양가", "매매완료"], "direction": ["동", "서", "남", "북", "남동", "남서", "북동", "서북"], "status": ["공실", "입주", "전세완", "월세완", "반전세", "단기", "계약완", "매매완", "중도퇴실"], "usage": ["주거", "겸용", "일반사업자", "간이사업자", "법인사업자", "일반임대사업자", "주택임대사업자", "사업자", "사업자X/전입X", "확인필요"], "ad": ["뱅크", "네이버", "당근", "블로그", "공동", "대기", "공동부동산확인중", "광고가능- 등록하기", "공동부거절", "임대인요청으로 광고X"], "consult": ["시작 전", "진행 중", "완료"]}, "danji_naver": {"래미안": ["래미안용산더센트럴"], "써밋": ["용산푸르지오써밋"], "호반": ["용산호반써밋에이디션"], "DK": ["DK밸리뷰용산"], "시티파크": ["용산시티파크1단지", "용산시티파크2단지"], "파크타워": ["파크타워"], "아스테리움": ["아스테리움용산"], "에테르나인용산": ["에테르나인용산"]}}
-;</script>
+<script>window.SB_URL="https://ctgaawyuwqihybxrdcgt.supabase.co";window.SB_ANON="sb_publishable_g-3Lbb_ygZL5gTvDvU06OA_HoWDzGaE";window.META={"fields": [["title", "가능여부", "text"], ["danji", "단지", "select"], ["dong", "동", "text"], ["ho", "호", "text"], ["typ", "타입", "text"], ["pyeong", "평형(전용)", "num"], ["direction", "방향", "multi"], ["deal", "거래유형", "multi"], ["sale", "매매가", "num"], ["jeonse", "전세가", "num"], ["deposit", "보증금", "num"], ["rent", "월세", "num"], ["cur_deposit", "보증(현)", "num"], ["cur_rent", "차임(현)", "num"], ["manki", "만기(년)", "date"], ["status", "현상태", "multi"], ["usage", "용도", "multi"], ["ad", "광고", "multi"], ["ad_type", "광고타입", "multi"], ["consult", "상담", "select"], ["owner", "임대인", "text"], ["owner_tel", "임대인연락처", "text"], ["tenant", "임차인", "text"], ["tenant_tel", "임차인연락처", "text"], ["owner_units", "임대인소유물건", "text"], ["coagent", "공동중개부동산", "text"], ["memo", "비고", "text"]], "options": {"danji": ["래미안", "써밋", "호반", "DK", "시티파크", "파크타워", "아스테리움", "에테르나인용산", "트럼프", "한강대우디오빌", "기타"], "deal": ["매매", "급매", "임대전세", "임대월세", "반전세", "단기", "예정", "지분매매", "분양가", "매매완료"], "direction": ["동", "서", "남", "북", "남동", "남서", "북동", "서북"], "status": ["공실", "입주", "전세완", "월세완", "반전세", "단기", "계약완", "매매완", "중도퇴실"], "usage": ["주거", "겸용", "일반사업자", "간이사업자", "법인사업자", "일반임대사업자", "주택임대사업자", "사업자", "사업자X/전입X", "확인필요"], "ad": ["뱅크", "네이버", "당근", "블로그", "공동", "대기", "공동부동산확인중", "광고가능- 등록하기", "공동부거절", "임대인요청으로 광고X"], "consult": ["시작 전", "진행 중", "완료"], "ad_type": ["신홍보", "전자홍보", "V2", "VR홍보"]}, "danji_naver": {"래미안": ["래미안용산더센트럴"], "써밋": ["용산푸르지오써밋"], "호반": ["용산호반써밋에이디션"], "DK": ["DK밸리뷰용산"], "시티파크": ["용산시티파크1단지", "용산시티파크2단지"], "파크타워": ["파크타워"], "아스테리움": ["아스테리움용산"], "에테르나인용산": ["에테르나인용산"]}};</script>
 <script>// 클라우드(Supabase) 버전 백엔드: 로컬 server.py 의 /api/* 를 브라우저에서 그대로 흉내낸다.
 // 필요: window.SB_URL, window.SB_ANON, window.META (meta.json), supabase-js v2
 const ME = '용산호반제이';
@@ -193,6 +195,8 @@ async function api(u, o = {}) {
  <div class="bar"><div class="chips" id="f-kind"></div><span class="mut">|</span>
   <label><input type="checkbox" id="f-active" checked> 진행 중인 매물만</label>
   <label><input type="checkbox" id="f-ad"> 광고(네이버·뱅크) 표시된 것만</label>
+  </div>
+ <div class="bar"><span class="mut">가능여부</span><div class="chips" id="f-avail"></div><span class="mut">| 광고타입</span><div class="chips" id="f-adt"></div>
   <span class="sp" style="flex:1"></span><span id="cnt" class="mut"></span><button class="b p" id="new">+ 매물 등록</button></div>
  <div id="list"></div>
 </section>
@@ -223,10 +227,16 @@ async function api(u, o = {}) {
  <div class="box" style="text-align:center"><h3>🏡 제이부동산 매물장</h3><p id="gate-msg" class="mut">접속 확인 중…</p></div></div>
 <script>
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let META,ROWS=[],F={danji:new Set(),kind:new Set()},SORT={k:'id',d:-1},CUR=null;
+let META,ROWS=[],F={danji:new Set(),kind:new Set(),avail:new Set(),adt:new Set()},SORT={k:'id',d:-1},CUR=null;
 const toast=t=>{const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2600)};
 const won=v=>{if(v==null||v==='')return'';v=Math.round(v);const e=Math.floor(v/10000),m=v%10000;return e&&m?`${e}억 ${m.toLocaleString()}`:e?`${e}억`:m.toLocaleString()};
 const kinds=d=>{d=(d||'').replace('매매완료','');const k=[];if(/매매|급매/.test(d))k.push('매매');if(d.includes('임대전세'))k.push('전세');if(/임대월세|반전세|단기/.test(d))k.push('월세');return k};
+const AVAIL=['가능','공동가능','급매가능','가능?','연락안됨','보류','표시없음'];
+function derive(r){if(r._d)return r;const t=(r.title||'').trim();const m=/^(\d{2})(\d{2})\s*\.?\s*(.*)$/.exec(t);
+ let st=(m?m[3]:t).replace(/\s*\(\d+\)\s*$/,'').trim(),chk='';
+ if(m){const now=new Date(),y=now.getFullYear();let d=new Date(y,+m[1]-1,+m[2]);if(d-now>7*864e5)d=new Date(y-1,+m[1]-1,+m[2]);if(!isNaN(d))chk=`${d.getFullYear()}-${m[1]}-${m[2]}`}
+ if(/보류/.test(st))st='보류';r._avail=st||'표시없음';r._chk=chk;r._d=1;return r}
+const avHtml=a=>a&&a!=='표시없음'?`<span class="av av-${esc(a)}">${esc(a)}</span>`:'';
 const active=r=>kinds(r.deal).length&&!/계약완|매매완/.test(r.status||'');
 const askPrice=r=>{const k=kinds(r.deal),o=[];if(k.includes('매매')&&r.sale)o.push('매 '+won(r.sale));if(k.includes('전세'))o.push('전 '+won(r.jeonse||r.deposit));if(k.includes('월세'))o.push('월 '+won(r.deposit)+'/'+(r.rent??''));return o.join(' · ')};
 const dday=s=>s?Math.round((new Date(s)-new Date(new Date().toDateString()))/864e5):null;
@@ -243,16 +253,18 @@ async function load(){META=await api('/api/meta');ROWS=await api('/api/listings'
 
 function filtered(){const q=$('#q').value.trim().toLowerCase();return ROWS.filter(r=>{
  if($('#f-active').checked&&!active(r))return false;if($('#f-ad').checked&&!/네이버|뱅크/.test(r.ad||''))return false;
- if(F.danji.size&&!F.danji.has(r.danji))return false;if(F.kind.size&&!kinds(r.deal).some(k=>F.kind.has(k)))return false;
+ if(F.danji.size&&!F.danji.has(r.danji))return false;if(F.avail.size&&!F.avail.has(r._avail))return false;if(F.adt.size&&!String(r.ad_type||'').split(', ').some(x=>F.adt.has(x)))return false;if(F.kind.size&&!kinds(r.deal).some(k=>F.kind.has(k)))return false;
  if(q&&!META.fields.some(([k])=>String(r[k]??'').toLowerCase().includes(q))&&!String(r.log_txt||'').toLowerCase().includes(q))return false;return true})}
 
-const COLS=[['danji','단지'],['dong','동'],['ho','호'],['typ','타입'],['pyeong','전용평','n'],['direction','방향'],['deal','거래유형'],['_ask','희망가'],
- ['cur_deposit','현 보증','n'],['cur_rent','현 차임','n'],['manki','만기'],['status','현상태'],['ad','광고'],['owner','임대인'],['owner_tel','임대인연락처'],['_log','상담일지'],['memo','비고']];
-function renderList(){if(!META)return;const base=ROWS.filter(r=>!$('#f-active').checked||active(r));const cnt={};base.forEach(r=>cnt[r.danji]=(cnt[r.danji]||0)+1);
+const COLS=[['_avail','가능여부'],['_chk','확인일'],['danji','단지'],['dong','동'],['ho','호'],['typ','타입'],['pyeong','전용평','n'],['direction','방향'],['deal','거래유형'],['_ask','희망가'],
+ ['cur_deposit','현 보증','n'],['cur_rent','현 차임','n'],['manki','만기'],['status','현상태'],['ad','광고'],['ad_type','광고타입'],['owner','임대인'],['owner_tel','임대인연락처'],['_log','상담일지'],['memo','비고']];
+function renderList(){if(!META)return;ROWS.forEach(derive);const base=ROWS.filter(r=>!$('#f-active').checked||active(r));const cnt={};base.forEach(r=>cnt[r.danji]=(cnt[r.danji]||0)+1);
  chips($('#f-danji'),META.options.danji.filter(d=>cnt[d]),F.danji,renderList,cnt);chips($('#f-kind'),['매매','전세','월세'],F.kind,renderList);
+ const ac={},tc={};base.forEach(r=>{ac[r._avail]=(ac[r._avail]||0)+1;String(r.ad_type||'').split(', ').filter(Boolean).forEach(x=>tc[x]=(tc[x]||0)+1)});
+ chips($('#f-avail'),AVAIL.filter(a=>ac[a]),F.avail,renderList,ac);chips($('#f-adt'),(META.options.ad_type||[]).filter(a=>tc[a]),F.adt,renderList,tc);
  let rs=filtered();const k=SORT.k;rs.sort((a,b)=>{const x=a[k]??'',y=b[k]??'';return (x>y?1:x<y?-1:0)*SORT.d});$('#cnt').textContent=`${rs.length.toLocaleString()}건`;
  if(!ROWS.length){$('#list').innerHTML=`<div class="empty">아직 매물이 없습니다. <b>가져오기·백업</b> 탭에서 노션 CSV를 가져오거나 <b>+ 매물 등록</b>으로 시작하세요.</div>`;return}
- $('#list').innerHTML=`<table><thead><tr>${COLS.map(([k,l])=>`<th data-k="${k}">${l}${SORT.k===k?(SORT.d>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>${rs.slice(0,1500).map(r=>`<tr data-id="${r.id}">${COLS.map(([k,,t])=>{
+ $('#list').innerHTML=`<table><thead><tr>${COLS.map(([k,l])=>`<th data-k="${k}">${l}${SORT.k===k?(SORT.d>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>${rs.slice(0,1500).map(r=>`<tr data-id="${r.id}" class="g-${esc(r._avail)}">${COLS.map(([k,,t])=>{if(k==='_avail')return `<td>${avHtml(r._avail)}</td>`;if(k==='_chk')return `<td class="mut">${r._chk?r._chk.slice(2).replace(/-/g,'.'):''}</td>`;
   if(k==='_log')return `<td class="mut" title="${esc((r.log_txt||'').slice(0,300))}">${r.log_n?`💬${r.log_n} ${String(r.log_last||'').slice(2,10)}`:''}</td>`;let v=k==='_ask'?askPrice(r):r[k];if(['cur_deposit'].includes(k))v=won(v);if(k==='manki')v=r.manki?`${r.manki} ${ddHtml(r.manki)}`:'';else v=k==='_ask'?esc(v):esc(v);
   return `<td class="${t||''} ${k==='memo'?'memo':''}" ${k==='memo'?`title="${esc(r.memo)}"`:''}>${v??''}</td>`}).join('')}</tr>`).join('')}</tbody></table>${rs.length>1500?'<p class="mut">1,500건까지만 표시합니다. 검색으로 좁혀 주세요.</p>':''}`;
  $('#list').querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.k==='_ask'?'sale':th.dataset.k;SORT={k,d:SORT.k===k?-SORT.d:1};renderList()});
@@ -260,10 +272,10 @@ function renderList(){if(!META)return;const base=ROWS.filter(r=>!$('#f-active').
 $('#q').oninput=renderList;$('#f-active').onchange=renderList;$('#f-ad').onchange=renderList;$('#new').onclick=()=>openDrawer(null);
 
 // ---------- 상세/편집 ----------
-const WIDE={memo:'w4',owner_units:'w2',deal:'w2',ad:'w4',usage:'w2',status:'w2',direction:'w2',title:'w2',coagent:'w2'};
+const WIDE={ad_type:'w2',memo:'w4',owner_units:'w2',deal:'w2',ad:'w4',usage:'w2',status:'w2',direction:'w2',title:'w2',coagent:'w2'};
 async function openDrawer(id){CUR=id?{...ROWS.find(r=>r.id===id)}:{danji:'',deal:''};
  $('#d-title').textContent=id?`${CUR.danji||''} ${CUR.dong||''} ${CUR.ho||''}`:'새 매물';$('#d-del').hidden=!id;
- const order=['danji','dong','ho','typ','pyeong','direction','deal','sale','jeonse','deposit','rent','cur_deposit','cur_rent','manki','status','usage','ad','consult','owner','owner_tel','tenant','tenant_tel','owner_units','coagent','title','memo'];
+ const order=['danji','dong','ho','typ','pyeong','direction','deal','sale','jeonse','deposit','rent','cur_deposit','cur_rent','manki','status','usage','ad','ad_type','consult','owner','owner_tel','tenant','tenant_tel','owner_units','coagent','title','memo'];
  const fm=Object.fromEntries(META.fields.map(f=>[f[0],f]));
  $('#d-body').innerHTML=`${CUR.notion_url?`<p><a href="${esc(CUR.notion_url)}" target="_blank">노션에서 열기 ↗</a></p>`:''}<div class="form">${order.map(k=>{const [,n,t]=fm[k];const v=CUR[k]??'';
   let inp;if(t==='multi')inp=`<div class="ms" data-k="${k}">${(META.options[k]||[]).map(o=>`<span class="chip ${String(v).split(', ').includes(o)?'on':''}">${esc(o)}</span>`).join('')}</div>`;
