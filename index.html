@@ -97,8 +97,12 @@ const hoFloor = ho => { const m = /(\d{3,4})/.exec(ho || ''); return m ? Math.fl
 const floorOk = (fl, nfl, total) => { if (fl == null) return true; nfl = String(nfl); if (/^\d+$/.test(nfl)) return +nfl === fl;
   if (!'저중고'.includes(nfl) || !nfl) return true; const t = parseInt(total); if (!t) return true;
   const [lo, hi] = {'저': [1, t / 3], '중': [t / 3, t * 2 / 3], '고': [t * 2 / 3, t]}[nfl]; return lo - 2 <= fl && fl <= hi + 2 };
-const danjiMatch = (L, nd) => { const names = DN[L.danji || '']; if (!names || !names.includes(nd)) return false;
-  if (L.danji === '시티파크') { const d = L.dong || ''; if (d.includes('1단지')) return nd.endsWith('1단지'); if (d.includes('2단지')) return nd.endsWith('2단지') } return true };
+const DN_APT = {"센트럴파크": ["센트럴파크"], "래미안": ["래미안용산더센트럴"], "써밋": ["용산푸르지오써밋"], "호반": ["용산호반써밋에이디션"], "아스테리움": ["아스테리움용산"], "파크타워": ["파크타워"], "시티파크": ["용산시티파크1단지", "용산시티파크2단지"], "벽산메가트리움": ["한강로벽산메가트리움"]}, NSHORT_APT = {}; for (const [k, vs] of Object.entries(DN_APT)) for (const v of vs) NSHORT_APT[v] = k;
+const dnOf = cat => cat === '아파트' ? DN_APT : DN;
+const danjiMatch = (L, nd, map) => { const names = (map || dnOf(L.category))[L.danji || '']; if (!names || !names.includes(nd)) return false;
+  if (L.danji === '시티파크') { const d = L.dong || '';
+    if ((L.category || '오피스텔') === '아파트') { const n = normDong(d); return n.startsWith('2') ? nd.endsWith('2단지') : nd.endsWith('1단지') }  // 아파트: 1단지 101~103동, 2단지 201~202동
+    if (d.includes('1단지')) return nd.endsWith('1단지'); if (d.includes('2단지')) return nd.endsWith('2단지') } return true };
 const dongOk = (L, n) => { const a = normDong(L.dong), b = normDong(n['동']); if (!a || !b || L.danji === '시티파크') return true; return a === b || a.replace(/^0+/, '') === b.replace(/^0+/, '') };
 const ledgerPrice = (L, k) => k === '매매' ? [L.sale, null] : k === '전세' ? [L.jeonse || L.deposit, null] : [L.deposit, L.rent];
 const adPrice = n => [n['가격(만원)'], n['월세(만원)']];
@@ -124,7 +128,7 @@ async function recon() {
     mine = [];
     for (const [cid, v] of Object.entries(G)) { if (!/^\d+$/.test(cid)) continue;
       for (const g of v.groups || []) {
-        const ms = (g.members || []).map(m => gRow(m, cid, v.name)); if (!ms.length) continue;
+        const ms = (g.members || []).map(m => gRow(m, cid, v.name)); if (!ms.length) continue; const gcat = v.category || '오피스텔'; ms.forEach(x => x.cat = gcat);
         let my = ms.find(x => x['중개사'].includes(ME));
         if (!my && (g.cnt || 1) > ms.length) { const r0 = ms[0];
           const hit = myRaw.find(n => n['단지'] === r0['단지'] && n['거래'] === r0['거래'] && String(n['층']) === String(r0['층']) && typeOk(n['타입'], r0['타입']) && (n['가격(만원)'] || 0) === (r0['가격(만원)'] || 0));
@@ -138,10 +142,11 @@ async function recon() {
   }
   const used = new Set(), out = [];
   for (const L of ls) {
-    if (!isActive(L) || !DN[L.danji] || (L.category || '오피스텔') !== '오피스텔') continue;
+    const lcat = L.category || '오피스텔'; const dm = dnOf(lcat);
+    if (!isActive(L) || !['오피스텔', '아파트'].includes(lcat) || !dm[L.danji]) continue;
     const wantAd = /네이버|뱅크/.test(L.ad || ''); const fl = hoFloor(L.ho);
     for (const kind of dealKinds(L.deal)) {
-      let c = mine.map((n, i) => [i, n]).filter(([, n]) => n['거래'] === kind && danjiMatch(L, n['단지']) && dongOk(L, n) && floorOk(fl, n['층'], n['총층']));
+      let c = mine.map((n, i) => [i, n]).filter(([, n]) => n['거래'] === kind && (n.cat || '오피스텔') === lcat && danjiMatch(L, n['단지'], dm) && dongOk(L, n) && floorOk(fl, n['층'], n['총층']));
       const otherType = c.filter(([, n]) => !typeOk(L.typ, n['타입'])).map(x => x[1]);
       c = c.filter(([, n]) => typeOk(L.typ, n['타입'])); const lp = ledgerPrice(L, kind);
       if (c.length > 1) { const pc = c.filter(([, n]) => adPrice(n)[0] === lp[0]); if (pc.length) c = pc }
@@ -162,16 +167,16 @@ async function recon() {
       out.push(r);
     }
   }
-  mine.forEach((n, i) => { if (!used.has(i)) out.push({id: null, category: n.category || '오피스텔', danji: NSHORT[n['단지']] || n['단지'], dong: n['동'], ho: '', typ: n['타입'], kind: n['거래'],
+  mine.forEach((n, i) => { if (!used.has(i)) out.push({id: null, category: n.cat || n.category || '오피스텔', danji: (n.cat === '아파트' ? NSHORT_APT : NSHORT)[n['단지']] || n['단지'], dong: n['동'], ho: '', typ: n['타입'], kind: n['거래'],
     ledger_price: '', ad_price: fmtPrice(adPrice(n)), ad_floor: n['층'], ad_link: n['링크'], cat: '장부없음', note: '내 광고인데 장부에서 못 찾음'}) });
   const seenG = new Set();
   for (const o of otherGroups) {
     const gk = o.ms.map(x => x.no).sort().join(','); if (seenG.has(gk)) continue; seenG.add(gk);
     const r0 = o.ms.find(x => x['집주인']) || o.ms[0]; const owner = o.ms.some(x => x['집주인']);
     const prices = o.ms.map(x => adPrice(x)).sort((a, b2) => (a[0] || 0) - (b2[0] || 0) || (a[1] || 0) - (b2[1] || 0));
-    const fl = parseInt(r0['층']); const nm = NSHORT[r0['단지']] || r0['단지'];
-    const cand = isNaN(fl) ? [] : ls.filter(L => (L.category || '오피스텔') === '오피스텔' && L.ho && L.typ && danjiMatch(L, r0['단지']) && dongOk(L, r0) && hoFloor(L.ho) === fl && typeOk(L.typ, r0['타입']));
-    out.push({id: cand.length === 1 ? cand[0].id : null, category: '오피스텔', danji: nm, dong: r0['동'], ho: cand.length === 1 ? cand[0].ho : (cand.length ? `후보 ${cand.length}곳: ` + cand.slice(0, 4).map(c => c.ho).join(', ') : ''), typ: r0['타입'], kind: r0['거래'],
+    const gc = r0.cat || '오피스텔', gdm = dnOf(gc); const fl = parseInt(r0['층']); const nm = (gc === '아파트' ? NSHORT_APT : NSHORT)[r0['단지']] || r0['단지'];
+    const cand = isNaN(fl) ? [] : ls.filter(L => (L.category || '오피스텔') === gc && L.ho && L.typ && danjiMatch(L, r0['단지'], gdm) && dongOk(L, r0) && hoFloor(L.ho) === fl && typeOk(L.typ, r0['타입']));
+    out.push({id: cand.length === 1 ? cand[0].id : null, category: gc, danji: nm, dong: r0['동'], ho: cand.length === 1 ? cand[0].ho : (cand.length ? `후보 ${cand.length}곳: ` + cand.slice(0, 4).map(c => c.ho).join(', ') : ''), typ: r0['타입'], kind: r0['거래'],
       ledger_price: cand.length === 1 ? fmtPrice(ledgerPrice(cand[0], r0['거래'])) : '', ad_price: fmtPrice(prices[0]) + (prices.length > 1 && fmtPrice(prices[prices.length - 1]) !== fmtPrice(prices[0]) ? ' ~ ' + fmtPrice(prices[prices.length - 1]) : ''),
       ad_floor: r0['층'], ad_type: r0['타입'], ad_link: r0['링크'], same_cnt: o.cnt,
       comp_low: '', comp_low_agent: [...new Set(o.ms.map(x => x['중개사'].replace(/공인중개사사무소|부동산중개|공인중개사/g, '').replace(/\d[\d\s.\-]{5,}\d/g, '').trim()))].slice(0, 5).join(', ') + (o.cnt > o.ms.length ? ` 외 ${o.cnt - o.ms.length}곳` : ''),
