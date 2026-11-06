@@ -183,6 +183,58 @@ async function recon() {
       cat: owner ? '타사광고(집주인O)' : '허위의심(집주인X)',
       note: (owner ? '우리 광고 없는 실매물' : '집주인 확인 없음 · 우리·집주인 광고와 안 묶임') + (cand.length ? ' · 우리 장부에 같은 호실 후보 있음 → 소유자 확인' : '')});
   }
+
+  // ---- 상가·오피스 (refdata 'naver_other', 묶음 없음: 같은 건물·층·거래·전용㎡±3 으로 같은 매물 판단) ----
+  try {
+    const OT = ((await loadRef('naver_other')).rows || []).filter(n => n.category === '상가' || n.category === '오피스').map(n => n['거래'] === '월세' ? n : {...n, '월세(만원)': null});
+    if (OT.length) {
+      const sgFloor = (ho, cat) => { ho = String(ho || '').toUpperCase().trim(); if (!ho) return null; if (/^(B|지하)\s*\d?/.test(ho)) return '지하';
+        let m = /^(\d+)\s*(층|F)/.exec(ho); if (m) return String(+m[1]); m = /(\d{3,4})/.exec(ho); if (m) return cat === '상가' ? m[1][0] : String(Math.floor(+m[1] / 100)); m = /^(\d{1,2})$/.exec(ho); return m ? m[1] : null };
+      const nFloor = n => { const f = String(n['층'] || '').toUpperCase(); return f.startsWith('B') ? '지하' : (f ? String(parseInt(f)) : null) };
+      const bld = L => L.danji || (L.extra || {})['구분'] || '';
+      const areaOk = (L, n) => { const a = L.pyeong ? L.pyeong * 3.3058 : null, c = n['전용㎡']; return !a || !c || Math.abs(a - c) <= 3 };
+      const ukey = n => [n.category, n['단지'], nFloor(n), n['거래'], Math.round(n['전용㎡'] || 0)].join('|');
+      const mineS = OT.filter(n => (n['중개사'] || '').includes(ME)), usedS = new Set(), myKeys = new Set(mineS.map(ukey));
+      const byKey = {}; for (const n of OT) (byKey[ukey(n)] ||= []).push(n);
+      for (const L of ls) {
+        const lc = L.category || ''; if (!['상가', '오피스'].includes(lc) || !isActive(L)) continue;
+        const B = bld(L); if (!B) continue; const fl = sgFloor(L.ho, lc); const wantAd = /네이버|뱅크/.test(L.ad || '');
+        for (const kind of dealKinds(L.deal)) {
+          let c = mineS.map((n, i) => [i, n]).filter(([, n]) => n.category === lc && n['단지'] === B && n['거래'] === kind && (!fl || nFloor(n) === fl) && areaOk(L, n));
+          const lp = ledgerPrice(L, kind);
+          if (c.length > 1) { const pc = c.filter(([, n]) => (n['가격(만원)'] || 0) === (lp[0] || 0)); if (pc.length) c = pc }
+          const base = {id: L.id, category: lc, danji: B, dong: '', ho: L.ho, typ: L.pyeong ? `전용 ${L.pyeong}평` : '', kind, ledger_price: fmtPrice(lp), ad_flag: L.ad || ''};
+          if (!c.length) { if (wantAd) out.push({...base, cat: '광고누락', note: '장부엔 광고표시가 있는데 네이버에 내 광고 없음'}); continue }
+          const [i, n] = c[0]; usedS.add(i); const ap = adPrice(n);
+          const oth = (byKey[ukey(n)] || []).filter(o => !(o['중개사'] || '').includes(ME));
+          const lo = oth.length ? oth.reduce((a, b2) => ((a['가격(만원)'] || 0) - (b2['가격(만원)'] || 0) || (a['월세(만원)'] || 0) - (b2['월세(만원)'] || 0)) <= 0 ? a : b2) : null;
+          const r = {...base, ad_price: fmtPrice(ap), ad_floor: n['층'], ad_type: n['전용㎡'] ? `전용 ${n['전용㎡']}㎡` : '', ad_link: n['링크'], same_cnt: oth.length,
+            comp_low: lo ? fmtPrice(adPrice(lo)) : '', comp_low_agent: lo ? (lo['중개사'] || '').replace(/공인중개사사무소|공인중개사/g, '') : '', ambiguous: c.length > 1};
+          if ((lp[0] || 0) != (ap[0] || 0) || (lp[1] || 0) != (ap[1] || 0)) Object.assign(r, {cat: '가격다름', note: `장부 ${fmtPrice(lp) || '-'} → 광고 ${fmtPrice(ap)}`});
+          else if (!wantAd) Object.assign(r, {cat: '광고표시없음', note: '네이버에 내 광고가 있는데 장부 광고칸 비어있음'});
+          else Object.assign(r, {cat: '일치', note: ''});
+          if (lo) { const p2 = adPrice(lo); if ((p2[0] || 0) < (ap[0] || 0) || ((p2[0] || 0) == (ap[0] || 0) && (p2[1] || 0) < (ap[1] || 0))) r.note = (r.note ? r.note + ' · ' : '') + '경쟁사가 더 쌈' }
+          out.push(r);
+        }
+      }
+      mineS.forEach((n, i) => { if (!usedS.has(i)) out.push({id: null, category: n.category, danji: n['단지'], dong: '', ho: '', typ: n['전용㎡'] ? `전용 ${n['전용㎡']}㎡` : '', kind: n['거래'],
+        ledger_price: '', ad_price: fmtPrice(adPrice(n)), ad_floor: n['층'], ad_link: n['링크'], cat: '장부없음', note: '내 광고인데 장부에서 못 찾음'}) });
+      for (const [k, arr] of Object.entries(byKey)) {
+        if (myKeys.has(k)) continue; const os = arr.filter(o => !(o['중개사'] || '').includes(ME)); if (!os.length) continue;
+        const r0 = os.find(x => x['집주인'] === 'O') || os[0]; const owner = os.some(x => x['집주인'] === 'O'); const nf = nFloor(r0);
+        const prices = os.map(x => adPrice(x)).sort((a, b2) => (a[0] || 0) - (b2[0] || 0) || (a[1] || 0) - (b2[1] || 0));
+        const cand = r0['단지'] === '기타' ? [] : ls.filter(L => (L.category || '') === r0.category && bld(L) === r0['단지'] && L.ho && sgFloor(L.ho, r0.category) === nf && areaOk(L, r0));
+        out.push({id: cand.length === 1 ? cand[0].id : null, category: r0.category, danji: r0['단지'] === '기타' ? (r0['건물제목'] || '기타') : r0['단지'], dong: '',
+          ho: cand.length === 1 ? cand[0].ho : (cand.length ? `후보 ${cand.length}곳: ` + cand.slice(0, 4).map(c2 => c2.ho).join(', ') : ''),
+          typ: r0['전용㎡'] ? `전용 ${r0['전용㎡']}㎡` : '', kind: r0['거래'], ledger_price: cand.length === 1 ? fmtPrice(ledgerPrice(cand[0], r0['거래'])) : '',
+          ad_price: fmtPrice(prices[0]) + (prices.length > 1 && fmtPrice(prices[prices.length - 1]) !== fmtPrice(prices[0]) ? ' ~ ' + fmtPrice(prices[prices.length - 1]) : ''),
+          ad_floor: r0['층'], ad_type: r0['용도'] || '', ad_link: r0['링크'], same_cnt: os.length,
+          comp_low: '', comp_low_agent: [...new Set(os.map(x => (x['중개사'] || '').replace(/공인중개사사무소|공인중개사/g, '').replace(/\d[\d\s.\-]{5,}\d/g, '').trim()).filter(Boolean))].slice(0, 5).join(', '),
+          cat: owner ? '타사광고(집주인O)' : '허위의심(집주인X)',
+          note: (owner ? '우리 광고 없는 실매물' : '집주인 확인 없음') + (cand.length ? ' · 우리 장부에 같은 층 호실 후보 있음 → 소유자 확인' : '')});
+      }
+    }
+  } catch (e) { console.warn('상가·오피스 대조 실패', e) }
   const ord = {'가격다름': 0, '광고누락': 1, '장부없음': 2, '타사광고(집주인O)': 3, '허위의심(집주인X)': 4, '광고표시없음': 5, '일치': 6};
   out.sort((a, b) => ord[a.cat] - ord[b.cat] || String(a.danji || '').localeCompare(String(b.danji || '')) || String(a.dong).localeCompare(String(b.dong)) || String(a.ho).localeCompare(String(b.ho)));
   return {naver_time: time + (useG ? ' (동일매물 묶기)' : ''), my_ads: mine.length, rows: out, grouped: useG};
