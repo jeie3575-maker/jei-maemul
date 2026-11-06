@@ -66,11 +66,26 @@ async function loadRef(name) {
 async function listingsAll() {
   const [ls, lg] = await Promise.all([
     all(() => sb.from('listings').select('*').order('notion_created', {ascending: false, nullsFirst: true}).order('id', {ascending: false})),
-    all(() => sb.from('logs').select('listing_id,at,text').order('id'))]);
+    all(() => sb.from('logs').select('id,listing_id,at,text').order('id'))]);
   const g = {};
   for (const l of lg) { const x = g[l.listing_id] ||= {n: 0, last: '', t: []}; x.n++; const a = kst(l.at); if (a > x.last) x.last = a; x.t.push(l.text) }
   for (const r of ls) { const x = g[r.id]; r.log_n = x?.n || 0; r.log_last = x?.last || ''; r.log_txt = x ? x.t.join(' / ') : '' }
+  _sync.upd = ls.reduce((m, r) => r.updated > m ? r.updated : m, ''); _sync.log = lg.reduce((m, l) => l.id > m ? l.id : m, 0);
   return _cache.listings = ls;
+}
+
+// ---- 실시간 동기화: 다른 사람이 고친 매물·상담일지를 몇 초마다 가져옴 ----
+const _sync = {upd: '', log: 0};
+async function pollChanges() {
+  if (!_sync.upd) return null;
+  const [a, b, c] = await Promise.all([
+    sb.from('listings').select('*').gt('updated', _sync.upd).order('updated'),
+    sb.from('logs').select('id,listing_id,at,text').gt('id', _sync.log).order('id'),
+    sb.from('listings').select('id', {count: 'exact', head: true})]);
+  if (a.error || b.error) return null;
+  for (const r of a.data) if (r.updated > _sync.upd) _sync.upd = r.updated;
+  for (const l of b.data) if (l.id > _sync.log) _sync.log = l.id;
+  return {ls: a.data, lg: b.data, count: c.count};
 }
 
 // ---- 대조 로직 (server.py 와 동일) ----
@@ -105,7 +120,7 @@ async function recon() {
       const otherType = c.filter(([, n]) => !typeOk(L.typ, n['타입'])).map(x => x[1]);
       c = c.filter(([, n]) => typeOk(L.typ, n['타입'])); const lp = ledgerPrice(L, kind);
       if (c.length > 1) { const pc = c.filter(([, n]) => adPrice(n)[0] === lp[0]); if (pc.length) c = pc }
-      const base = {id: L.id, danji: L.danji, dong: L.dong, ho: L.ho, typ: L.typ, kind, ledger_price: fmtPrice(lp), ad_flag: L.ad || ''};
+      const base = {id: L.id, danji: L.danji, dong: L.dong, ho: L.ho, typ: L.typ, kind, ledger_price: fmtPrice(lp), ad_flag: L.ad || '', category: L.category || '오피스텔'};
       if (!c.length) { if (wantAd) { let note = '장부엔 광고표시가 있는데 네이버에 내 광고 없음';
           if (otherType.length) note += ' · 같은 층대에 타입 다른 내 광고: ' + otherType.slice(0, 3).map(n => `${n['타입']} ${n['층']}층 ${fmtPrice(adPrice(n))}`).join(', ');
           out.push({...base, cat: '광고누락', note}) } continue }
@@ -122,7 +137,7 @@ async function recon() {
       out.push(r);
     }
   }
-  mine.forEach((n, i) => { if (!used.has(i)) out.push({id: null, danji: NSHORT[n['단지']] || n['단지'], dong: n['동'], ho: '', typ: n['타입'], kind: n['거래'],
+  mine.forEach((n, i) => { if (!used.has(i)) out.push({id: null, category: n.category || '오피스텔', danji: NSHORT[n['단지']] || n['단지'], dong: n['동'], ho: '', typ: n['타입'], kind: n['거래'],
     ledger_price: '', ad_price: fmtPrice(adPrice(n)), ad_floor: n['층'], ad_link: n['링크'], cat: '장부없음', note: '내 광고인데 장부에서 못 찾음'}) });
   const ord = {'가격다름': 0, '광고누락': 1, '장부없음': 2, '광고표시없음': 3, '일치': 4};
   out.sort((a, b) => ord[a.cat] - ord[b.cat] || String(a.danji || '').localeCompare(String(b.danji || '')) || String(a.dong).localeCompare(String(b.dong)) || String(a.ho).localeCompare(String(b.ho)));
@@ -208,7 +223,7 @@ async function api(u, o = {}) {
 <section id="t-co" hidden><div class="bar"><span class="mut">가능여부가 '공동가능'인 매물을 받은 부동산별로 묶었습니다. 부동산 칸에 입력하면 바로 저장됩니다.</span>
  <label><input type="checkbox" id="co-empty"> 부동산 미입력만</label></div><div id="co"></div></section>
 <section id="t-recon" hidden><div class="bar"><span id="recon-info" class="mut"></span><button class="b" id="recon-reload">새로고침</button></div>
- <div class="chips" id="recon-cats" style="margin-bottom:10px"></div><div id="recon"></div></section>
+ <div class="bar" id="recon-catbar" style="margin-bottom:8px"></div><div class="chips" id="recon-danji" style="margin-bottom:8px"></div><div class="chips" id="recon-kind" style="margin-bottom:8px"></div><div class="chips" id="recon-cats" style="margin-bottom:10px"></div><div id="recon"></div></section>
 <section id="t-manki" hidden><div class="cards" id="manki-cards"></div>
  <div class="bar"><button class="b" id="tg">텔레그램으로 3개월 이내 만기 보내기</button><span class="mut">현 보증금/차임과 만기 기준. 기간 지난 것은 최근 1개월까지 표시</span></div>
  <div id="manki"></div></section>
@@ -378,11 +393,26 @@ function renderCo(){ROWS.forEach(derive);let rs=ROWS.filter(r=>(r.category||'오
 $('#co-empty').onchange=renderCo;
 
 // ---------- 광고 대조 ----------
-let RECON=null,RCAT=new Set(['가격다름','광고누락','장부없음','광고표시없음']);
+let RECON=null,RCAT=new Set(['가격다름','광고누락','장부없음','광고표시없음']);let RCATG=localStorage.rcatg||'오피스텔',RDJ=new Set(),RKIND=new Set();
 async function loadRecon(force){if(!RECON||force){$('#recon').innerHTML='<p class="mut">대조 중…</p>';RECON=await api('/api/recon')}
  $('#recon-info').textContent=`네이버 수집 ${RECON.naver_time} · 내 광고 ${RECON.my_ads}건 · 장부의 진행 중 매물과 비교`;
- const cnt={};RECON.rows.forEach(r=>cnt[r.cat]=(cnt[r.cat]||0)+1);chips($('#recon-cats'),['가격다름','광고누락','장부없음','광고표시없음','일치'],RCAT,()=>loadRecon(),cnt);
- const rs=RECON.rows.filter(r=>RCAT.has(r.cat));
+ const nc={};RECON.rows.forEach(r=>{const c=r.category||'오피스텔';nc[c]=(nc[c]||0)+1});
+ $('#recon-catbar').innerHTML=CATS.map(c=>`<button class="cat ${c===RCATG?'on':''}" data-c="${c}">${c} ${nc[c]||0}</button>`).join('');
+ $('#recon-catbar').querySelectorAll('.cat').forEach(b=>b.onclick=()=>{RCATG=localStorage.rcatg=b.dataset.c;RDJ.clear();RKIND.clear();loadRecon()});
+ const inCat=RECON.rows.filter(r=>(r.category||'오피스텔')===RCATG);
+ const dc={};inCat.forEach(r=>{const d=r.danji||'(단지없음)';dc[d]=(dc[d]||0)+1});const djs=Object.keys(dc).sort((a,b)=>dc[b]-dc[a]);
+ [...RDJ].forEach(d=>{if(!dc[d])RDJ.delete(d)});
+ $('#recon-danji').innerHTML=djs.length?`<span class="chip ${RDJ.size?'':'on'}" data-all="1">단지 전체<i>${inCat.length}</i></span>`+djs.map(d=>`<span class="chip ${RDJ.has(d)?'on':''}" data-v="${esc(d)}">${esc(d)}<i>${dc[d]}</i></span>`).join(''):'';
+ $('#recon-danji').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{if(c.dataset.all)RDJ.clear();else{const v=c.dataset.v;RDJ.has(v)?RDJ.delete(v):RDJ.add(v)}loadRecon()});
+ const inDj=inCat.filter(r=>!RDJ.size||RDJ.has(r.danji||'(단지없음)'));
+ const kc={};inDj.forEach(r=>{kc[r.kind]=(kc[r.kind]||0)+1});const kinds=['매매','전세','월세',...Object.keys(kc).filter(k=>!['매매','전세','월세'].includes(k))].filter(k=>kc[k]);
+ [...RKIND].forEach(k=>{if(!kc[k])RKIND.delete(k)});
+ $('#recon-kind').innerHTML=kinds.length?`<span class="chip ${RKIND.size?'':'on'}" data-all="1">거래 전체<i>${inDj.length}</i></span>`+kinds.map(k=>`<span class="chip ${RKIND.has(k)?'on':''}" data-v="${esc(k)}">${esc(k)}<i>${kc[k]}</i></span>`).join(''):'';
+ $('#recon-kind').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{if(c.dataset.all)RKIND.clear();else{const v=c.dataset.v;RKIND.has(v)?RKIND.delete(v):RKIND.add(v)}loadRecon()});
+ const inK=inDj.filter(r=>!RKIND.size||RKIND.has(r.kind));
+const cnt={};inK.forEach(r=>cnt[r.cat]=(cnt[r.cat]||0)+1);chips($('#recon-cats'),['가격다름','광고누락','장부없음','광고표시없음','일치'],RCAT,()=>loadRecon(),cnt);
+ const rs=inK.filter(r=>RCAT.has(r.cat));
+ if(!inCat.length){$('#recon').innerHTML=`<div class="empty">${RCATG} 네이버 광고는 아직 수집하지 않아 대조할 데이터가 없습니다.</div>`;return}
  $('#recon').innerHTML=rs.length?`<table><thead><tr><th>구분</th><th>단지</th><th>동</th><th>호</th><th>타입</th><th>거래</th><th>장부가격</th><th>내 광고가격</th><th>광고층</th><th>동일매물(타사)</th><th>타사 최저가</th><th>장부 광고칸</th><th>메모</th></tr></thead><tbody>${rs.map(r=>`<tr data-id="${r.id??''}"><td><span class="tag t-${r.cat}">${r.cat}</span></td><td>${esc(r.danji)}</td><td>${esc(r.dong)}</td><td>${esc(r.ho)}</td><td>${esc(r.typ)}${r.ad_type&&r.ad_type!==r.typ?` <span class="mut">(광고 ${esc(r.ad_type)})</span>`:''}</td><td>${r.kind}</td><td>${esc(r.ledger_price)}</td><td>${r.ad_link?`<a href="${esc(r.ad_link)}" target="_blank" onclick="event.stopPropagation()">${esc(r.ad_price||'')}</a>`:esc(r.ad_price||'')}</td><td>${esc(r.ad_floor||'')}</td><td class="n">${r.same_cnt??''}</td><td>${esc(r.comp_low||'')} <span class="mut">${esc(r.comp_low_agent||'')}</span></td><td>${esc(r.ad_flag||'')}</td><td>${esc(r.note)}${r.ambiguous?' <span class="mut">(후보 여러 개)</span>':''}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">해당 항목 없음</div>';
  $('#recon').querySelectorAll('tbody tr').forEach(tr=>tr.onclick=()=>tr.dataset.id&&openDrawer(+tr.dataset.id))}
 $('#recon-reload').onclick=()=>loadRecon(true);
@@ -408,6 +438,16 @@ async function loadRemote(){const r=await api('/api/remote');if(r.remote){$('#re
  $('#remote-info').innerHTML=r.url?`외부 주소: <b>${esc(r.url)}</b><br>비밀 링크는 텔레그램으로 보냈습니다.`:'외부 접속이 꺼져 있습니다 (터널 미실행).'}
 $('#rotate').onclick=async()=>{if(!confirm('비밀 링크를 바꿀까요? 지금까지 접속한 휴대폰·집 PC는 모두 로그아웃되고, 새 링크를 텔레그램으로 보냅니다.'))return;
  const r=await api('/api/rotate_key',{method:'POST'});toast(r.link?'새 링크를 텔레그램으로 보냈습니다':'바꿨습니다 (터널 꺼져 있음)');loadRemote()};
+// ---------- 실시간 동기화 (클라우드 버전에서만 동작) ----------
+let SYNCING=false;
+async function liveSync(){if(SYNCING||document.hidden||typeof pollChanges!=='function'||!ROWS)return;SYNCING=true;try{
+ const ch=await pollChanges();if(!ch)return;let n=0;
+ for(const r of ch.ls){const i=ROWS.findIndex(x=>x.id===r.id);const o=i>=0?ROWS[i]:null;r.log_n=o?.log_n||0;r.log_last=o?.log_last||'';r.log_txt=o?.log_txt||'';if(i>=0)ROWS[i]=r;else ROWS.unshift(r);n++}
+ for(const l of ch.lg){const r=ROWS.find(x=>x.id===l.listing_id);if(!r)continue;r.log_n=(r.log_n||0)+1;const a=kst(l.at);if(a>(r.log_last||''))r.log_last=a;r.log_txt=(r.log_txt?r.log_txt+' / ':'')+l.text;n++}
+ if(ch.count!=null&&ch.count<ROWS.length){_cache.listings=null;ROWS=await api('/api/listings');n++}
+ if(!n)return;RECON=null;if(!$('#drawer').classList.contains('on')&&!$('#t-list').hidden)renderList();
+ $('#info').textContent=`매물 ${ROWS.length.toLocaleString()}건 · 실시간 ${new Date().toTimeString().slice(0,5)}`;toast(`새 변경 ${n}건 반영`)}catch(e){}finally{SYNCING=false}}
+setInterval(liveSync,10000);window.addEventListener('focus',liveSync);
 async function boot(){const g=$('#gate'),m=$('#gate-msg');
  const k=new URLSearchParams(location.hash.slice(1)).get('k');
  if(k){try{const [e,pw]=atob(k.replace(/-/g,'+').replace(/_/g,'/')).split('\n');const {error}=await sb.auth.signInWithPassword({email:e,password:pw});
