@@ -20,7 +20,7 @@ th{background:#eef1f5;position:sticky;top:46px;cursor:pointer;font-weight:600;z-
 td.n{text-align:right;font-variant-numeric:tabular-nums}td.memo{max-width:260px;overflow:hidden;text-overflow:ellipsis}
 .tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:12px;background:#eef1f5;margin-right:2px}
 .t-가격다름{background:#ffebe9;color:var(--red)}.t-광고누락{background:#fff1e5;color:var(--org)}.t-장부없음{background:#fbefff;color:#8250df}
-.t-광고표시없음{background:#ddf4ff;color:#0969da}.t-일치{background:#dafbe1;color:var(--grn)}
+.t-타사광고\(집주인O\){background:#fff8c5;color:#7d4e00}.t-허위의심\(집주인X\){background:#ffebe9;color:#a40e26;font-weight:600}.t-광고표시없음{background:#ddf4ff;color:#0969da}.t-일치{background:#dafbe1;color:var(--grn)}
 .av{display:inline-block;padding:0 7px;border-radius:10px;font-size:12px;font-weight:600;background:#eef1f5;color:#57606a}
 .av-가능,.av-급매가능,.av-공실,.av-퇴거예정{background:#1a7f37;color:#fff}.av-가계약,.av-홀딩{background:#fff1e5;color:#bc4c00}.av-공동가능{background:#aceebb;color:#0f5323}.av-가능\?{background:#fff8c5;color:#7d4e00}.av-연락안됨{background:#ffebe9;color:#d1242f}
 tr.g-가능,tr.g-급매가능,tr.g-공실,tr.g-퇴거예정{background:#eafbea}tr.g-공동가능{background:#f3fcf3}
@@ -107,13 +107,38 @@ const fmtPrice = p => fmtWon(p[0]) + (p[1] ? '/' + Math.trunc(p[1]) : '');
 const isActive = L => dealKinds(L.deal).length && !/계약완|매매완/.test(L.status || '');
 const sameUnit = a => [a['단지'], a['동'], a['거래'], a['타입'], String(a['층']), a['방향']].join('|');
 
+// ---- 네이버 '동일매물 묶기' 묶음(refdata 'naver_groups') ----
+const won2 = s => { s = String(s || '').replace(/,/g, '').trim(); if (!s) return null; let v = 0; const m = s.match(/(\d+)억/); if (m) v += +m[1] * 10000; const r = s.replace(/.*억\s*/, ''); if (r && /^\d+$/.test(r)) v += +r; else if (!m && /^\d+$/.test(s)) v = +s; return v || null };
+const gRow = (m, cid, cname) => { const p = String(m.dealOrWarrantPrc || ''); const [dep, rent] = p.includes('/') ? p.split('/') : [p, m.rentPrc];
+  const [fl, tot] = String(m.floorInfo || '').split('/');
+  return {'단지': cname, '동': m.buildingName || '', '거래': m.tradeTypeName, '가격(만원)': won2(dep), '월세(만원)': rent ? won2(rent) : null, '층': fl, '총층': tot, '타입': m.areaName, '방향': m.direction,
+    '중개사': m.realtorName || '', '링크': `https://new.land.naver.com/complexes/${cid}?articleNo=${m.articleNo}`, '집주인': m.verificationTypeCode === 'OWNER', 'no': m.articleNo} };
 async function recon() {
-  const {rows, time} = await loadRef('naver'); const ls = _cache.listings || await listingsAll();
-  const mine = rows.filter(n => (n['중개사'] || '').includes(ME)); const units = {};
-  for (const n of rows) (units[sameUnit(n)] ||= []).push(n);
+  const {rows: rows0, time} = await loadRef('naver'); const ls = _cache.listings || await listingsAll();
+  const G = (await loadRef('naver_groups')).rows || {};
+  const useG = G && typeof G === 'object' && Object.keys(G).some(k => /^\d+$/.test(k));
+  let rows = rows0, mine, units = {}, otherGroups = [];
+  if (useG) {
+    // 묶음마다: 우리 광고가 있으면 내 묶음, 없으면 타사 묶음. 덜 펼쳐진 묶음은 우리 개별 광고(가격·층·타입)와 맞으면 내 묶음으로 봄
+    const myRaw = rows0.filter(n => (n['중개사'] || '').includes(ME));
+    mine = [];
+    for (const [cid, v] of Object.entries(G)) { if (!/^\d+$/.test(cid)) continue;
+      for (const g of v.groups || []) {
+        const ms = (g.members || []).map(m => gRow(m, cid, v.name)); if (!ms.length) continue;
+        let my = ms.find(x => x['중개사'].includes(ME));
+        if (!my && (g.cnt || 1) > ms.length) { const r0 = ms[0];
+          const hit = myRaw.find(n => n['단지'] === r0['단지'] && n['거래'] === r0['거래'] && String(n['층']) === String(r0['층']) && typeOk(n['타입'], r0['타입']) && (n['가격(만원)'] || 0) === (r0['가격(만원)'] || 0));
+          if (hit) my = {...r0, '중개사': hit['중개사'], '링크': hit['링크'] || r0['링크']} }
+        const key = 'G' + g.rep; ms.forEach(x => x._g = key);
+        if (my) { my._g = key; units[key] = ms; mine.push(my) }
+        else otherGroups.push({ms, cnt: g.cnt || ms.length, cid}) } }
+  } else {
+    mine = rows.filter(n => (n['중개사'] || '').includes(ME));
+    for (const n of rows) (units[sameUnit(n)] ||= []).push(n);
+  }
   const used = new Set(), out = [];
   for (const L of ls) {
-    if (!isActive(L) || !DN[L.danji]) continue;
+    if (!isActive(L) || !DN[L.danji] || (L.category || '오피스텔') !== '오피스텔') continue;
     const wantAd = /네이버|뱅크/.test(L.ad || ''); const fl = hoFloor(L.ho);
     for (const kind of dealKinds(L.deal)) {
       let c = mine.map((n, i) => [i, n]).filter(([, n]) => n['거래'] === kind && danjiMatch(L, n['단지']) && dongOk(L, n) && floorOk(fl, n['층'], n['총층']));
@@ -125,7 +150,7 @@ async function recon() {
           if (otherType.length) note += ' · 같은 층대에 타입 다른 내 광고: ' + otherType.slice(0, 3).map(n => `${n['타입']} ${n['층']}층 ${fmtPrice(adPrice(n))}`).join(', ');
           out.push({...base, cat: '광고누락', note}) } continue }
       const [i, n] = c[0]; used.add(i);
-      const others = (units[sameUnit(n)] || []).filter(o => !(o['중개사'] || '').includes(ME));
+      const others = (units[n._g || sameUnit(n)] || []).filter(o => !(o['중개사'] || '').includes(ME));
       const lo = others.length ? others.reduce((a, b) => ((a['가격(만원)'] || 0) - (b['가격(만원)'] || 0) || (a['월세(만원)'] || 0) - (b['월세(만원)'] || 0)) <= 0 ? a : b) : null;
       const ap = adPrice(n);
       const r = {...base, ad_price: fmtPrice(ap), ad_floor: n['층'], ad_type: n['타입'], ad_link: n['링크'], same_cnt: others.length,
@@ -139,9 +164,23 @@ async function recon() {
   }
   mine.forEach((n, i) => { if (!used.has(i)) out.push({id: null, category: n.category || '오피스텔', danji: NSHORT[n['단지']] || n['단지'], dong: n['동'], ho: '', typ: n['타입'], kind: n['거래'],
     ledger_price: '', ad_price: fmtPrice(adPrice(n)), ad_floor: n['층'], ad_link: n['링크'], cat: '장부없음', note: '내 광고인데 장부에서 못 찾음'}) });
-  const ord = {'가격다름': 0, '광고누락': 1, '장부없음': 2, '광고표시없음': 3, '일치': 4};
+  const seenG = new Set();
+  for (const o of otherGroups) {
+    const gk = o.ms.map(x => x.no).sort().join(','); if (seenG.has(gk)) continue; seenG.add(gk);
+    const r0 = o.ms.find(x => x['집주인']) || o.ms[0]; const owner = o.ms.some(x => x['집주인']);
+    const prices = o.ms.map(x => adPrice(x)).sort((a, b2) => (a[0] || 0) - (b2[0] || 0) || (a[1] || 0) - (b2[1] || 0));
+    const fl = parseInt(r0['층']); const nm = NSHORT[r0['단지']] || r0['단지'];
+    const cand = isNaN(fl) ? [] : ls.filter(L => (L.category || '오피스텔') === '오피스텔' && L.ho && L.typ && danjiMatch(L, r0['단지']) && dongOk(L, r0) && hoFloor(L.ho) === fl && typeOk(L.typ, r0['타입']));
+    out.push({id: cand.length === 1 ? cand[0].id : null, category: '오피스텔', danji: nm, dong: r0['동'], ho: cand.length === 1 ? cand[0].ho : (cand.length ? `후보 ${cand.length}곳: ` + cand.slice(0, 4).map(c => c.ho).join(', ') : ''), typ: r0['타입'], kind: r0['거래'],
+      ledger_price: cand.length === 1 ? fmtPrice(ledgerPrice(cand[0], r0['거래'])) : '', ad_price: fmtPrice(prices[0]) + (prices.length > 1 && fmtPrice(prices[prices.length - 1]) !== fmtPrice(prices[0]) ? ' ~ ' + fmtPrice(prices[prices.length - 1]) : ''),
+      ad_floor: r0['층'], ad_type: r0['타입'], ad_link: r0['링크'], same_cnt: o.cnt,
+      comp_low: '', comp_low_agent: [...new Set(o.ms.map(x => x['중개사'].replace(/공인중개사사무소|부동산중개|공인중개사/g, '').replace(/\d[\d\s.\-]{5,}\d/g, '').trim()))].slice(0, 5).join(', ') + (o.cnt > o.ms.length ? ` 외 ${o.cnt - o.ms.length}곳` : ''),
+      cat: owner ? '타사광고(집주인O)' : '허위의심(집주인X)',
+      note: (owner ? '우리 광고 없는 실매물' : '집주인 확인 없음 · 우리·집주인 광고와 안 묶임') + (cand.length ? ' · 우리 장부에 같은 호실 후보 있음 → 소유자 확인' : '')});
+  }
+  const ord = {'가격다름': 0, '광고누락': 1, '장부없음': 2, '타사광고(집주인O)': 3, '허위의심(집주인X)': 4, '광고표시없음': 5, '일치': 6};
   out.sort((a, b) => ord[a.cat] - ord[b.cat] || String(a.danji || '').localeCompare(String(b.danji || '')) || String(a.dong).localeCompare(String(b.dong)) || String(a.ho).localeCompare(String(b.ho)));
-  return {naver_time: time, my_ads: mine.length, rows: out};
+  return {naver_time: time + (useG ? ' (동일매물 묶기)' : ''), my_ads: mine.length, rows: out, grouped: useG};
 }
 
 async function unitInfo(id) {
@@ -393,7 +432,7 @@ function renderCo(){ROWS.forEach(derive);let rs=ROWS.filter(r=>(r.category||'오
 $('#co-empty').onchange=renderCo;
 
 // ---------- 광고 대조 ----------
-let RECON=null,RCAT=new Set(['가격다름','광고누락','장부없음','광고표시없음']);let RCATG=localStorage.rcatg||'오피스텔',RDJ=new Set(),RKIND=new Set();
+let RECON=null,RCAT=new Set(['가격다름','광고누락','장부없음','타사광고(집주인O)','허위의심(집주인X)','광고표시없음']);let RCATG=localStorage.rcatg||'오피스텔',RDJ=new Set(),RKIND=new Set();
 async function loadRecon(force){if(!RECON||force){$('#recon').innerHTML='<p class="mut">대조 중…</p>';RECON=await api('/api/recon')}
  $('#recon-info').textContent=`네이버 수집 ${RECON.naver_time} · 내 광고 ${RECON.my_ads}건 · 장부의 진행 중 매물과 비교`;
  const nc={};RECON.rows.forEach(r=>{const c=r.category||'오피스텔';nc[c]=(nc[c]||0)+1});
@@ -410,7 +449,7 @@ async function loadRecon(force){if(!RECON||force){$('#recon').innerHTML='<p clas
  $('#recon-kind').innerHTML=kinds.length?`<span class="chip ${RKIND.size?'':'on'}" data-all="1">거래 전체<i>${inDj.length}</i></span>`+kinds.map(k=>`<span class="chip ${RKIND.has(k)?'on':''}" data-v="${esc(k)}">${esc(k)}<i>${kc[k]}</i></span>`).join(''):'';
  $('#recon-kind').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{if(c.dataset.all)RKIND.clear();else{const v=c.dataset.v;RKIND.has(v)?RKIND.delete(v):RKIND.add(v)}loadRecon()});
  const inK=inDj.filter(r=>!RKIND.size||RKIND.has(r.kind));
-const cnt={};inK.forEach(r=>cnt[r.cat]=(cnt[r.cat]||0)+1);chips($('#recon-cats'),['가격다름','광고누락','장부없음','광고표시없음','일치'],RCAT,()=>loadRecon(),cnt);
+const cnt={};inK.forEach(r=>cnt[r.cat]=(cnt[r.cat]||0)+1);chips($('#recon-cats'),['가격다름','광고누락','장부없음','타사광고(집주인O)','허위의심(집주인X)','광고표시없음','일치'],RCAT,()=>loadRecon(),cnt);
  const rs=inK.filter(r=>RCAT.has(r.cat));
  if(!inCat.length){$('#recon').innerHTML=`<div class="empty">${RCATG} 네이버 광고는 아직 수집하지 않아 대조할 데이터가 없습니다.</div>`;return}
  $('#recon').innerHTML=rs.length?`<table><thead><tr><th>구분</th><th>단지</th><th>동</th><th>호</th><th>타입</th><th>거래</th><th>장부가격</th><th>내 광고가격</th><th>광고층</th><th>동일매물(타사)</th><th>타사 최저가</th><th>장부 광고칸</th><th>메모</th></tr></thead><tbody>${rs.map(r=>`<tr data-id="${r.id??''}"><td><span class="tag t-${r.cat}">${r.cat}</span></td><td>${esc(r.danji)}</td><td>${esc(r.dong)}</td><td>${esc(r.ho)}</td><td>${esc(r.typ)}${r.ad_type&&r.ad_type!==r.typ?` <span class="mut">(광고 ${esc(r.ad_type)})</span>`:''}</td><td>${r.kind}</td><td>${esc(r.ledger_price)}</td><td>${r.ad_link?`<a href="${esc(r.ad_link)}" target="_blank" onclick="event.stopPropagation()">${esc(r.ad_price||'')}</a>`:esc(r.ad_price||'')}</td><td>${esc(r.ad_floor||'')}</td><td class="n">${r.same_cnt??''}</td><td>${esc(r.comp_low||'')} <span class="mut">${esc(r.comp_low_agent||'')}</span></td><td>${esc(r.ad_flag||'')}</td><td>${esc(r.note)}${r.ambiguous?' <span class="mut">(후보 여러 개)</span>':''}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">해당 항목 없음</div>';
