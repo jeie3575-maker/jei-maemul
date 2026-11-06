@@ -171,12 +171,14 @@ async function api(u, o = {}) {
     case '/api/meta': return {fields: window.META.fields, options: window.META.options, notion_token: false, cloud: true};
     case '/api/listings':
       if (o.method === 'POST') { const d = JSON.parse(o.body); const row = cleanRow(d);
+        if (d.category) row.category = d.category; if ('extra' in d) row.extra = d.extra && Object.keys(d.extra).length ? d.extra : null;
         if (d.id) { chk(await sb.from('listings').update(row).eq('id', d.id)); _cache.listings = null; return {id: d.id} }
-        const r = chk(await sb.from('listings').insert({...row, source: 'app', category: d.category || '오피스텔'}).select('id').single()); _cache.listings = null; return {id: r.id} }
+        const r = chk(await sb.from('listings').insert({...row, source: 'app', category: row.category || '오피스텔'}).select('id').single()); _cache.listings = null; return {id: r.id} }
       return await listingsAll();
     case '/api/delete': chk(await sb.from('listings').delete().eq('id', +q.id)); _cache.listings = null; return {ok: true};
     case '/api/log': { const d = JSON.parse(o.body); const r = chk(await sb.from('logs').insert({listing_id: d.listing_id, text: d.text, author: d.author, source: 'app'}).select('id').single()); _cache.listings = null; return {id: r.id} }
-    case '/api/log_delete': chk(await sb.from('logs').delete().eq('id', +q.id).eq('source', 'app')); return {ok: true};
+    case '/api/log_delete': chk(await sb.from('logs').delete().eq('id', +q.id)); _cache.listings = null; return {ok: true};
+    case '/api/log_update': { const d = JSON.parse(o.body); chk(await sb.from('logs').update({text: d.text}).eq('id', d.id)); _cache.listings = null; return {ok: true} }
     case '/api/recon': return await recon();
     case '/api/rt': return (await loadRef('rt')).rows;
     case '/api/unit': return await unitInfo(+q.id);
@@ -200,7 +202,7 @@ async function api(u, o = {}) {
   <label><input type="checkbox" id="f-ad"> 광고(네이버·뱅크) 표시된 것만</label>
   </div>
  <div class="bar"><span class="mut">가능여부</span><div class="chips" id="f-avail"></div><span class="mut">| 광고타입</span><div class="chips" id="f-adt"></div>
-  <span class="sp" style="flex:1"></span><span id="cnt" class="mut"></span><button class="b p" id="new">+ 매물 등록</button></div>
+  <span class="sp" style="flex:1"></span><span class="mut" style="font-size:12px">칸을 더블클릭하면 바로 수정</span> <span id="cnt" class="mut"></span><button class="b p" id="new">+ 매물 등록</button></div>
  <div id="list"></div>
 </section>
 <section id="t-co" hidden><div class="bar"><span class="mut">가능여부가 '공동가능'인 매물을 받은 부동산별로 묶었습니다. 부동산 칸에 입력하면 바로 저장됩니다.</span>
@@ -226,7 +228,7 @@ async function api(u, o = {}) {
   <p class="mut">비밀 링크를 한 번 열면 그 기기는 180일 동안 기억됩니다. 링크는 텔레그램으로만 받고 다른 사람에게 보내지 마세요.</p></div>
 </section>
 </main>
-<div id="drawer"><div class="hd"><b id="d-title"></b><button class="b d" id="d-del">삭제</button><button class="b p" id="d-save">저장</button><button class="b" id="d-close">닫기(자동 저장)</button></div><div class="bd" id="d-body"></div></div>
+<div id="drawer"><div class="hd"><b id="d-title"></b><button class="b" id="d-copy">복사해서 새로 작성</button><button class="b d" id="d-del">삭제</button><button class="b p" id="d-save">저장</button><button class="b" id="d-close">닫기(자동 저장)</button></div><div class="bd" id="d-body"></div></div>
 <div id="toast"></div>
 <div id="gate" style="position:fixed;inset:0;background:#f6f7f9;z-index:50;display:flex;align-items:center;justify-content:center">
  <div class="box" style="text-align:center"><h3>🏡 제이부동산 매물장</h3><p id="gate-msg" class="mut">접속 확인 중…</p></div></div>
@@ -254,6 +256,7 @@ function rtFor(r){if(r._rt)return r._rt;const names=DNM[r.danji]||[];let pool=[]
  const ws=y1.filter(x=>x['거래']==='월세');const wd=med(ws.map(x=>+x['보증금(만)'])),wr=med(ws.map(x=>+x['월세(만)']));
  const sum=[ms?'매 '+won(ms):'',js?'전 '+won(js):'',ws.length?'월 '+won(wd)+'/'+wr:''].filter(Boolean).join(' · ');
  return r._rt={exact,same,area,sum,n1:y1.length,last:exact[0]?`${exact[0]['계약일'].slice(2,7).replace('-','.')} ${rtPrice(exact[0])}`:''}}
+const exRow=(a,b)=>`<div class="ex-row" style="display:flex;gap:6px;margin:4px 0"><input class="ex-k" value="${esc(a)}" placeholder="항목" style="width:180px"><input class="ex-v" value="${esc(b)}" placeholder="내용" style="flex:1"><button class="b d ex-del" type="button">삭제</button></div>`;
 const AVAIL=['가능','공동가능','급매가능','공실','퇴거예정','가능?','가계약','홀딩','모집보류','계약','연락안됨','보류','표시없음'];
 function derive(r){if(r._d)return r;const t=(r.title||'').trim();const m=/^(\d{2})(\d{2})\s*\.?\s*(.*)$/.exec(t);
  let st=(m?m[3]:t).replace(/\s*\(\d+\)\s*$/,'').trim(),chk='';
@@ -279,6 +282,7 @@ function filtered(){const q=$('#q').value.trim().toLowerCase();return ROWS.filte
  if(F.danji.size&&!F.danji.has(r.danji))return false;if(F.avail.size&&!F.avail.has(r._avail))return false;if(F.adt.size&&!String(r.ad_type||'').split(', ').some(x=>F.adt.has(x)))return false;if(F.kind.size&&!kinds(r.deal).some(k=>F.kind.has(k)))return false;
  if(q&&!META.fields.some(([k])=>String(r[k]??'').toLowerCase().includes(q))&&!String(r.log_txt||'').toLowerCase().includes(q)&&!JSON.stringify(r.extra||'').toLowerCase().includes(q))return false;return true})}
 
+const INLINE=['danji','dong','ho','typ','pyeong','direction','deal','cur_deposit','cur_rent','manki','status','owner','owner_tel','memo','ad','ad_type','co_office'];
 const COLS=[['_avail','가능여부'],['_chk','확인일'],['co_office','공동중개부동산'],['danji','단지'],['dong','동'],['ho','호'],['typ','타입'],['pyeong','전용평','n'],['direction','방향'],['deal','거래유형'],['_ask','희망가'],
  ['cur_deposit','현 보증','n'],['cur_rent','현 차임','n'],['manki','만기'],['status','현상태'],['owner','임대인'],['owner_tel','임대인연락처'],['_log','상담일지'],['_rtx','추정호실 실거래'],['_rta','같은평형 시세(1년)'],['memo','비고'],['_extra','추가정보'],['ad','광고'],['ad_type','광고타입']];
 function renderCats(){const n={};ROWS.forEach(r=>{const c=r.category||'오피스텔';n[c]=(n[c]||0)+1});
@@ -294,15 +298,21 @@ function renderList(){if(!META)return;ROWS.forEach(derive);renderCats();const ba
  const hasEx=rs.some(r=>r.extra);const COLS2=COLS.filter(c=>c[0]!=='_extra'||hasEx);
  $('#list').innerHTML=`<table><thead><tr>${COLS2.map(([k,l])=>`<th data-k="${k}">${k==='pyeong'&&CAT==='아파트'?'공급평':l}${SORT.k===k?(SORT.d>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>${rs.slice(0,1500).map(r=>`<tr data-id="${r.id}" class="g-${esc(r._avail)}">${COLS2.map(([k,,t])=>{if(k==='_extra'){const e=r.extra?Object.entries(r.extra).map(([a,b])=>`${a}: ${b}`).join(' · '):'';return `<td class="memo mut" title="${esc(e)}">${esc(e)}</td>`}if(k==='_avail')return `<td>${avHtml(r._avail)}</td>`;if(k==='_rtx'){const t=RTIDX?rtFor(r):{};return `<td title="${t.exact?.length||0}건">${esc(t.last||'')}</td>`}if(k==='_rta'){const t=RTIDX?rtFor(r):{};return `<td class="mut" title="최근 1년 ${t.n1||0}건 중간값">${esc(t.sum||'')}</td>`}if(k==='_chk')return `<td class="mut">${r._chk?r._chk.slice(2).replace(/-/g,'.'):''}</td>`;
   if(k==='_log')return `<td class="mut" title="${esc((r.log_txt||'').slice(0,300))}">${r.log_n?`💬${r.log_n} ${String(r.log_last||'').slice(2,10)}`:''}</td>`;let v=k==='_ask'?askPrice(r):r[k];if(['cur_deposit'].includes(k))v=won(v);if(k==='manki')v=r.manki?`${r.manki} ${ddHtml(r.manki)}`:'';else v=k==='_ask'?esc(v):esc(v);
-  return `<td class="${t||''} ${k==='memo'?'memo':''}" ${k==='memo'?`title="${esc(r.memo)}"`:''}>${v??''}</td>`}).join('')}</tr>`).join('')}</tbody></table>${rs.length>1500?'<p class="mut">1,500건까지만 표시합니다. 검색으로 좁혀 주세요.</p>':''}`;
+  return `<td ${INLINE.includes(k)?`data-ek="${k}"`:''} class="${t||''} ${k==='memo'?'memo':''}" ${k==='memo'?`title="${esc(r.memo)}"`:''}>${v??''}</td>`}).join('')}</tr>`).join('')}</tbody></table>${rs.length>1500?'<p class="mut">1,500건까지만 표시합니다. 검색으로 좁혀 주세요.</p>':''}`;
  $('#list').querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.k==='_ask'?'sale':th.dataset.k;SORT={k,d:SORT.k===k?-SORT.d:1};renderList()});
- $('#list').querySelectorAll('tbody tr').forEach(tr=>tr.onclick=()=>openDrawer(+tr.dataset.id))}
+ $('#list').querySelectorAll('tbody tr').forEach(tr=>tr.onclick=e=>{if(e.target.closest('.ie'))return;clearTimeout(window.__ct);window.__ct=setTimeout(()=>openDrawer(+tr.dataset.id),260)});
+ $('#list').querySelectorAll('td[data-ek]').forEach(td=>td.ondblclick=e=>{e.stopPropagation();clearTimeout(window.__ct);inlineEdit(td)})}
+function inlineEdit(td){const id=+td.parentElement.dataset.id,k=td.dataset.ek,r=ROWS.find(x=>x.id===id);const t=(META.fields.find(f=>f[0]===k)||[])[2];
+ const v=r[k]??'';td.innerHTML=k==='memo'?`<textarea class="ie" rows="2" style="width:260px">${esc(v)}</textarea>`:`<input class="ie" type="${t==='date'?'date':'text'}" value="${esc(t==='num'&&v!==''?+v:v)}" style="width:${t==='num'?90:140}px">`;
+ const i=td.querySelector('.ie');i.focus();i.select&&i.select();let done=false;
+ const fin=async save=>{if(done)return;done=true;if(save&&i.value!==String(v)){try{await api('/api/listings',{method:'POST',body:JSON.stringify({id,category:r.category,[k]:i.value})});ROWS=await api('/api/listings');toast('저장했습니다')}catch(err){alert('저장 실패: '+err.message)}}renderList()};
+ i.onkeydown=e=>{if(e.key==='Enter'&&!(k==='memo'&&e.shiftKey)){e.preventDefault();fin(true)}if(e.key==='Escape'){e.stopPropagation();fin(false)}};i.onblur=()=>fin(true)}
 $('#q').oninput=renderList;$('#f-active').onchange=renderList;$('#f-ad').onchange=renderList;$('#new').onclick=()=>openDrawer(null);
 
 // ---------- 상세/편집 ----------
 const WIDE={ad_type:'w2',memo:'w4',owner_units:'w2',deal:'w2',ad:'w4',usage:'w2',status:'w2',direction:'w2',title:'w2',coagent:'w2'};
-async function openDrawer(id){if(FORM0!==null&&$('#drawer').classList.contains('on')&&JSON.stringify(collectForm())!==FORM0){try{await saveForm(false)}catch(e){}}CUR=id?{...ROWS.find(r=>r.id===id)}:{danji:'',deal:''};
- $('#d-title').textContent=id?`${CUR.danji||''} ${CUR.dong||''} ${CUR.ho||''}`:'새 매물';$('#d-del').hidden=!id;
+async function openDrawer(id,tpl){if(FORM0!==null&&$('#drawer').classList.contains('on')&&JSON.stringify(collectForm())!==FORM0){try{await saveForm(false)}catch(e){}}CUR=id?{...ROWS.find(r=>r.id===id)}:(tpl?{...tpl}:{danji:'',deal:'',category:CAT});
+ $('#d-title').textContent=id?`${CUR.danji||''} ${CUR.dong||''} ${CUR.ho||''}`:(tpl?'새 매물 (복사본 — 호수 등을 고치고 저장하세요)':'새 매물');$('#d-del').hidden=!id;$('#d-copy').hidden=!id;
  const order=['danji','dong','ho','typ','pyeong','direction','deal','sale','jeonse','deposit','rent','cur_deposit','cur_rent','manki','status','usage','ad','ad_type','consult','owner','owner_tel','tenant','tenant_tel','owner_units','co_office','coagent','memo'];
  const fm=Object.fromEntries(META.fields.map(f=>[f[0],f]));
  derive(CUR);const avNow=CUR._avail&&CUR._avail!=='표시없음'?CUR._avail:'';
@@ -312,22 +322,25 @@ async function openDrawer(id){if(FORM0!==null&&$('#drawer').classList.contains('
   <span class="mut">확인일</span><input type="date" id="av-date" value="${CUR._chk||''}"><button class="b" id="av-clear" type="button">지우기</button></div>
   <div class="mut" style="font-size:12px;margin-top:4px">저장될 값: <b id="av-show">${esc(CUR.title||'(없음)')}</b> · 버튼을 누르면 확인일이 오늘로 바뀝니다</div>
   <input type="hidden" data-k="title" id="av-title" value="${esc(CUR.title||'')}"></div>
- <div class="form">${order.map(k=>{const [,n,t]=fm[k];const v=CUR[k]??'';
+ <div class="form"><label class="w2">분류<select data-k="category">${CATS.map(c=>`<option ${c===(CUR.category||CAT)?'selected':''}>${c}</option>`).join('')}</select></label>${order.map(k=>{const [,n,t]=fm[k];const v=CUR[k]??'';
   let inp;if(t==='multi')inp=`<div class="ms" data-k="${k}">${(META.options[k]||[]).map(o=>`<span class="chip ${String(v).split(', ').includes(o)?'on':''}">${esc(o)}</span>`).join('')}</div>`;
   else if(t==='select')inp=`<select data-k="${k}"><option></option>${[...new Set([...(k==='danji'?ROWS.filter(x=>(x.category||'오피스텔')===CAT).map(x=>x.danji).filter(Boolean):[]),...META.options[k]])].map(o=>`<option ${o===v?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
   else if(k==='memo')inp=`<textarea data-k="${k}" rows="3">${esc(v)}</textarea>`;
   else inp=`<input data-k="${k}" type="${t==='date'?'date':'text'}" value="${esc(t==='num'&&v!==''?+v:v)}" ${t==='num'?'inputmode="decimal" placeholder="만원"':''}>`;
-  return `<label class="${WIDE[k]||''}">${({coagent:'공동중개 메모',co_office:'공동중개부동산',pyeong:(CUR.category||CAT)==='아파트'?'평형(공급)':'평형(전용)'})[k]||n}${inp}</label>`}).join('')}</div>${CUR.extra?`<h3>추가정보</h3><div class="form">${Object.entries(CUR.extra).map(([a,b])=>`<label class="w2">${esc(a)}<input value="${esc(b)}" readonly></label>`).join('')}</div>`:''}<div id="d-sub" class="sub"><p class="mut">${id?'불러오는 중…':''}</p></div>`;
+  return `<label class="${WIDE[k]||''}">${({coagent:'공동중개 메모',co_office:'공동중개부동산',pyeong:(CUR.category||CAT)==='아파트'?'평형(공급)':'평형(전용)'})[k]||n}${inp}</label>`}).join('')}</div><h3>추가정보 <button class="b" type="button" id="ex-add" style="font-size:12px;padding:2px 8px">+ 항목 추가</button></h3><div id="ex-box">${Object.entries(CUR.extra||{}).map(([a,b])=>exRow(a,b)).join('')}</div><div id="d-sub" class="sub"><p class="mut">${id?'불러오는 중…':''}</p></div>`;
  $('#d-body').querySelectorAll('.ms .chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
  const avSet=()=>{const on=$('#av-chips .chip.on');const dt=$('#av-date').value;const v=on?((dt?dt.slice(5,7)+dt.slice(8,10)+'.':'')+on.dataset.a):'';$('#av-title').value=v;$('#av-show').textContent=v||'(없음)'};
  $('#av-chips').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{const was=c.classList.contains('on');$('#av-chips').querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));if(!was){c.classList.add('on');const t=new Date(),p=n=>String(n).padStart(2,'0');$('#av-date').value=`${t.getFullYear()}-${p(t.getMonth()+1)}-${p(t.getDate())}`}avSet()});
- $('#av-date').onchange=avSet;setTimeout(markForm,0);$('#av-clear').onclick=()=>{$('#av-chips').querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));$('#av-date').value='';avSet()};$('#drawer').classList.add('on');
+ $('#av-date').onchange=avSet;
+ const exWire=()=>$('#ex-box').querySelectorAll('.ex-del').forEach(x=>x.onclick=()=>x.parentElement.remove());exWire();
+ $('#ex-add').onclick=()=>{$('#ex-box').insertAdjacentHTML('beforeend',exRow('',''));exWire();$('#ex-box').lastElementChild.querySelector('.ex-k').focus()};
+ setTimeout(markForm,0);$('#av-clear').onclick=()=>{$('#av-chips').querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));$('#av-date').value='';avSet()};$('#drawer').classList.add('on');
  if(id)renderSub(await api('/api/unit?id='+id))}
 function renderSub(u){const tb=(rows,cols)=>rows.length?`<table><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr>${rows.map(r=>`<tr>${cols.map(c=>`<td>${esc(r[c])}</td>`).join('')}</tr>`).join('')}</table>`:'<p class="mut">없음</p>';
  const rtc=['계약일','거래','층','전용㎡','보증금(만)','월세(만)','매매가(만)','계약기간','만기','신규/갱신','예상호실','후보수'];
  $('#d-sub').innerHTML=`<h3>상담일지 <span class="mut">(${u.logs.length}건 · 노션 댓글 포함)</span></h3>
  <div style="display:flex;gap:6px;margin-bottom:8px"><textarea id="log-new" rows="2" style="flex:1" placeholder="상담 내용 입력 (⌘+Enter 저장)"></textarea><input id="log-author" placeholder="작성자" style="width:80px" value="${esc(localStorage.author||'')}"><button class="b p" id="log-add">추가</button></div>
- ${u.logs.map(l=>`<div style="border-left:3px solid ${l.source==='notion'?'#c9d1e0':'var(--acc)'};padding:4px 10px;margin:6px 0;white-space:pre-wrap"><div class="mut" style="font-size:12px">${esc(l.at)} · ${esc(l.author||'')} ${l.source==='notion'?'· 노션':`· <a href="#" data-del="${l.id}">삭제</a>`}</div>${esc(l.text)}</div>`).join('')}
+ ${u.logs.map(l=>`<div style="border-left:3px solid ${l.source==='notion'?'#c9d1e0':'var(--acc)'};padding:4px 10px;margin:6px 0;white-space:pre-wrap"><div class="mut" style="font-size:12px" data-logtext="${esc(l.text)}">${esc(l.at)} · ${esc(l.author||'')} ${l.source==='notion'?'· 노션 ':''}· <a href="#" data-edit="${l.id}">수정</a> · <a href="#" data-del="${l.id}">삭제</a></div>${esc(l.text)}</div>`).join('')}
  <h3>네이버 동일·유사 광고 <span class="mut">(같은 단지·동·층대·타입 · 수집 ${esc(u.naver_time)})</span></h3>${u.ads.length?`<table><tr><th>거래</th><th>가격</th><th>동</th><th>층</th><th>타입</th><th>방향</th><th>중개사</th><th>확인일</th></tr>${u.ads.map(a=>`<tr style="${a.내광고?'background:var(--yel)':''}"><td>${a.거래}</td><td>${esc(a.가격)}</td><td>${esc(a.동)}</td><td>${esc(a.층)}</td><td>${esc(a.타입)}</td><td>${esc(a.방향)}</td><td>${a.링크?`<a href="${esc(a.링크)}" target="_blank">${esc(a.중개사)}</a>`:esc(a.중개사)}${a.내광고?' ⭐':''}</td><td>${esc(a.확인일)}</td></tr>`).join('')}</table>`:'<p class="mut">없음</p>'}
  <h3>이 호실로 추정되는 실거래 <span class="mut">(국토부 실거래 × 층·전용면적 → 예상호실)</span></h3>${tb(u.exact,rtc)}
  ${(()=>{const t=RTIDX&&CUR.id?rtFor(ROWS.find(x=>x.id===CUR.id)):null;if(!t||!t.area)return '<h3>같은 평형 실거래</h3><p class="mut">전용평형이 없어 비교할 수 없습니다</p>';
@@ -336,11 +349,13 @@ function renderSub(u){const tb=(rows,cols)=>rows.length?`<table><tr>${cols.map(c
  <h3>수정 이력</h3>${u.history.length?u.history.map(h=>`<div class="mut">${h.at} · ${h.action} ${h.action==='update'?esc(Object.entries(JSON.parse(h.diff)).map(([k,[a,b]])=>`${k}: ${a??''}→${b??''}`).join(', ')):''}</div>`).join(''):'<p class="mut">없음</p>'}`}
 async function addLog(){const t=$('#log-new').value.trim();if(!t)return;localStorage.author=$('#log-author').value;
  await api('/api/log',{method:'POST',body:JSON.stringify({listing_id:CUR.id,text:t,author:$('#log-author').value})});ROWS=await api('/api/listings');renderSub(await api('/api/unit?id='+CUR.id));toast('상담일지 추가')}
-document.addEventListener('click',async e=>{if(e.target.id==='log-add')addLog();const d=e.target.dataset?.del;if(d){e.preventDefault();if(!confirm('이 상담일지를 삭제할까요?'))return;await api('/api/log_delete?id='+d,{method:'POST'});renderSub(await api('/api/unit?id='+CUR.id))}});
+document.addEventListener('click',async e=>{const ed=e.target.dataset?.edit;if(ed){e.preventDefault();const old=e.target.closest('[data-logtext]').dataset.logtext;const t=prompt('상담일지 수정',old);if(t===null||t===old)return;await api('/api/log_update',{method:'POST',body:JSON.stringify({id:+ed,text:t})});renderSub(await api('/api/unit?id='+CUR.id));toast('상담일지를 고쳤습니다');return}
+ if(e.target.id==='log-add')addLog();const d=e.target.dataset?.del;if(d){e.preventDefault();if(!confirm('이 상담일지를 삭제할까요?'))return;await api('/api/log_delete?id='+d,{method:'POST'});renderSub(await api('/api/unit?id='+CUR.id))}});
 document.addEventListener('keydown',e=>{if(e.target.id==='log-new'&&e.key==='Enter'&&e.metaKey)addLog()});
 window.addEventListener('beforeunload',e=>{if(FORM0!==null&&$('#drawer').classList.contains('on')&&JSON.stringify(collectForm())!==FORM0){e.preventDefault();e.returnValue=''}});
 // 상세 화면: 고친 내용은 [저장] 또는 닫을 때(닫기·Esc·바깥) 자동 저장
-function collectForm(){const d={id:CUR.id,category:CUR.category||CAT};$('#d-body').querySelectorAll('[data-k]').forEach(e=>{d[e.dataset.k]=e.classList.contains('ms')?[...e.querySelectorAll('.chip.on')].map(c=>c.textContent).join(', '):e.value});return d}
+function collectForm(){const d={id:CUR.id,category:CUR.category||CAT};$('#d-body').querySelectorAll('[data-k]').forEach(e=>{d[e.dataset.k]=e.classList.contains('ms')?[...e.querySelectorAll('.chip.on')].map(c=>c.textContent).join(', '):e.value});
+ const ex={};$('#d-body').querySelectorAll('.ex-row').forEach(r=>{const k=r.querySelector('.ex-k').value.trim(),v=r.querySelector('.ex-v').value.trim();if(k&&v)ex[k]=isNaN(+v)||v===''?v:+v});d.extra=Object.keys(ex).length?ex:null;return d}
 let FORM0=null;const markForm=()=>{FORM0=JSON.stringify(collectForm())};
 async function saveForm(reopen){const d=collectForm();if(JSON.stringify(d)===FORM0&&CUR.id){return null}
  const r=await api('/api/listings',{method:'POST',body:JSON.stringify(d)});ROWS=await api('/api/listings');renderList();FORM0=JSON.stringify(d);toast(reopen?'저장했습니다':'바뀐 내용을 자동 저장했습니다');if(reopen)openDrawer(r.id);return r}
@@ -348,6 +363,8 @@ async function closeDrawer(){if(!$('#drawer').classList.contains('on'))return;co
 $('#d-close').onclick=closeDrawer;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
 $('#d-save').onclick=()=>saveForm(true);
+$('#d-copy').onclick=async()=>{if(FORM0!==null&&JSON.stringify(collectForm())!==FORM0){try{await saveForm(false)}catch(e){}}
+ const t=collectForm();delete t.id;FORM0=null;await openDrawer(null,t);toast('복사본을 만들었습니다. 고칠 곳을 고치고 [저장]을 누르세요')};
 $('#d-del').onclick=async()=>{if(!confirm('이 매물을 삭제할까요? (이력에는 남습니다)'))return;await api('/api/delete?id='+CUR.id,{method:'POST'});ROWS=await api('/api/listings');renderList();$('#drawer').classList.remove('on');toast('삭제했습니다')};
 
 // ---------- 공동중개 ----------
