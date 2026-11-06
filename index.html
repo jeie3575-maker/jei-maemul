@@ -206,7 +206,7 @@ async function api(u, o = {}) {
 <style>#tabs button[data-t=io],#tg{display:none}</style></head><body>
 <header><b>🏡 제이부동산 매물장</b><nav id="tabs">
 <button data-t="list" class="on">매물장</button><button data-t="co">공동중개</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">가져오기·백업</button></nav>
-<span class="sp"></span><small id="info"></small></header>
+<span class="sp"></span><small id="info"></small><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
 <main>
 <section id="t-list">
  <div class="bar" id="catbar"></div>
@@ -448,6 +448,12 @@ async function liveSync(){if(SYNCING||document.hidden||typeof pollChanges!=='fun
  if(!n)return;RECON=null;if(!$('#drawer').classList.contains('on')&&!$('#t-list').hidden)renderList();
  $('#info').textContent=`매물 ${ROWS.length.toLocaleString()}건 · 실시간 ${new Date().toTimeString().slice(0,5)}`;toast(`새 변경 ${n}건 반영`)}catch(e){}finally{SYNCING=false}}
 setInterval(liveSync,10000);window.addEventListener('focus',liveSync);
+$('#refresh').onclick=async()=>{const b=$('#refresh');if(b.disabled)return;b.disabled=true;b.textContent='⏳ 불러오는 중…';
+ try{if(typeof _cache!=='undefined'){_cache.listings=null;_cache.naver=null;_cache.rt=null}
+  ROWS=await api('/api/listings');try{RT=await api('/api/rt');rtIndex()}catch(e){}RECON=null;
+  $('#info').textContent=`매물 ${ROWS.length.toLocaleString()}건 · ${new Date().toTimeString().slice(0,5)} 새로고침`;
+  const t=document.querySelector('#tabs button.on')?.dataset.t;({recon:loadRecon,manki:renderManki,list:renderList,co:renderCo})[t]?.();toast('최신 내용으로 새로고침했습니다')}
+ catch(err){alert('새로고침 실패: '+err.message)}finally{b.disabled=false;b.textContent='🔄 새로고침'}};
 async function boot(){const g=$('#gate'),m=$('#gate-msg');
  const k=new URLSearchParams(location.hash.slice(1)).get('k')||new URLSearchParams(location.search).get('k');
  if(k){try{const [e,pw]=atob(k.replace(/-/g,'+').replace(/_/g,'/')).split('\n');const {error}=await sb.auth.signInWithPassword({email:e,password:pw});
