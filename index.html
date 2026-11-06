@@ -22,8 +22,8 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}td.memo{max-width:260px;
 .t-가격다름{background:#ffebe9;color:var(--red)}.t-광고누락{background:#fff1e5;color:var(--org)}.t-장부없음{background:#fbefff;color:#8250df}
 .t-광고표시없음{background:#ddf4ff;color:#0969da}.t-일치{background:#dafbe1;color:var(--grn)}
 .av{display:inline-block;padding:0 7px;border-radius:10px;font-size:12px;font-weight:600;background:#eef1f5;color:#57606a}
-.av-가능,.av-급매가능,.av-공실{background:#1a7f37;color:#fff}.av-가계약,.av-홀딩{background:#fff1e5;color:#bc4c00}.av-공동가능{background:#aceebb;color:#0f5323}.av-가능\?{background:#fff8c5;color:#7d4e00}.av-연락안됨{background:#ffebe9;color:#d1242f}
-tr.g-가능,tr.g-급매가능,tr.g-공실{background:#eafbea}tr.g-공동가능{background:#f3fcf3}
+.av-가능,.av-급매가능,.av-공실,.av-퇴거예정{background:#1a7f37;color:#fff}.av-가계약,.av-홀딩{background:#fff1e5;color:#bc4c00}.av-공동가능{background:#aceebb;color:#0f5323}.av-가능\?{background:#fff8c5;color:#7d4e00}.av-연락안됨{background:#ffebe9;color:#d1242f}
+tr.g-가능,tr.g-급매가능,tr.g-공실,tr.g-퇴거예정{background:#eafbea}tr.g-공동가능{background:#f3fcf3}
 .dd{font-weight:600}.dd.r{color:var(--red)}.dd.o{color:var(--org)}.mut{color:var(--mut)}
 #drawer{position:fixed;top:0;right:0;width:min(760px,100%);height:100%;background:#fff;box-shadow:-6px 0 24px #0002;transform:translateX(105%);transition:.18s;z-index:10;display:flex;flex-direction:column}
 #drawer.on{transform:none}#drawer .hd{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line)}
@@ -254,7 +254,7 @@ function rtFor(r){if(r._rt)return r._rt;const names=DNM[r.danji]||[];let pool=[]
  const ws=y1.filter(x=>x['거래']==='월세');const wd=med(ws.map(x=>+x['보증금(만)'])),wr=med(ws.map(x=>+x['월세(만)']));
  const sum=[ms?'매 '+won(ms):'',js?'전 '+won(js):'',ws.length?'월 '+won(wd)+'/'+wr:''].filter(Boolean).join(' · ');
  return r._rt={exact,same,area,sum,n1:y1.length,last:exact[0]?`${exact[0]['계약일'].slice(2,7).replace('-','.')} ${rtPrice(exact[0])}`:''}}
-const AVAIL=['가능','공동가능','급매가능','공실','가능?','가계약','홀딩','모집보류','계약','연락안됨','보류','표시없음'];
+const AVAIL=['가능','공동가능','급매가능','공실','퇴거예정','가능?','가계약','홀딩','모집보류','계약','연락안됨','보류','표시없음'];
 function derive(r){if(r._d)return r;const t=(r.title||'').trim();const m=/^(\d{2})(\d{2})\s*\.?\s*(.*)$/.exec(t);
  let st=(m?m[3]:t).replace(/\s*\(\d+\)\s*$/,'').trim(),chk='';
  if(m){const now=new Date(),y=now.getFullYear();let d=new Date(y,+m[1]-1,+m[2]);if(d-now>7*864e5)d=new Date(y-1,+m[1]-1,+m[2]);if(!isNaN(d))chk=`${d.getFullYear()}-${m[1]}-${m[2]}`}
