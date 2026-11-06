@@ -280,7 +280,7 @@ function filtered(){const q=$('#q').value.trim().toLowerCase();return ROWS.filte
  if(q&&!META.fields.some(([k])=>String(r[k]??'').toLowerCase().includes(q))&&!String(r.log_txt||'').toLowerCase().includes(q)&&!JSON.stringify(r.extra||'').toLowerCase().includes(q))return false;return true})}
 
 const COLS=[['_avail','가능여부'],['_chk','확인일'],['co_office','공동중개부동산'],['danji','단지'],['dong','동'],['ho','호'],['typ','타입'],['pyeong','전용평','n'],['direction','방향'],['deal','거래유형'],['_ask','희망가'],
- ['_rtx','추정호실 실거래'],['_rta','같은평형 시세(1년)'],['cur_deposit','현 보증','n'],['cur_rent','현 차임','n'],['manki','만기'],['status','현상태'],['owner','임대인'],['owner_tel','임대인연락처'],['_log','상담일지'],['memo','비고'],['_extra','추가정보'],['ad','광고'],['ad_type','광고타입']];
+ ['cur_deposit','현 보증','n'],['cur_rent','현 차임','n'],['manki','만기'],['status','현상태'],['owner','임대인'],['owner_tel','임대인연락처'],['_log','상담일지'],['_rtx','추정호실 실거래'],['_rta','같은평형 시세(1년)'],['memo','비고'],['_extra','추가정보'],['ad','광고'],['ad_type','광고타입']];
 function renderCats(){const n={};ROWS.forEach(r=>{const c=r.category||'오피스텔';n[c]=(n[c]||0)+1});
  $('#catbar').innerHTML=CATS.map(c=>`<button class="cat ${c===CAT?'on':''}" data-c="${c}" ${n[c]?'':'disabled title="아직 옮기지 않음"'}>${c} ${n[c]?n[c].toLocaleString():'—'}</button>`).join('');
  $('#catbar').querySelectorAll('.cat').forEach(b=>b.onclick=()=>{CAT=localStorage.cat=b.dataset.c;renderList()})}
