@@ -235,6 +235,7 @@ async function api(u, o = {}) {
     case '/api/log_update': { const d = JSON.parse(o.body); chk(await sb.from('logs').update({text: d.text}).eq('id', d.id)); _cache.listings = null; return {ok: true} }
     case '/api/recon': return await recon();
     case '/api/rt': return (await loadRef('rt')).rows;
+    case '/api/stores': return (await loadRef('stores')).rows || {rows: []};
     case '/api/unit': return await unitInfo(+q.id);
     case '/api/manki_text': return {text: mankiText(+(q.months || 3))};
     case '/api/remote': return {remote: true};
@@ -244,7 +245,7 @@ async function api(u, o = {}) {
 </script>
 <style>#tabs button[data-t=io],#tg{display:none}</style></head><body>
 <header><b>🏡 제이부동산 매물장</b><nav id="tabs">
-<button data-t="list" class="on">매물장</button><button data-t="co">공동중개</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">가져오기·백업</button></nav>
+<button data-t="list" class="on">매물장</button><button data-t="co">공동중개</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
 <span class="sp"></span><small id="info"></small><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
 <main>
 <section id="t-list">
@@ -267,16 +268,9 @@ async function api(u, o = {}) {
  <div class="bar"><button class="b" id="tg">텔레그램으로 3개월 이내 만기 보내기</button><span class="mut">현 보증금/차임과 만기 기준. 기간 지난 것은 최근 1개월까지 표시</span></div>
  <div id="manki"></div></section>
 <section id="t-io" hidden>
- <div class="box"><h3 style="margin-top:0">① 노션 CSV로 가져오기 (지금 바로 가능)</h3>
-  <p>노션 매물장 → 오른쪽 위 <b>⋯</b> → <b>내보내기</b> → 형식 <b>Markdown &amp; CSV</b> → 내보내기. 받은 zip 안의 <code>…_all.csv</code> 파일을 골라 주세요.</p>
-  <p><input type="file" id="csv" accept=".csv"> <label><input type="checkbox" id="replace" checked> 이전에 가져온 노션 데이터는 지우고 새로 가져오기 (앱에서 직접 등록한 매물은 유지)</label></p>
-  <p class="mut">가져오기 전에 자동으로 백업합니다 (data/backup).</p></div>
- <div class="box"><h3 style="margin-top:0">② 노션 API로 바로 동기화 (선택)</h3>
-  <p id="tokinfo"></p><button class="b" id="pull">노션에서 지금 가져오기</button>
-  <p class="mut">노션 → 설정 → 연결 → 통합 개발 → 새 내부 통합 생성 후, 매물장 페이지 ⋯ → 연결 추가. 토큰은 <code>~/.notion.env</code> 에 <code>NOTION_TOKEN=…</code> 로 저장 (채팅에 붙여넣지 마세요).</p></div>
- <div class="box"><h3 style="margin-top:0">③ 내보내기·백업</h3><p><a href="/api/export.csv" class="b" style="text-decoration:none;color:inherit;border:1px solid var(--line);padding:5px 12px;border-radius:6px">전체 CSV 내려받기</a></p>
-  <p class="mut">DB 파일: ~/officetel/app/data/maemul.db · 매일 첫 실행 시 자동 백업 30일치 보관</p></div>
-<div class="box" id="remote-box"><h3 style="margin-top:0">④ 외부 접속 (집·휴대폰)</h3>
+ <div class="box"><h3 style="margin-top:0">① 내보내기·백업</h3><p><a href="/api/export.csv" class="b" style="text-decoration:none;color:inherit;border:1px solid var(--line);padding:5px 12px;border-radius:6px">전체 CSV 내려받기</a></p>
+  <p class="mut">원본은 클라우드(대표님 매물장)입니다. 맥북에 매일 12시 클라우드 전체 백업(data/backup/cloud_날짜.json.gz, 60일치) · 로컬 DB: ~/officetel/app/data/maemul.db</p></div>
+<div class="box" id="remote-box" style="display:none"><h3 style="margin-top:0">② 외부 접속 (집·휴대폰)</h3>
   <p id="remote-info" class="mut">확인 중…</p>
   <p><button class="b" id="rotate">링크 바꾸기 (이전 링크 즉시 차단)</button></p>
   <p class="mut">비밀 링크를 한 번 열면 그 기기는 180일 동안 기억됩니다. 링크는 텔레그램으로만 받고 다른 사람에게 보내지 마세요.</p></div>
@@ -329,7 +323,7 @@ function chips(el,opts,set,cb,counts){el.innerHTML=opts.map(o=>`<span class="chi
  el.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{const v=c.dataset.v;set.has(v)?set.delete(v):set.add(v);cb()})}
 
 async function load(){META=await api('/api/meta');ROWS=await api('/api/listings');try{RT=await api('/api/rt');rtIndex()}catch(e){RT=[]};$('#info').textContent=`매물 ${ROWS.length.toLocaleString()}건`;
- $('#tokinfo').innerHTML=META.notion_token?'✅ 노션 토큰이 설정되어 있습니다.':'노션 토큰이 아직 없습니다.';renderList()}
+ renderList()}
 
 function filtered(){const q=$('#q').value.trim().toLowerCase();return ROWS.filter(r=>{if((r.category||'오피스텔')!==CAT)return false;
  if($('#f-active').checked&&!active(r))return false;if($('#f-ad').checked&&!/네이버|뱅크/.test(r.ad||''))return false;
@@ -348,7 +342,7 @@ function renderList(){if(!META)return;ROWS.forEach(derive);renderCats();const ba
  chips($('#f-avail'),AVAIL.filter(a=>ac[a]),F.avail,renderList,ac);const uc={};base.forEach(r=>String(r.usage||'(미입력)').split(', ').filter(Boolean).forEach(x=>uc[x]=(uc[x]||0)+1));chips($('#f-use'),Object.keys(uc).sort((a,b)=>a==='(미입력)'?1:b==='(미입력)'?-1:uc[b]-uc[a]),F.use,renderList,uc);chips($('#f-adt'),(META.options.ad_type||[]).filter(a=>tc[a]),F.adt,renderList,tc);
  let rs=filtered();const k=SORT.k;const cmp=(x,y)=>{x=x??'';y=y??'';if(x===''&&y!=='')return 1;if(y===''&&x!=='')return -1;return typeof x==='number'&&typeof y==='number'?x-y:String(x).localeCompare(String(y),'ko',{numeric:true})};
  rs.sort((a,b)=>k==='_def'?(cmp(a.danji,b.danji)||cmp(a.dong,b.dong)||cmp(a.ho,b.ho)):(cmp(a[k],b[k])*SORT.d||cmp(a.danji,b.danji)||cmp(a.dong,b.dong)||cmp(a.ho,b.ho)));$('#cnt').textContent=`${rs.length.toLocaleString()}건`;
- if(!ROWS.length){$('#list').innerHTML=`<div class="empty">아직 매물이 없습니다. <b>가져오기·백업</b> 탭에서 노션 CSV를 가져오거나 <b>+ 매물 등록</b>으로 시작하세요.</div>`;return}
+ if(!ROWS.length){$('#list').innerHTML=`<div class="empty">아직 매물이 없습니다. <b>+ 매물 등록</b>으로 시작하세요.</div>`;return}
  const hasEx=rs.some(r=>r.extra);const COLS2=COLS.filter(c=>c[0]!=='_extra'||hasEx);
  $('#list').innerHTML=`<table><thead><tr>${COLS2.map(([k,l])=>`<th data-k="${k}">${k==='pyeong'&&CAT==='아파트'?'공급평':l}${SORT.k===k?(SORT.d>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>${rs.slice(0,1500).map(r=>`<tr data-id="${r.id}" class="g-${esc(r._avail)}">${COLS2.map(([k,,t])=>{if(k==='_extra'){const e=r.extra?Object.entries(r.extra).map(([a,b])=>`${a}: ${b}`).join(' · '):'';return `<td class="memo mut" title="${esc(e)}">${esc(e)}</td>`}if(k==='_avail')return `<td>${avHtml(r._avail)}</td>`;if(k==='_rtx'){const t=RTIDX?rtFor(r):{};return `<td title="${t.exact?.length||0}건">${esc(t.last||'')}</td>`}if(k==='_rta'){const t=RTIDX?rtFor(r):{};return `<td class="mut" title="최근 1년 ${t.n1||0}건 중간값">${esc(t.sum||'')}</td>`}if(k==='_chk')return `<td class="mut">${r._chk?r._chk.slice(2).replace(/-/g,'.'):''}</td>`;
   if(k==='_log')return `<td class="mut" title="${esc((r.log_txt||'').slice(0,300))}">${r.log_n?`💬${r.log_n} ${String(r.log_last||'').slice(2,10)}`:''}</td>`;let v=k==='_ask'?askPrice(r):r[k];if(['cur_deposit'].includes(k))v=won(v);if(k==='manki')v=r.manki?`${r.manki} ${ddHtml(r.manki)}`:'';else v=k==='_ask'?esc(v):esc(v);
@@ -390,7 +384,28 @@ async function openDrawer(id,tpl){if(FORM0!==null&&$('#drawer').classList.contai
  $('#ex-add').onclick=()=>{$('#ex-box').insertAdjacentHTML('beforeend',exRow('',''));exWire();$('#ex-box').lastElementChild.querySelector('.ex-k').focus()};
  setTimeout(markForm,0);$('#av-clear').onclick=()=>{$('#av-chips').querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));$('#av-date').value='';avSet()};$('#drawer').classList.add('on');
  if(id)renderSub(await api('/api/unit?id='+id))}
-function renderSub(u){const tb=(rows,cols)=>rows.length?`<table><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr>${rows.map(r=>`<tr>${cols.map(c=>`<td>${esc(r[c])}</td>`).join('')}</tr>`).join('')}</table>`:'<p class="mut">없음</p>';
+// ---------- 같은 층 입점 업체 (소상공인 상가정보) ----------
+const STORE_BLD={'센트럴파크':[['서빙고로 17'],['센트럴파크']],'래미안':[['한강대로 95'],['래미안']],'써밋':[['한강대로 69'],['푸르지오']],'호반':[['한강대로 66'],['호반']],
+ '아스테리움':[['한강대로30길 25'],['아스테리움']],'DK':[[],['DK','디케이']],'시티파크':[[],['시티파크']],'파크타워':[[],['파크타워']],'대우디오빌':[['한강대로 115'],['디오빌']],
+ 'KY빌딩':[[],['KY','케이와이']],'신세기한덕':[[],['한덕','신세기']],'청룡빌딩':[[],['청룡']]};
+let STORES=null;
+function storeFloor(ho,cat){ho=String(ho||'').toUpperCase().trim();if(!ho)return null;if(/^(B|지하)\s*\d?/.test(ho))return '지하';
+ let m=/^(\d+)\s*(층|F)/.exec(ho);if(m)return String(+m[1]);m=/(\d{3,4})/.exec(ho);if(m)return cat==='상가'?m[1][0]:String(Math.floor(+m[1]/100));m=/^(\d{1,2})$/.exec(ho);return m?m[1]:null}
+async function renderStores(){const el=$('#d-stores');if(!el||!CUR)return;
+ const bld=CUR.danji||(CUR.extra||{})['구분']||'';const spec=STORE_BLD[bld];
+ if(!spec){el.innerHTML=`<h3>같은 층 입점 업체</h3><p class="mut">'${esc(bld)||'건물 미지정'}' 건물 주소를 아직 몰라서 찾지 못했습니다.</p>`;return}
+ try{STORES=STORES||await api('/api/stores')}catch(e){el.innerHTML='<p class="mut">입점 업체 자료를 불러오지 못했습니다.</p>';return}
+ const [adrs,keys]=spec;const inB=(STORES.rows||[]).filter(r=>adrs.some(a=>r['도로명주소'].endsWith(a))||keys.some(k=>(r['건물명']||'').includes(k)));
+ const fl=storeFloor(CUR.ho,CUR.category);const fn=v=>v==='지'||v==='지하'||/^B/.test(v)?'지하':v;
+ const same=fl?inB.filter(r=>fn(r['층'])===fl):[];const byF={};inB.forEach(r=>{const f=fn(r['층'])||'층 미상';byF[f]=(byF[f]||0)+1});
+ const fk=Object.keys(byF).sort((a,b)=>(a==='지하'?-1:+a||99)-(b==='지하'?-1:+b||99));
+ const row=r=>`<tr><td>${esc(r['상호'])}${r['지점']?` <span class="mut">${esc(r['지점'])}</span>`:''}</td><td>${esc(r['소분류'])}</td><td class="mut">${esc(r['중분류'])}</td><td>${esc(fn(r['층'])||'')}</td><td class="mut">${esc(r['건물명']||'')}</td></tr>`;
+ el.innerHTML=`<h3>같은 층 입점 업체 <span class="mut">(${esc(bld)} ${fl?(fl==='지하'?'지하':fl+'층'):'층 미상'} · 소상공인 상가정보 ${esc(STORES['기준']||'')} 기준 · 호수는 공개 안 됨)</span></h3>
+ ${same.length?`<table><tr><th>상호</th><th>업종</th><th>분류</th><th>층</th><th>건물명</th></tr>${same.map(row).join('')}</table>`:`<p class="mut">${fl?'이 층에 등록된 업체가 없습니다.':'호수에서 층을 알 수 없습니다.'}</p>`}
+ <details style="margin-top:6px"><summary class="mut">건물 전체 ${inB.length}곳 · 층별: ${fk.map(f=>`${f==='지하'||f==='층 미상'?f:f+'층'} ${byF[f]}`).join(' · ')}</summary>
+ <table><tr><th>상호</th><th>업종</th><th>분류</th><th>층</th><th>건물명</th></tr>${inB.slice().sort((a,b)=>String(fn(a['층'])).localeCompare(String(fn(b['층'])),'ko',{numeric:true})).map(row).join('')}</table></details>`}
+function renderSub(u){_renderSub(u);if(['상가','오피스'].includes(CUR?.category)){const d=document.createElement('div');d.id='d-stores';d.innerHTML='<p class="mut">입점 업체 불러오는 중…</p>';const sub=$('#d-sub');const h=[...sub.querySelectorAll('h3')].find(x=>x.textContent.startsWith('네이버'));sub.insertBefore(d,h||null);renderStores()}}
+function _renderSub(u){const tb=(rows,cols)=>rows.length?`<table><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr>${rows.map(r=>`<tr>${cols.map(c=>`<td>${esc(r[c])}</td>`).join('')}</tr>`).join('')}</table>`:'<p class="mut">없음</p>';
  const rtc=['계약일','거래','층','전용㎡','보증금(만)','월세(만)','매매가(만)','계약기간','만기','신규/갱신','예상호실','후보수'];
  $('#d-sub').innerHTML=`<h3>상담일지 <span class="mut">(${u.logs.length}건 · 노션 댓글 포함)</span></h3>
  <div style="display:flex;gap:6px;margin-bottom:8px"><textarea id="log-new" rows="2" style="flex:1" placeholder="상담 내용 입력 (⌘+Enter 저장)"></textarea><input id="log-author" placeholder="작성자" style="width:80px" value="${esc(localStorage.author||'')}"><button class="b p" id="log-add">추가</button></div>
@@ -468,11 +483,6 @@ function renderManki(){const b=r=>{const d=dday(r.manki);if(d==null)return null;
 $('#tg').onclick=async()=>{const t=(await api('/api/manki_text?months=3')).text;if(!confirm('텔레그램으로 보낼 내용:\n\n'+t.slice(0,1200)))return;await api('/api/manki_tg?months=3',{method:'POST'});toast('텔레그램 전송 완료')};
 
 // ---------- 가져오기 ----------
-$('#csv').onchange=async e=>{const f=e.target.files[0];if(!f)return;const txt=await f.text();
- try{const r=await api('/api/import_csv?replace='+($('#replace').checked?1:0),{method:'POST',body:txt});ROWS=await api('/api/listings');renderList();RECON=null;
-  toast(`${r.imported.toLocaleString()}건 가져왔습니다`);if(r.missing_cols.length)alert('CSV에 없는 열: '+r.missing_cols.join(', '));$('#info').textContent=`매물 ${ROWS.length.toLocaleString()}건`}catch(err){alert('가져오기 실패: '+err.message)}e.target.value=''};
-$('#pull').onclick=async()=>{if(!confirm('노션 매물장을 다시 가져올까요? (이전에 가져온 노션 데이터는 교체, 자동 백업)'))return;
- try{const r=await api('/api/notion_pull',{method:'POST'});ROWS=await api('/api/listings');renderList();RECON=null;toast(`${r.imported}건 동기화`)}catch(err){alert(err.message)}};
 async function loadRemote(){const r=await api('/api/remote');if(r.remote){$('#remote-box').hidden=true;return}
  $('#remote-info').innerHTML=r.url?`외부 주소: <b>${esc(r.url)}</b><br>비밀 링크는 텔레그램으로 보냈습니다.`:'외부 접속이 꺼져 있습니다 (터널 미실행).'}
 $('#rotate').onclick=async()=>{if(!confirm('비밀 링크를 바꿀까요? 지금까지 접속한 휴대폰·집 PC는 모두 로그아웃되고, 새 링크를 텔레그램으로 보냅니다.'))return;
