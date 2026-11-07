@@ -397,7 +397,7 @@ function filtered(){const q=$('#q').value.trim().toLowerCase();return ROWS.filte
 
 const INLINE=['danji','dong','ho','typ','pyeong','direction','usage','deal','cur_deposit','cur_rent','manki','status','owner','owner_tel','memo','ad','ad_type','co_office'];
 const COLS=[['_avail','가능여부'],['_chk','확인일'],['co_office','공동중개부동산'],['danji','단지'],['_addr','주소'],['dong','동'],['ho','호'],['typ','타입'],['pyeong','전용평','n'],['_jibun','지분/평단가'],['_yeon','연면적평'],['_daeji','대지지분(평)'],['direction','방향'],['usage','용도'],['deal','거래유형'],['_ask','희망가'],
- ['cur_deposit','현 보증','n'],['cur_rent','현 차임','n'],['manki','만기'],['status','현상태'],['owner','임대인'],['owner_tel','임대인연락처'],['_log','상담일지'],['_rtx','추정호실 실거래'],['_rta','같은평형 시세(1년)'],['memo','비고'],['_extra','추가정보'],['ad','광고'],['ad_type','광고타입']];
+ ['cur_deposit','현 보증','n'],['cur_rent','현 차임','n'],['manki','만기'],['status','현상태'],['owner','임대인'],['owner_tel','임대인연락처'],['_log','상담일지'],['_rtx','추정호실 실거래'],['_rta','같은평형 시세(1년)'],['memo','비고'],['_extra','추가정보'],['_lease','임대차 신고(현 임차·만기)'],['ad','광고'],['ad_type','광고타입']];
 function renderCats(){const n={};ROWS.forEach(r=>{const c=r.category||'오피스텔';n[c]=(n[c]||0)+1});
  $('#catbar').innerHTML=CATS.map(c=>`<button class="cat ${c===CAT?'on':''}" data-c="${c}" ${n[c]?'':'disabled title="아직 옮기지 않음"'}>${c} ${n[c]?n[c].toLocaleString():'—'}</button>`).join('');
  $('#catbar').querySelectorAll('.cat').forEach(b=>b.onclick=()=>{if(b.dataset.c!==CAT){F.danji.clear();F.avail.clear();F.adt.clear();F.use.clear()}CAT=localStorage.cat=b.dataset.c;renderList()})}
@@ -411,8 +411,8 @@ function renderList(){if(!META)return;ROWS.forEach(derive);renderCats();const ba
  if(!rs.length&&ROWS.some(r=>(r.category||'오피스텔')===CAT)){const on=[F.danji.size&&'단지',F.kind.size&&'거래',F.avail.size&&'가능여부',F.adt.size&&'광고타입',F.use.size&&'용도',$('#q').value.trim()&&'검색어',$('#f-active').checked&&'진행 중만',$('#f-ad').checked&&'광고표시만'].filter(Boolean);
   $('#list').innerHTML=`<div class="empty">걸러진 결과가 0건입니다. 켜져 있는 조건: <b>${on.join(', ')||'없음'}</b> <button class="b" onclick="clearFilters()">필터 모두 해제</button></div>`;return}
  if(!ROWS.length){$('#list').innerHTML=`<div class="empty">아직 매물이 없습니다. <b>+ 매물 등록</b>으로 시작하세요.</div>`;return}
- const hasEx=rs.some(r=>exShown(r.extra).length);const COLS2=COLS.filter(c=>(c[0]!=='_extra'||hasEx)&&!(c[0]==='usage'&&CAT==='아파트')&&!(['direction','usage','typ'].includes(c[0])&&CAT==='전자상가')&&(c[0]!=='_addr'||['주택·빌딩·토지','전자상가'].includes(CAT))&&(c[0]!=='_jibun'||CAT==='전자상가')&&(!['_yeon','_daeji'].includes(c[0])||CAT==='주택·빌딩·토지')&&!(['dong','typ','pyeong','direction','usage'].includes(c[0])&&CAT==='주택·빌딩·토지'));
- $('#list').innerHTML=`<table><thead><tr>${COLS2.map(([k,l])=>`<th data-k="${k}">${k==='pyeong'&&CAT==='아파트'?'공급평':l}${SORT.k===k?(SORT.d>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>${rs.slice(0,1500).map(r=>`<tr data-id="${r.id}" class="g-${esc(r._avail)}">${COLS2.map(([k,,t])=>{if(['_jibun','_yeon','_daeji','_addr'].includes(k)){const ek={_jibun:'지분/평단가',_yeon:'연면적평',_daeji:'대지지분(평)',_addr:'주소'}[k];const v=(r.extra||{})[ek]??'';return `<td data-exk="${ek}">${esc(v)}</td>`}if(k==='_extra'){const e=exShown(r.extra).map(([a,b])=>`${a}: ${b}`).join(' · ');return `<td class="memo mut" title="${esc(e)}">${esc(e)}</td>`}if(k==='_avail')return `<td>${avHtml(r._avail)}</td>`;if(k==='_rtx'){const t=RTIDX?rtFor(r):{};return `<td title="${t.exact?.length||0}건">${esc(t.last||'')}</td>`}if(k==='_rta'){const t=RTIDX?rtFor(r):{};return `<td class="mut" title="최근 1년 ${t.n1||0}건 중간값">${esc(t.sum||'')}</td>`}if(k==='_chk')return `<td class="mut">${r._chk?r._chk.slice(2).replace(/-/g,'.'):''}</td>`;
+ if(CAT==='아파트'&&RTA===null&&!window.__rtaLoading){window.__rtaLoading=1;api('/api/rt_apt').then(d=>{RTA=d;RTAIDX=null;window.__rtaLoading=0;if(CAT==='아파트')renderList()}).catch(()=>{RTA=[];window.__rtaLoading=0})}const hasEx=rs.some(r=>exShown(r.extra).length);const COLS2=COLS.filter(c=>(c[0]!=='_extra'||hasEx)&&(c[0]!=='_lease'||CAT==='아파트')&&!(['_rtx','_rta'].includes(c[0])&&CAT==='아파트')&&!(c[0]==='usage'&&CAT==='아파트')&&!(['direction','usage','typ'].includes(c[0])&&CAT==='전자상가')&&(c[0]!=='_addr'||['주택·빌딩·토지','전자상가'].includes(CAT))&&(c[0]!=='_jibun'||CAT==='전자상가')&&(!['_yeon','_daeji'].includes(c[0])||CAT==='주택·빌딩·토지')&&!(['dong','typ','pyeong','direction','usage'].includes(c[0])&&CAT==='주택·빌딩·토지'));
+ $('#list').innerHTML=`<table><thead><tr>${COLS2.map(([k,l])=>`<th data-k="${k}">${k==='pyeong'&&CAT==='아파트'?'공급평':l}${SORT.k===k?(SORT.d>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>${rs.slice(0,1500).map(r=>`<tr data-id="${r.id}" class="g-${esc(r._avail)}">${COLS2.map(([k,,t])=>{if(['_jibun','_yeon','_daeji','_addr'].includes(k)){const ek={_jibun:'지분/평단가',_yeon:'연면적평',_daeji:'대지지분(평)',_addr:'주소'}[k];const v=(r.extra||{})[ek]??'';return `<td data-exk="${ek}">${esc(v)}</td>`}if(k==='_extra'){const e=exShown(r.extra).map(([a,b])=>`${a}: ${b}`).join(' · ');return `<td class="memo mut" title="${esc(e)}">${esc(e)}</td>`}if(k==='_avail')return `<td>${avHtml(r._avail)}</td>`;if(k==='_lease'){const t=leaseFor(r);return t?`<td class="${t.old?'mut':''}" title="${esc(t.tip)}">${t.html}</td>`:'<td></td>'}if(k==='_rtx'){const t=RTIDX?rtFor(r):{};return `<td title="${t.exact?.length||0}건">${esc(t.last||'')}</td>`}if(k==='_rta'){const t=RTIDX?rtFor(r):{};return `<td class="mut" title="최근 1년 ${t.n1||0}건 중간값">${esc(t.sum||'')}</td>`}if(k==='_chk')return `<td class="mut">${r._chk?r._chk.slice(2).replace(/-/g,'.'):''}</td>`;
   if(k==='_log')return `<td class="mut" title="${esc((r.log_txt||'').slice(0,300))}">${r.log_n?`💬${r.log_n} ${String(r.log_last||'').slice(2,10)}`:''}</td>`;let v=k==='_ask'?askPrice(r):r[k];if(['cur_deposit'].includes(k))v=won(v);if(k==='manki')v=r.manki?`${r.manki} ${ddHtml(r.manki)}`:'';else v=k==='_ask'?esc(v):esc(v);
   return `<td ${INLINE.includes(k)?`data-ek="${k}"`:''} class="${t||''} ${k==='memo'?'memo':''}" ${k==='memo'?`title="${esc(r.memo)}"`:''}>${v??''}</td>`}).join('')}</tr>`).join('')}</tbody></table>${rs.length>1500?'<p class="mut">1,500건까지만 표시합니다. 검색으로 좁혀 주세요.</p>':''}`;
  $('#list').querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.k==='_ask'?'sale':th.dataset.k;SORT={k,d:SORT.k===k?-SORT.d:1};renderList()});
@@ -511,7 +511,19 @@ $('#d-del').onclick=async()=>{if(!confirm('이 매물을 삭제할까요? (이�
 
 // ---------- 공동중개 ----------
 const coKey=s=>(s||'').replace(/\s*(공인중개사사무소|공인중개사|부동산중개|부동산)\s*$/,'').trim();
-let RTA=null,RTAK='';
+let RTA=null,RTAK='';let RTAIDX=null;
+function rtaIndex(){RTAIDX={};for(const x of RTA||[]){if(x['거래']==='매매'||!x['예상호실'])continue;for(const c of String(x['예상호실']).split(', ')){const m=/^(?:(\S+?)동\s*)?(\d+)호/.exec(c.trim());if(!m)continue;const k=x['단지']+'|'+(m[1]||'').toUpperCase()+'|'+m[2];(RTAIDX[k]||=[]).push(x)}}
+ for(const k in RTAIDX)RTAIDX[k].sort((a,b)=>a['계약일']<b['계약일']?1:-1)}
+function leaseFor(r){if(!RTA)return null;if(!RTAIDX)rtaIndex();const hm=/(\d{3,4})/.exec(String(r.ho||''));if(!hm)return null;const ho=String(+hm[1]);
+ let d=nDong(r.dong);if(r.danji==='시티파크'&&/2단지/.test(r.dong||''))d='2단지';
+ const xs=(RTAIDX[r.danji+'|'+d+'|'+ho]||[]).concat(d?(RTAIDX[r.danji+'||'+ho]||[]):[]);if(!xs.length)return null;
+ xs.sort((a,b)=>a['계약일']<b['계약일']?1:-1);const x=xs[0];const now=new Date(),cur=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+ const amt=y=>y['거래']==='전세'?'전 '+won(y['보증금(만)']):'월 '+won(y['보증금(만)'])+'/'+(y['월세(만)']||0);
+ const mk=x['만기']?x['만기'].slice(2).replace('-','.'):'';const old=x['만기']&&x['만기']<cur;
+ const tag=(x['신규/갱신']==='갱신'?' 갱신':'')+(x['갱신요구권']==='사용'?'(요구권)':'');
+ const est=x['후보수']>1?` <span class="mut">추정${x['후보수']}</span>`:'';
+ const tip=xs.slice(0,6).map(y=>`${y['계약일']} ${amt(y)} ${y['계약기간']||''} ${y['신규/갱신']||''}${y['후보수']>1?' (같은 층·면적 후보 '+y['후보수']+'호실 중 하나)':''}`).join('\n');
+ return {html:`${esc(amt(x))} · ~${esc(mk)}${old?' 지남':''}${esc(tag)}${est}`,tip,old}}
 async function renderRta(){if(!RTA){$('#rta').innerHTML='<div class="empty">불러오는 중…</div>';try{RTA=await api('/api/rt_apt')}catch(e){RTA=[]}
   const dj=[...new Set(RTA.map(r=>r['단지']))].sort((a,b)=>RTA.filter(r=>r['단지']===b).length-RTA.filter(r=>r['단지']===a).length);
   $('#rta-danji').innerHTML='<option value="">단지 전체</option>'+dj.map(d=>`<option>${esc(d)}</option>`).join('');
@@ -597,7 +609,7 @@ $('#refresh').onclick=async()=>{const b=$('#refresh');if(b.disabled)return;b.dis
  try{if(typeof _cache!=='undefined'){_cache.listings=null;_cache.naver=null;_cache.rt=null}
   ROWS=await api('/api/listings');try{RT=await api('/api/rt');rtIndex()}catch(e){}RECON=null;
   $('#info').textContent=`매물 ${ROWS.length.toLocaleString()}건 · ${new Date().toTimeString().slice(0,5)} 새로고침`;
-  const t=document.querySelector('#tabs button.on')?.dataset.t;RTA=null;({recon:loadRecon,manki:renderManki,list:renderList,co:renderCo,rta:renderRta})[t]?.();toast('최신 내용으로 새로고침했습니다')}
+  const t=document.querySelector('#tabs button.on')?.dataset.t;RTA=null;RTAIDX=null;({recon:loadRecon,manki:renderManki,list:renderList,co:renderCo,rta:renderRta})[t]?.();toast('최신 내용으로 새로고침했습니다')}
  catch(err){alert('새로고침 실패: '+err.message)}finally{b.disabled=false;b.textContent='🔄 새로고침'}};
 async function boot(){const g=$('#gate'),m=$('#gate-msg');
  const k=new URLSearchParams(location.hash.slice(1)).get('k')||new URLSearchParams(location.search).get('k');
