@@ -507,10 +507,11 @@ $('#d-del').onclick=async()=>{if(!confirm('이 매물을 삭제할까요? (이�
 
 // ---------- 공동중개 ----------
 const coKey=s=>(s||'').replace(/\s*(공인중개사사무소|공인중개사|부동산중개|부동산)\s*$/,'').trim();
-let RTA=null,RTAK='';let RTAIDX=null;function aptRtHtml(){if(!RTA){api('/api/rt_apt').then(d=>{RTA=d;RTAIDX=null;if(CUR&&CUR.category==='아파트')api('/api/unit?id='+CUR.id).then(renderSub)}).catch(()=>{});return '<h3>임대차·매매 신고</h3><p class="mut">불러오는 중…</p>'}
+let RTA=null,RTAK='';let RTAIDX=null;const candS=s=>String(s||'').split(', ').map(c=>c.replace(/^(\S+?)동\s*/,'$1-').replace(/호$/,'')).join(', ');
+function aptRtHtml(){if(!RTA){api('/api/rt_apt').then(d=>{RTA=d;RTAIDX=null;if(CUR&&CUR.category==='아파트')api('/api/unit?id='+CUR.id).then(renderSub)}).catch(()=>{});return '<h3>임대차·매매 신고</h3><p class="mut">불러오는 중…</p>'}
  const r=ROWS.find(x=>x.id===CUR.id)||CUR;const xs=aptRtAll(r);const amt=y=>y['거래']==='매매'?'매 '+won(y['매매가(만)']):y['거래']==='전세'?'전 '+won(y['보증금(만)']):'월 '+won(y['보증금(만)'])+' / '+(y['월세(만)']||0);
  const prev=y=>y['신규/갱신']==='갱신'&&y['종전보증금(만)']!==''&&y['종전보증금(만)']!=null?won(y['종전보증금(만)'])+(y['종전월세(만)']?' / '+y['종전월세(만)']:''):'';
- return `<h3>임대차·매매 신고 <span class="mut">(국토부 실거래 · 같은 층·같은 전용면적 호실이 여러 개면 '후보'로 표시)</span></h3>${xs.length?`<table><tr><th>계약일</th><th>거래</th><th>금액</th><th>계약기간</th><th>만기</th><th>신규/갱신</th><th>갱신요구권</th><th>종전 금액</th><th>층</th><th>전용㎡</th><th>후보</th></tr>${xs.map(y=>`<tr><td>${esc(y['계약일'])}</td><td>${esc(y['거래'])}</td><td>${esc(amt(y))}</td><td>${esc(y['계약기간']||'')}</td><td><b>${esc(y['만기']||'')}</b></td><td>${esc(y['신규/갱신']||'')}</td><td>${esc(y['갱신요구권']||'')}</td><td class="mut">${esc(prev(y))}</td><td>${y['층']??''}</td><td>${y['전용㎡']}</td><td class="mut" title="${esc(y['예상호실'])}">${y['후보수']>1?y['후보수']+'호실 중 하나':'이 호실'}</td></tr>`).join('')}</table>`:'<p class="mut">이 호실로 추정되는 신고가 없습니다</p>'}`}
+ return `<h3>임대차·매매 신고 <span class="mut">(국토부 실거래 · 같은 층·같은 전용면적 호실이 여러 개면 '후보'로 표시)</span></h3>${xs.length?`<table><tr><th>계약일</th><th>거래</th><th>금액</th><th>계약기간</th><th>만기</th><th>신규/갱신</th><th>갱신요구권</th><th>종전 금액</th><th>층</th><th>전용㎡</th><th>후보</th></tr>${xs.map(y=>`<tr><td>${esc(y['계약일'])}</td><td>${esc(y['거래'])}</td><td>${esc(amt(y))}</td><td>${esc(y['계약기간']||'')}</td><td><b>${esc(y['만기']||'')}</b></td><td>${esc(y['신규/갱신']||'')}</td><td>${esc(y['갱신요구권']||'')}</td><td class="mut">${esc(prev(y))}</td><td>${y['층']??''}</td><td>${y['전용㎡']}</td><td class="mut" style="max-width:260px;white-space:normal">${y['후보수']>1?`${y['후보수']}호실 중 하나: ${esc(candS(y['예상호실']))}`:'이 호실'}</td></tr>`).join('')}</table>`:'<p class="mut">이 호실로 추정되는 신고가 없습니다</p>'}`}
 function leaseBucket(r){const t=leaseFor(r);if(!t||!t.mk)return '신고 없음';const n=new Date(),ym=k=>{const d=new Date(n.getFullYear(),n.getMonth()+k,1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`};
  if(t.mk<ym(0))return '지남';if(t.mk<=ym(3))return '3개월 안';if(t.mk<=ym(6))return '6개월 안';return '6개월 넘음'}
 const DIRS=['남','남동','남서','동','서','북','북동','서북'];let DIRDJ='';
@@ -546,8 +547,8 @@ function leaseFor(r){if(!RTA)return null;if(!RTAIDX)rtaIndex();const hm=/(\d{3,4
  const amt=y=>y['거래']==='전세'?'전 '+won(y['보증금(만)']):'월 '+won(y['보증금(만)'])+'/'+(y['월세(만)']||0);
  const mk=x['만기']?x['만기'].slice(2).replace('-','.'):'';const old=x['만기']&&x['만기']<cur;
  const tag=(x['신규/갱신']==='갱신'?' 갱신':'')+(x['갱신요구권']==='사용'?'(요구권)':'');
- const est=x['후보수']>1?` <span class="mut">추정${x['후보수']}</span>`:'';
- const tip=xs.slice(0,6).map(y=>`${y['계약일']} ${amt(y)} ${y['계약기간']||''} ${y['신규/갱신']||''}${y['후보수']>1?' (같은 층·면적 후보 '+y['후보수']+'호실 중 하나)':''}`).join('\n');
+ const est=x['후보수']>1?` <span class="mut">후보 ${x['후보수']}: ${esc(candS(x['예상호실']))}</span>`:'';
+ const tip=xs.slice(0,6).map(y=>`${y['계약일']} ${amt(y)} ${y['계약기간']||''} ${y['신규/갱신']||''}${y['후보수']>1?' (후보 '+candS(y['예상호실'])+')':''}`).join('\n');
  return {mk:x['만기']||'',html:`${esc(amt(x))} · ~${esc(mk)}${old?' 지남':''}${esc(tag)}${est}`,tip,old}}
 async function renderRta(){if(!RTA){$('#rta').innerHTML='<div class="empty">불러오는 중…</div>';try{RTA=await api('/api/rt_apt')}catch(e){RTA=[]}
   const dj=[...new Set(RTA.map(r=>r['단지']))].sort((a,b)=>RTA.filter(r=>r['단지']===b).length-RTA.filter(r=>r['단지']===a).length);
