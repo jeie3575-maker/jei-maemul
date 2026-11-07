@@ -292,6 +292,7 @@ async function api(u, o = {}) {
     case '/api/log_update': { const d = JSON.parse(o.body); chk(await sb.from('logs').update({text: d.text}).eq('id', d.id)); _cache.listings = null; return {ok: true} }
     case '/api/recon': return await recon();
     case '/api/rt': return (await loadRef('rt')).rows;
+    case '/api/rt_apt': return (await loadRef('rt_apt')).rows;
     case '/api/stores': return (await loadRef('stores')).rows || {rows: []};
     case '/api/unit': return await unitInfo(+q.id);
     case '/api/manki_text': return {text: mankiText(+(q.months || 3))};
@@ -302,7 +303,7 @@ async function api(u, o = {}) {
 </script>
 <style>#tabs button[data-t=io],#tg{display:none}</style></head><body>
 <header><b>🏡 제이부동산 매물장</b><nav id="tabs">
-<button data-t="list" class="on">매물장</button><button data-t="co">공동중개</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
+<button data-t="list" class="on">매물장</button><button data-t="co">공동중개</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="rta">아파트 임대차</button><button data-t="io">백업</button></nav>
 <span class="sp"></span><small id="info"></small><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
 <main>
 <section id="t-list">
@@ -317,6 +318,12 @@ async function api(u, o = {}) {
   <span class="sp" style="flex:1"></span><span class="mut" style="font-size:12px">칸을 더블클릭하면 바로 수정</span> <span id="cnt" class="mut"></span><button class="b p" id="new">+ 매물 등록</button></div>
  <div id="list"></div>
 </section>
+<section id="t-rta" hidden><div class="bar"><select id="rta-danji"></select><div class="chips" id="rta-kind"></div>
+ <label><input type="checkbox" id="rta-cur" checked> 지금 임차 중(만기 안 지남)</label><label><input type="checkbox" id="rta-last" checked> 호실별 최신 계약만</label>
+ <select id="rta-soon"><option value="">만기 전체</option><option value="3">3개월 안에 만기</option><option value="6">6개월 안에 만기</option></select>
+ <input id="rta-q" placeholder="호수·층 검색 (예: 101동 2301, 23층)" style="width:200px"><span class="sp" style="flex:1"></span><span id="rta-cnt" class="mut"></span></div>
+ <div class="bar mut" style="font-size:12px">국토부 실거래 신고(주택임대차 신고·매매 신고) 자료입니다. 신고에는 동·호가 없어서 층과 전용면적이 같은 호실을 '예상호실'로 적었습니다. 후보가 1개면 그 호실, 여러 개면 그중 하나입니다.</div>
+ <div id="rta"></div></section>
 <section id="t-co" hidden><div class="bar"><span class="mut">가능여부가 '공동가능'인 매물을 받은 부동산별로 묶었습니다. 부동산 칸에 입력하면 바로 저장됩니다.</span>
  <label><input type="checkbox" id="co-empty"> 부동산 미입력만</label></div><div id="co"></div></section>
 <section id="t-recon" hidden><div class="bar"><span id="recon-info" class="mut"></span><button class="b" id="recon-reload">새로고침</button></div>
@@ -375,7 +382,7 @@ const dday=s=>s?Math.round((new Date(s)-new Date(new Date().toDateString()))/864
 const ddHtml=s=>{const d=dday(s);if(d==null)return'';return `<span class="dd ${d<0?'r':d<=31?'r':d<=92?'o':''}">${d<0?'지남 '+(-d)+'일':'D-'+d}</span>`};
 
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
- document.querySelectorAll('main>section').forEach(s=>s.hidden=s.id!=='t-'+b.dataset.t);({recon:loadRecon,manki:renderManki,list:renderList,co:renderCo})[b.dataset.t]?.()});
+ document.querySelectorAll('main>section').forEach(s=>s.hidden=s.id!=='t-'+b.dataset.t);({recon:loadRecon,manki:renderManki,list:renderList,co:renderCo,rta:renderRta})[b.dataset.t]?.()});
 
 function chips(el,opts,set,cb,counts){el.innerHTML=opts.map(o=>`<span class="chip ${set.has(o)?'on':''}" data-v="${esc(o)}">${esc(o)}${counts?`<i>${counts[o]||0}</i>`:''}</span>`).join('');
  el.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{const v=c.dataset.v;set.has(v)?set.delete(v):set.add(v);cb()})}
@@ -504,6 +511,29 @@ $('#d-del').onclick=async()=>{if(!confirm('이 매물을 삭제할까요? (이�
 
 // ---------- 공동중개 ----------
 const coKey=s=>(s||'').replace(/\s*(공인중개사사무소|공인중개사|부동산중개|부동산)\s*$/,'').trim();
+let RTA=null,RTAK='';
+async function renderRta(){if(!RTA){$('#rta').innerHTML='<div class="empty">불러오는 중…</div>';try{RTA=await api('/api/rt_apt')}catch(e){RTA=[]}
+  const dj=[...new Set(RTA.map(r=>r['단지']))].sort((a,b)=>RTA.filter(r=>r['단지']===b).length-RTA.filter(r=>r['단지']===a).length);
+  $('#rta-danji').innerHTML='<option value="">단지 전체</option>'+dj.map(d=>`<option>${esc(d)}</option>`).join('');
+  $('#rta-kind').innerHTML=['전체','전세','월세','매매'].map(k=>`<span class="chip${k==='전체'?' on':''}" data-k="${k}">${k}</span>`).join('');
+  $('#rta-kind').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{$('#rta-kind').querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===c));RTAK=c.dataset.k==='전체'?'':c.dataset.k;if(RTAK==='매매')$('#rta-cur').checked=false;renderRta()});
+  ['rta-danji','rta-cur','rta-last','rta-soon'].forEach(i=>$('#'+i).onchange=renderRta);$('#rta-q').oninput=renderRta}
+ const now=new Date(),ym=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`,cur=ym(now);
+ const sm=+$('#rta-soon').value,lim=sm?ym(new Date(now.getFullYear(),now.getMonth()+sm,1)):null;
+ let rs=RTA.filter(r=>(!$('#rta-danji').value||r['단지']===$('#rta-danji').value)&&(!RTAK||r['거래']===RTAK));
+ if($('#rta-cur').checked)rs=rs.filter(r=>r['거래']!=='매매'&&r['만기']&&r['만기']>=cur);
+ if(lim)rs=rs.filter(r=>r['만기']&&r['만기']>=cur&&r['만기']<=lim);
+ if($('#rta-last').checked){const seen=new Set();rs=rs.filter(r=>{if(r['후보수']!==1)return true;const k=r['단지']+'|'+r['예상호실']+'|'+(r['거래']==='매매'?'s':'r');if(seen.has(k))return false;seen.add(k);return true})}
+ const q=$('#rta-q').value.trim();if(q){const ws=q.split(/\s+/);rs=rs.filter(r=>ws.every(w=>{const f=/^(\d+)층$/.exec(w);return f?String(r['층'])===f[1]:String(r['예상호실']).replace(/동|호/g,' ').includes(w.replace(/동|호/g,''))}))}
+ rs.sort((a,b)=>($('#rta-cur').checked||lim)?(a['만기']<b['만기']?-1:a['만기']>b['만기']?1:0):(a['계약일']<b['계약일']?1:-1));
+ const apt=ROWS.filter(r=>r.category==='아파트');const led=r=>{if(r['후보수']!==1)return null;const m=/^(?:(\S+)동\s*)?(\d+)호/.exec(r['예상호실']);if(!m)return null;
+  return apt.find(x=>x.danji===r['단지']&&String(x.ho||'').replace(/\D/g,'')===m[2]&&(!m[1]||nDong(x.dong)===m[1].toUpperCase()||(m[1]==='2단지'&&/^2/.test(x.dong||''))))};
+ const pr=r=>r['거래']==='매매'?won(r['매매가(만)']):r['거래']==='전세'?won(r['보증금(만)']):won(r['보증금(만)'])+' / '+(r['월세(만)']||0);
+ const prev=r=>r['종전보증금(만)']!==''&&r['종전보증금(만)']!=null&&r['신규/갱신']==='갱신'?won(r['종전보증금(만)'])+(r['종전월세(만)']?' / '+r['종전월세(만)']:''):'';
+ $('#rta-cnt').textContent=`${rs.length.toLocaleString()}건`;const show=rs.slice(0,1500);
+ $('#rta').innerHTML=show.length?`<table><thead><tr><th>만기</th><th>단지</th><th>예상호실</th><th>층</th><th>전용㎡</th><th>거래</th><th>금액</th><th>계약기간</th><th>신규/갱신</th><th>갱신요구권</th><th>종전 금액</th><th>계약일</th><th>매물장</th></tr></thead><tbody>${show.map(r=>{const L=led(r);
+  return `<tr><td><b>${esc(r['만기']||'')}</b></td><td>${esc(r['단지'])}</td><td title="${esc(r['예상호실'])}">${r['후보수']>1?`<span class="mut">후보 ${r['후보수']}개</span> `+esc(String(r['예상호실']).split(', ').slice(0,3).join(', '))+(r['후보수']>3?'…':''):esc(r['예상호실']||'-')}</td><td>${r['층']??''}</td><td>${r['전용㎡']} <span class="mut">(${(r['전용㎡']/3.3058).toFixed(1)}평)</span></td><td>${esc(r['거래'])}</td><td>${esc(pr(r))}</td><td class="mut">${esc(r['계약기간']||'')}</td><td>${esc(r['신규/갱신']||'')}</td><td>${esc(r['갱신요구권']||'')}</td><td class="mut">${esc(prev(r))}</td><td class="mut">${esc(r['계약일'])}</td><td>${L?`<button class="b" data-open="${L.id}">열기</button>`:''}</td></tr>`}).join('')}</tbody></table>${rs.length>1500?'<div class="mut" style="padding:8px">앞의 1,500건만 보여 줍니다. 단지나 조건을 골라 주세요.</div>':''}`:'<div class="empty">조건에 맞는 신고 자료가 없습니다</div>';
+ $('#rta').querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openDrawer(+b.dataset.open))}
 function renderCo(){ROWS.forEach(derive);let rs=ROWS.filter(r=>(r.category||'오피스텔')===CAT&&r._avail==='공동가능');if($('#co-empty').checked)rs=rs.filter(r=>!r.co_office);
  const g={};rs.forEach(r=>(g[coKey(r.co_office)||'(미입력)']||=[]).push(r));const keys=Object.keys(g).sort((a,b)=>a==='(미입력)'?1:b==='(미입력)'?-1:g[b].length-g[a].length||a.localeCompare(b,'ko'));
  const dl=`<datalist id="co-list">${[...new Set(ROWS.map(r=>r.co_office).filter(Boolean))].sort().map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`;
@@ -567,7 +597,7 @@ $('#refresh').onclick=async()=>{const b=$('#refresh');if(b.disabled)return;b.dis
  try{if(typeof _cache!=='undefined'){_cache.listings=null;_cache.naver=null;_cache.rt=null}
   ROWS=await api('/api/listings');try{RT=await api('/api/rt');rtIndex()}catch(e){}RECON=null;
   $('#info').textContent=`매물 ${ROWS.length.toLocaleString()}건 · ${new Date().toTimeString().slice(0,5)} 새로고침`;
-  const t=document.querySelector('#tabs button.on')?.dataset.t;({recon:loadRecon,manki:renderManki,list:renderList,co:renderCo})[t]?.();toast('최신 내용으로 새로고침했습니다')}
+  const t=document.querySelector('#tabs button.on')?.dataset.t;RTA=null;({recon:loadRecon,manki:renderManki,list:renderList,co:renderCo,rta:renderRta})[t]?.();toast('최신 내용으로 새로고침했습니다')}
  catch(err){alert('새로고침 실패: '+err.message)}finally{b.disabled=false;b.textContent='🔄 새로고침'}};
 async function boot(){const g=$('#gate'),m=$('#gate-msg');
  const k=new URLSearchParams(location.hash.slice(1)).get('k')||new URLSearchParams(location.search).get('k');
