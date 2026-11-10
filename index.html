@@ -311,12 +311,15 @@ async function api(u, o = {}) {
 <main>
 <section id="t-list">
  <div class="bar" id="catbar"></div>
- <div class="bar"><input id="q" placeholder="검색 (단지·동·호·임대인·연락처·비고·상담일지…)" style="width:280px">
+ <div class="bar"><select id="qf" title="검색 대상"><option value="">전체</option><option value="ho">호수</option><option value="typ">타입</option><option value="owner">임대인</option><option value="tel">연락처</option><option value="memo">메모</option></select><input id="q" placeholder="검색 (단지·동·호·임대인·연락처·비고·상담일지…)" style="width:240px">
   <div class="chips" id="f-danji"></div></div>
  <div class="bar"><div class="chips" id="f-kind"></div><span class="mut">|</span>
   <label><input type="checkbox" id="f-active" checked> 진행 중인 매물만</label>
   <label><input type="checkbox" id="f-ad"> 광고(네이버·뱅크) 표시된 것만</label>
   </div>
+ <div class="bar"><span class="mut">타입</span><div class="chips" id="f-typ"></div><button class="b" id="fx-tog" style="font-size:12px;padding:2px 8px">세부 필터 ▾</button></div>
+ <div class="bar" id="fx-box" hidden><span class="mut">동</span><div class="chips" id="f-dong"></div><span class="mut">| 층</span><div class="chips" id="f-flp"></div><input id="fl1" inputmode="numeric" placeholder="부터" style="width:52px">~<input id="fl2" inputmode="numeric" placeholder="까지" style="width:52px"><span class="mut">| 향</span><div class="chips" id="f-dir"></div><span class="mut">| 평형</span><input id="py1" inputmode="decimal" placeholder="부터" style="width:52px">~<input id="py2" inputmode="decimal" placeholder="까지" style="width:52px"></div>
+ <div class="bar" id="f-on" hidden></div>
  <div class="bar"><span class="mut">가능여부</span><div class="chips" id="f-avail"></div><span class="mut">| 광고타입</span><div class="chips" id="f-adt"></div><span class="mut">| 용도</span><div class="chips" id="f-use"></div>
   <span class="sp" style="flex:1"></span><span class="mut" style="font-size:12px">칸을 더블클릭하면 바로 수정</span> <span id="cnt" class="mut"></span><button class="b" id="dir-open" title="동·라인별로 방향을 정하면 그 라인의 빈 방향 호실을 한 번에 채웁니다">🧭 라인별 방향표</button><button class="b p" id="new">+ 매물 등록</button></div>
  <div id="dirpanel" hidden></div><div id="list"></div>
@@ -346,7 +349,7 @@ async function api(u, o = {}) {
 <script>
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const CATS=['오피스텔','아파트','상가','오피스','전자상가','주택·빌딩·토지'];let CAT=localStorage.cat||'오피스텔';
-let META,ROWS=[],F={danji:new Set(),kind:new Set(),avail:new Set(),adt:new Set(),use:new Set(),lease:new Set()},SORT={k:'_def',d:1},CUR=null;
+let META,ROWS=[],F={danji:new Set(),kind:new Set(),avail:new Set(),adt:new Set(),use:new Set(),lease:new Set(),typ:new Set(),dong:new Set(),dir:new Set()},FX={fl1:'',fl2:'',py1:'',py2:''},SORT={k:'_def',d:1},CUR=null;
 const toast=t=>{const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2600)};
 const won=v=>{if(v==null||v==='')return'';v=Math.round(v);const e=Math.floor(v/10000),m=v%10000;return e&&m?`${e}억 ${m.toLocaleString()}`:e?`${e}억`:m.toLocaleString()};
 const kinds=d=>{d=(d||'').replace('매매완료','');const k=[];if(/매매|급매/.test(d))k.push('매매');if(d.includes('임대전세'))k.push('전세');if(/임대월세|반전세|단기/.test(d))k.push('월세');return k};
@@ -386,23 +389,53 @@ document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.que
 function chips(el,opts,set,cb,counts){el.innerHTML=opts.map(o=>`<span class="chip ${set.has(o)?'on':''}" data-v="${esc(o)}">${esc(o)}${counts?`<i>${counts[o]||0}</i>`:''}</span>`).join('');
  el.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{const v=c.dataset.v;set.has(v)?set.delete(v):set.add(v);cb()})}
 
-async function load(){META=await api('/api/meta');ROWS=await api('/api/listings');try{RT=await api('/api/rt');rtIndex()}catch(e){RT=[]};$('#info').textContent=`매물 ${ROWS.length.toLocaleString()}건`;
+async function load(){META=await api('/api/meta');fltLoad();ROWS=await api('/api/listings');try{RT=await api('/api/rt');rtIndex()}catch(e){RT=[]};$('#info').textContent=`매물 ${ROWS.length.toLocaleString()}건`;
  renderList()}
 
-function filtered(){const q=$('#q').value.trim().toLowerCase();return ROWS.filter(r=>{if((r.category||'오피스텔')!==CAT)return false;
+// ---- 세부 필터: 타입(끝 글자 묶음)·동·층·향·평형, 검색 대상 ----
+const tnorm=t=>String(t||'').split('/')[0].trim().toUpperCase().replace(/\s*형$/,'');
+function typeMap(rows){const ks=new Set(rows.map(r=>tnorm(r.typ)).filter(Boolean));const short=[...ks].filter(k=>/^[A-Z]{1,2}\d?$/.test(k));const m={};
+ for(const k of ks){const s=short.filter(s=>s!==k&&k.endsWith(s)&&/^\d+$/.test(k.slice(0,-s.length))).sort((a,b)=>b.length-a.length)[0];m[k]=s||k}return m}
+const tkeyOf=(r,m)=>{const k=tnorm(r.typ);return k?(m[k]||k):''};
+const flOf=r=>{const m=/(\d{3,4})/.exec(String(r.ho||''));return m?+m[1].slice(0,-2):null};
+const nDongLbl=r=>String(r.dong||'').trim()||'(동 없음)';
+function fltSave(){try{localStorage.flt=JSON.stringify({c:CAT,danji:[...F.danji],kind:[...F.kind],avail:[...F.avail],adt:[...F.adt],use:[...F.use],typ:[...F.typ],dong:[...F.dong],dir:[...F.dir],...FX,qf:$('#qf').value,fx:!$('#fx-box').hidden})}catch(e){}}
+function fltLoad(){try{const s=JSON.parse(localStorage.flt||'null');if(!s||s.c!==CAT)return;for(const k of ['danji','kind','avail','adt','use','typ','dong','dir'])F[k]=new Set(s[k]||[]);for(const k of ['fl1','fl2','py1','py2']){FX[k]=s[k]||'';$('#'+k).value=FX[k]}$('#qf').value=s.qf||'';$('#fx-box').hidden=!s.fx}catch(e){}}
+function fxPass(r,tm){if(F.typ.size&&!F.typ.has(tkeyOf(r,tm)))return false;if(F.dong.size&&!F.dong.has(nDongLbl(r)))return false;if(F.dir.size&&!F.dir.has(r.direction||'(미입력)'))return false;
+ const fl=flOf(r);if((FX.fl1!==''||FX.fl2!=='')&&(fl==null||(FX.fl1!==''&&fl<+FX.fl1)||(FX.fl2!==''&&fl>+FX.fl2)))return false;
+ const py=r.pyeong==null||r.pyeong===''?null:+r.pyeong;if((FX.py1!==''||FX.py2!=='')&&(py==null||(FX.py1!==''&&py<+FX.py1)||(FX.py2!==''&&py>+FX.py2)))return false;return true}
+function qPass(r,q){if(!q)return true;const f=$('#qf').value,low=v=>String(v??'').toLowerCase();
+ if(f==='ho')return low(r.ho).includes(q);if(f==='typ')return low(r.typ).includes(q);if(f==='owner')return low(r.owner).includes(q);
+ if(f==='tel')return low(r.owner_tel).replace(/\D/g,'').includes(q.replace(/\D/g,''))&&q.replace(/\D/g,'')!=='';if(f==='memo')return low(r.memo).includes(q)||low(r.log_txt).includes(q);
+ return META.fields.some(([k])=>low(r[k]).includes(q))||low(r.log_txt).includes(q)||JSON.stringify(r.extra||'').toLowerCase().includes(q)}
+function renderFx(base){const inD=base.filter(r=>!F.danji.size||F.danji.has(r.danji));const tm=typeMap(inD);
+ const tc={};inD.forEach(r=>{const k=tkeyOf(r,tm);if(k)tc[k]=(tc[k]||0)+1});[...F.typ].forEach(k=>{if(!tc[k])F.typ.delete(k)});
+ chips($('#f-typ'),Object.keys(tc).sort((a,b)=>a.localeCompare(b,'ko',{numeric:true})),F.typ,renderList,tc);
+ const dc={};inD.forEach(r=>{const k=nDongLbl(r);dc[k]=(dc[k]||0)+1});chips($('#f-dong'),Object.keys(dc).sort((a,b)=>a.localeCompare(b,'ko',{numeric:true})),F.dong,renderList,dc);
+ const vc={};inD.forEach(r=>{const k=r.direction||'(미입력)';vc[k]=(vc[k]||0)+1});chips($('#f-dir'),Object.keys(vc).sort((a,b)=>vc[b]-vc[a]),F.dir,renderList,vc);
+ const P=[['저층','','5'],['중층','6','15'],['고층','16','']];$('#f-flp').innerHTML=P.map(([l,a,b])=>`<span class="chip ${FX.fl1===a&&FX.fl2===b&&(a||b)?'on':''}" data-a="${a}" data-b="${b}">${l}</span>`).join('');
+ $('#f-flp').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{const on=c.classList.contains('on');FX.fl1=on?'':c.dataset.a;FX.fl2=on?'':c.dataset.b;$('#fl1').value=FX.fl1;$('#fl2').value=FX.fl2;renderList()});
+ const on=[...[...F.typ].map(v=>['typ',v,'타입 '+v]),...[...F.dong].map(v=>['dong',v,'동 '+v]),...[...F.dir].map(v=>['dir',v,'향 '+v])];
+ if(FX.fl1!==''||FX.fl2!=='')on.push(['fl','',`층 ${FX.fl1||''}~${FX.fl2||''}`]);if(FX.py1!==''||FX.py2!=='')on.push(['py','',`평형 ${FX.py1||''}~${FX.py2||''}`]);
+ [...F.danji].forEach(v=>on.push(['danji',v,'단지 '+v]));[...F.kind].forEach(v=>on.push(['kind',v,v]));[...F.avail].forEach(v=>on.push(['avail',v,v]));[...F.adt].forEach(v=>on.push(['adt',v,'광고 '+v]));[...F.use].forEach(v=>on.push(['use',v,'용도 '+v]));
+ if($('#q').value.trim())on.push(['q','',`검색${$('#qf').value?'('+$('#qf').selectedOptions[0].text+')':''}: ${$('#q').value.trim()}`]);
+ $('#f-on').hidden=!on.length;$('#f-on').innerHTML=on.map(([k,v,l])=>`<span class="chip on" data-k="${k}" data-v="${esc(v)}" title="눌러서 빼기">${esc(l)} ✕</span>`).join('')+(on.length?'<button class="b" id="f-reset">필터 초기화</button>':'');
+ $('#f-on').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{const k=c.dataset.k,v=c.dataset.v;if(k==='fl'){FX.fl1=FX.fl2='';$('#fl1').value=$('#fl2').value=''}else if(k==='py'){FX.py1=FX.py2='';$('#py1').value=$('#py2').value=''}else if(k==='q'){$('#q').value=''}else F[k].delete(v);renderList()});
+ const rb=$('#f-reset');if(rb)rb.onclick=()=>clearFilters();return tm}
+function filtered(){const q=$('#q').value.trim().toLowerCase();const tm=typeMap(ROWS.filter(r=>(r.category||'오피스텔')===CAT&&(!F.danji.size||F.danji.has(r.danji))));return ROWS.filter(r=>{if((r.category||'오피스텔')!==CAT)return false;if(!fxPass(r,tm))return false;
  if($('#f-active').checked&&!active(r))return false;if($('#f-ad').checked&&!/네이버|뱅크/.test(r.ad||''))return false;
  if(F.danji.size&&!F.danji.has(r.danji))return false;if(F.avail.size&&!F.avail.has(r._avail))return false;if(F.adt.size&&!String(r.ad_type||'').split(', ').some(x=>F.adt.has(x)))return false;if(CAT==='오피스텔'&&F.use.size&&!String(r.usage||'(미입력)').split(', ').some(x=>F.use.has(x)))return false;if(F.kind.size&&!kinds(r.deal).some(k=>F.kind.has(k)))return false;
- if(q&&!META.fields.some(([k])=>String(r[k]??'').toLowerCase().includes(q))&&!String(r.log_txt||'').toLowerCase().includes(q)&&!JSON.stringify(r.extra||'').toLowerCase().includes(q))return false;return true})}
+ if(!qPass(r,q))return false;return true})}
 
 const INLINE=['danji','dong','ho','typ','pyeong','direction','usage','deal','cur_deposit','cur_rent','manki','status','owner','owner_tel','memo','ad','ad_type','co_office'];
 const COLS=[['_avail','가능여부'],['_chk','확인일'],['co_office','공동중개부동산'],['danji','단지'],['_addr','주소'],['dong','동'],['ho','호'],['typ','타입'],['pyeong','전용평','n'],['_jibun','지분/평단가'],['_yeon','연면적평'],['_daeji','대지지분(평)'],['direction','방향'],['usage','용도'],['deal','거래유형'],['_ask','희망가'],
  ['cur_deposit','현 보증','n'],['cur_rent','현 차임','n'],['manki','만기'],['_early','중도퇴실'],['status','현상태'],['owner','임대인'],['owner_tel','임대인연락처'],['_log','상담일지'],['_rtx','추정호실 실거래'],['_rta','같은평형 시세(1년)'],['memo','비고'],['_extra','추가정보'],['_lease','임대차 신고(현 임차·만기)'],['ad','광고'],['ad_type','광고타입']];
 function renderCats(){const n={};ROWS.forEach(r=>{const c=r.category||'오피스텔';n[c]=(n[c]||0)+1});
  $('#catbar').innerHTML=CATS.map(c=>`<button class="cat ${c===CAT?'on':''}" data-c="${c}" ${n[c]?'':'disabled title="아직 옮기지 않음"'}>${c} ${n[c]?n[c].toLocaleString():'—'}</button>`).join('');
- $('#catbar').querySelectorAll('.cat').forEach(b=>b.onclick=()=>{if(b.dataset.c!==CAT){F.danji.clear();F.avail.clear();F.adt.clear();F.use.clear();F.lease.clear();$('#dirpanel').hidden=true}CAT=localStorage.cat=b.dataset.c;renderList()})}
-function clearFilters(){F.lease.clear();F.danji.clear();F.kind.clear();F.avail.clear();F.adt.clear();F.use.clear();$('#q').value='';renderList()}
+ $('#catbar').querySelectorAll('.cat').forEach(b=>b.onclick=()=>{if(b.dataset.c!==CAT){for(const k in F)F[k].clear();for(const k in FX){FX[k]='';const e=$('#'+k);if(e)e.value=''}$('#dirpanel').hidden=true}CAT=localStorage.cat=b.dataset.c;fltLoad();renderList()})}
+function clearFilters(){for(const k in F)F[k].clear();for(const k in FX){FX[k]='';const e=$('#'+k);if(e)e.value=''}$('#q').value='';$('#qf').value='';renderList()}
 function renderList(){if(!META)return;ROWS.forEach(derive);renderCats();const base=ROWS.filter(r=>(r.category||'오피스텔')===CAT&&(!$('#f-active').checked||active(r)));const cnt={};base.forEach(r=>cnt[r.danji]=(cnt[r.danji]||0)+1);
- chips($('#f-danji'),Object.keys(cnt).filter(d=>d&&d!=='null').sort((a,b)=>cnt[b]-cnt[a]),F.danji,renderList,cnt);chips($('#f-kind'),['매매','전세','월세'],F.kind,renderList);
+ chips($('#f-danji'),Object.keys(cnt).filter(d=>d&&d!=='null').sort((a,b)=>cnt[b]-cnt[a]),F.danji,renderList,cnt);renderFx(base);fltSave();chips($('#f-kind'),['매매','전세','월세'],F.kind,renderList);
  const ac={},tc={};base.forEach(r=>{ac[r._avail]=(ac[r._avail]||0)+1;String(r.ad_type||'').split(', ').filter(Boolean).forEach(x=>tc[x]=(tc[x]||0)+1)});
  chips($('#f-avail'),AVAIL.filter(a=>ac[a]),F.avail,renderList,ac);const uc={};base.forEach(r=>String(r.usage||'(미입력)').split(', ').filter(Boolean).forEach(x=>uc[x]=(uc[x]||0)+1));$('#f-use').parentElement&&($('#f-use').style.display=CAT!=='오피스텔'?'none':'');if($('#f-use').previousElementSibling)$('#f-use').previousElementSibling.style.display=CAT!=='오피스텔'?'none':'';chips($('#f-use'),Object.keys(uc).sort((a,b)=>a==='(미입력)'?1:b==='(미입력)'?-1:uc[b]-uc[a]),F.use,renderList,uc);chips($('#f-adt'),(META.options.ad_type||[]).filter(a=>tc[a]),F.adt,renderList,tc);$('#dir-open').style.display=['아파트','오피스텔'].includes(CAT)?'':'none';
  let rs=filtered();const k=SORT.k;if(k==='_lease')rs.forEach(r=>r._lease=leaseFor(r)?.mk||'');const cmp=(x,y)=>{x=x??'';y=y??'';if(x===''&&y!=='')return 1;if(y===''&&x!=='')return -1;return typeof x==='number'&&typeof y==='number'?x-y:String(x).localeCompare(String(y),'ko',{numeric:true})};
@@ -427,7 +460,7 @@ function inlineEdit(td){const id=+td.parentElement.dataset.id,k=td.dataset.ek,r=
  const i=td.querySelector('.ie');i.focus();i.select&&i.select();let done=false;
  const fin=async save=>{if(done)return;done=true;if(save&&i.value!==String(v)){try{await api('/api/listings',{method:'POST',body:JSON.stringify({id,category:r.category,[k]:i.value})});ROWS=await api('/api/listings');toast('저장했습니다')}catch(err){alert('저장 실패: '+err.message)}}renderList()};
  i.onkeydown=e=>{if(e.key==='Enter'&&!(k==='memo'&&e.shiftKey)){e.preventDefault();fin(true)}if(e.key==='Escape'){e.stopPropagation();fin(false)}};i.onblur=()=>fin(true)}
-$('#dir-open').onclick=()=>{const P=$('#dirpanel');P.hidden=!P.hidden;if(!P.hidden)renderDir()};$('#q').oninput=renderList;$('#f-active').onchange=renderList;$('#f-ad').onchange=renderList;$('#new').onclick=()=>openDrawer(null);
+$('#dir-open').onclick=()=>{const P=$('#dirpanel');P.hidden=!P.hidden;if(!P.hidden)renderDir()};$('#q').oninput=renderList;$('#qf').onchange=renderList;['fl1','fl2','py1','py2'].forEach(k=>$('#'+k).oninput=e=>{FX[k]=e.target.value.trim();renderList()});$('#fx-tog').onclick=()=>{$('#fx-box').hidden=!$('#fx-box').hidden;fltSave()};$('#f-active').onchange=renderList;$('#f-ad').onchange=renderList;$('#new').onclick=()=>openDrawer(null);
 
 // ---------- 상세/편집 ----------
 const WIDE={ad_type:'w2',memo:'w4',owner_units:'w2',deal:'w2',ad:'w4',usage:'w2',status:'w2',direction:'w2',title:'w2',coagent:'w2'};
