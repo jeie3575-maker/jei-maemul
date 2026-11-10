@@ -602,7 +602,7 @@ async function renderCall(){if(!RECON){$('#call').innerHTML='<p class="mut">불�
   const done=last&&((['매물 받음','안 내놓음'].includes(last.res)&&ago<=30)||(last.res==='나중에'&&isToday));const absent=last&&last.res==='부재';
   const st=done?'done':(absent&&isToday)?'absent':'todo';
   const amb=all.every(q=>q.cand);const r0=rs[0].r;const names=[...new Set(rs.map(x=>x.r.owner).filter(Boolean))];return {...c,rs,p,dd,last,st,absent,ago,names,amb,tel:c.tel?String(r0.owner_tel||'').match(/01[016789][\d\- ]{7,10}|0\d{1,2}[\- ]?\d{3,4}[\- ]?\d{4}/)[0].trim():''}});
- const sc={todo:0,absent:0,done:0};cards.forEach(c=>{sc[c.st]++;if(c.st==='todo'&&c.absent)sc.absent++});
+ const sc={todo:0,absent:0,done:0};cards.filter(c=>!c.amb).forEach(c=>{sc[c.st]++;if(c.st==='todo'&&c.absent)sc.absent++});
  $('#call-st').innerHTML=[['todo','안 한 곳'],['absent','부재'],['done','완료']].map(([k,l])=>`<span class="chip ${CALLST===k?'on':''}" data-k="${k}">${l}<i>${sc[k]}</i></span>`).join('');
  $('#call-st').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{CALLST=c.dataset.k;renderCall()});
  const cc={};callItems().forEach(it=>{const c=it.r.category||'오피스텔';cc[c]=(cc[c]||0)+1});
