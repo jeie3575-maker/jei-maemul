@@ -590,7 +590,7 @@ function callItems(){const by=new Map(ROWS.map(r=>[r.id,r]));const items=[];
   else if(x.cat==='가격다름'&&x.id&&by.get(x.id))items.push({r:by.get(x.id),p:2,dd:999,tag:'가격다름',q:`${x.kind} 가격 ${x.ad_price} 맞는지 (장부 ${x.ledger_price||'-'})`,link:x.ad_link})}
  for(const r of ROWS){const d=dday(r.manki);if(d==null||d<-31||d>61)continue;const e=r.extra||{};if(e['중도퇴실']==='계약 연장')continue;
   const md=r.manki.slice(5).replace('-','/').replace(/^0/,'').replace('/0','/');items.push({r,p:1,dd:d,tag:d<0?'만기지남':'만기',q:`만기 ${md} (${d<0?'D+'+(-d):'D-'+d})${e['중도퇴실']?' · '+e['중도퇴실']:''} → 재계약/퇴실 여부, 다시 내놓을지`})}
- return items}
+ return items.filter(it=>!/가능/.test(it.r.title||''))}  // 가능여부에 '가능'(공동가능 포함)인 매물은 전화 목록에서 뺌
 function callKey(r){const t=String(r.owner_tel||'').match(/01[016789][\d\- ]{7,10}|0\d{1,2}[\- ]?\d{3,4}[\- ]?\d{4}/);if(t)return 'T'+t[0].replace(/\D/g,'');return null}
 async function renderCall(){if(!RECON){$('#call').innerHTML='<p class="mut">불러오는 중…</p>';try{RECON=await api('/api/recon')}catch(e){RECON={rows:[]}}}
  ROWS.forEach(derive);const items=callItems().filter(it=>(!CALLCAT.size||CALLCAT.has(it.r.category||'오피스텔'))&&(!CALLDJ||it.r.danji===CALLDJ));
