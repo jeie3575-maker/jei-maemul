@@ -28,6 +28,7 @@ tr.g-가능,tr.g-급매가능,tr.g-공실,tr.g-퇴거예정{background:#eafbea}t
 #drawer{position:fixed;top:0;right:0;width:min(760px,100%);height:100%;background:#fff;box-shadow:-6px 0 24px #0002;transform:translateX(105%);transition:.18s;z-index:10;display:flex;flex-direction:column}
 #drawer.on{transform:none}#drawer .hd{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line)}
 #drawer .hd b{flex:1;font-size:15px}#drawer .bd{overflow:auto;padding:14px 16px;flex:1}
+.dsum{position:sticky;top:-1px;z-index:2;background:#fff;padding:4px 0 8px;margin-bottom:8px;border-bottom:1px solid var(--line)}.dsum .l1{font-size:19px;font-weight:700;line-height:1.35}.dsum .l2{font-size:16px;margin-top:2px}.dsum #d-edit{margin-top:6px;font-size:12px;padding:2px 8px}.dsec{margin:0 0 12px}.dsec h4{margin:0 0 6px;font-size:13px;color:var(--acc);border-left:3px solid var(--acc);padding-left:6px}#d-body:not(.edit) label.emp,#d-body:not(.edit) .dsec.allemp{display:none}.telb{display:flex;gap:6px;margin-top:4px}.telb .b{text-decoration:none;font-size:13px;padding:4px 10px}.ro{color:var(--text);font-size:14px;padding:4px 0}.dmore{margin-top:12px;border-top:1px solid var(--line);padding-top:8px}.dmore summary{cursor:pointer;color:var(--mut);font-weight:600;padding:6px 0}@media(max-width:640px){.form{grid-template-columns:repeat(2,1fr)!important}.form label.w4,.form label.w2{grid-column:span 2!important}#d-title{display:none}}
 .form{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 10px}.form label{display:flex;flex-direction:column;font-size:12px;color:var(--mut);gap:2px}
 .form label.w2{grid-column:span 2}.form label.w4{grid-column:span 4}.form input,.form select,.form textarea{color:var(--text)}
 .ms{display:flex;flex-wrap:wrap;gap:3px}.ms .chip{font-size:12px;padding:1px 7px}
@@ -320,7 +321,7 @@ async function api(u, o = {}) {
  <div class="bar"><span class="mut">타입</span><div class="chips" id="f-typ"></div><button class="b" id="fx-tog" style="font-size:12px;padding:2px 8px">세부 필터 ▾</button></div>
  <div class="bar" id="fx-box" hidden><span class="mut">동</span><div class="chips" id="f-dong"></div><span class="mut">| 층</span><div class="chips" id="f-flp"></div><input id="fl1" inputmode="numeric" placeholder="부터" style="width:52px">~<input id="fl2" inputmode="numeric" placeholder="까지" style="width:52px"><span class="mut">| 향</span><div class="chips" id="f-dir"></div><span class="mut">| 평형</span><input id="py1" inputmode="decimal" placeholder="부터" style="width:52px">~<input id="py2" inputmode="decimal" placeholder="까지" style="width:52px"></div>
  <div class="bar" id="f-on" hidden></div>
- <div class="bar"><span class="mut">가능여부</span><div class="chips" id="f-avail"></div><span class="mut">| 광고타입</span><div class="chips" id="f-adt"></div><span class="mut">| 용도</span><div class="chips" id="f-use"></div>
+ <div class="bar"><span class="mut">가능여부</span><div class="chips" id="f-avail"></div><span class="mut" hidden>| 광고타입</span><div class="chips" id="f-adt" hidden></div><span class="mut">| 용도</span><div class="chips" id="f-use"></div>
   <span class="sp" style="flex:1"></span><span class="mut" style="font-size:12px">칸을 더블클릭하면 바로 수정</span> <span id="cnt" class="mut"></span><button class="b" id="dir-open" title="동·라인별로 방향을 정하면 그 라인의 빈 방향 호실을 한 번에 채웁니다">🧭 라인별 방향표</button><button class="b p" id="new">+ 매물 등록</button></div>
  <div id="dirpanel" hidden></div><div id="list"></div>
 </section>
@@ -400,7 +401,7 @@ const tkeyOf=(r,m)=>{const k=tnorm(r.typ);return k?(m[k]||k):''};
 const flOf=r=>{const m=/(\d{3,4})/.exec(String(r.ho||''));return m?+m[1].slice(0,-2):null};
 const nDongLbl=r=>String(r.dong||'').trim()||'(동 없음)';
 function fltSave(){try{localStorage.flt=JSON.stringify({c:CAT,danji:[...F.danji],kind:[...F.kind],avail:[...F.avail],adt:[...F.adt],use:[...F.use],typ:[...F.typ],dong:[...F.dong],dir:[...F.dir],...FX,qf:$('#qf').value,fx:!$('#fx-box').hidden})}catch(e){}}
-function fltLoad(){try{const s=JSON.parse(localStorage.flt||'null');if(!s||s.c!==CAT)return;for(const k of ['danji','kind','avail','adt','use','typ','dong','dir'])F[k]=new Set(s[k]||[]);for(const k of ['fl1','fl2','py1','py2']){FX[k]=s[k]||'';$('#'+k).value=FX[k]}$('#qf').value=s.qf||'';$('#fx-box').hidden=!s.fx}catch(e){}}
+function fltLoad(){try{setTimeout(()=>F.adt&&F.adt.clear(),0);const s=JSON.parse(localStorage.flt||'null');if(!s||s.c!==CAT)return;for(const k of ['danji','kind','avail','adt','use','typ','dong','dir'])F[k]=new Set(s[k]||[]);for(const k of ['fl1','fl2','py1','py2']){FX[k]=s[k]||'';$('#'+k).value=FX[k]}$('#qf').value=s.qf||'';$('#fx-box').hidden=!s.fx}catch(e){}}
 function fxPass(r,tm){if(F.typ.size&&!F.typ.has(tkeyOf(r,tm)))return false;if(F.dong.size&&!F.dong.has(nDongLbl(r)))return false;if(F.dir.size&&!F.dir.has(r.direction||'(미입력)'))return false;
  const fl=flOf(r);if((FX.fl1!==''||FX.fl2!=='')&&(fl==null||(FX.fl1!==''&&fl<+FX.fl1)||(FX.fl2!==''&&fl>+FX.fl2)))return false;
  const py=r.pyeong==null||r.pyeong===''?null:+r.pyeong;if((FX.py1!==''||FX.py2!=='')&&(py==null||(FX.py1!==''&&py<+FX.py1)||(FX.py2!==''&&py>+FX.py2)))return false;return true}
@@ -466,23 +467,42 @@ $('#dir-open').onclick=()=>{const P=$('#dirpanel');P.hidden=!P.hidden;if(!P.hidd
 const WIDE={ad_type:'w2',memo:'w4',owner_units:'w2',deal:'w2',ad:'w4',usage:'w2',status:'w2',direction:'w2',title:'w2',coagent:'w2'};
 async function openDrawer(id,tpl){if(FORM0!==null&&$('#drawer').classList.contains('on')&&JSON.stringify(collectForm())!==FORM0){try{await saveForm(false)}catch(e){}}CUR=id?{...ROWS.find(r=>r.id===id)}:(tpl?{...tpl}:{danji:'',deal:'',category:CAT});
  $('#d-title').textContent=id?`${CUR.danji||''} ${CUR.dong||''} ${CUR.ho||''}`:(tpl?'새 매물 (복사본 — 호수 등을 고치고 저장하세요)':'새 매물');$('#d-del').hidden=!id;$('#d-copy').hidden=!id;
- const order=['danji','dong','ho','typ','pyeong','direction','deal','sale','jeonse','deposit','rent','cur_deposit','cur_rent','manki','status','usage','ad','ad_type','consult','owner','owner_tel','tenant','tenant_tel','owner_units','co_office','coagent','memo'];
- const fm=Object.fromEntries(META.fields.map(f=>[f[0],f]));
- derive(CUR);const avNow=CUR._avail&&CUR._avail!=='표시없음'?CUR._avail:'';
- $('#d-body').innerHTML=`${CUR.notion_url?`<p><a href="${esc(CUR.notion_url)}" target="_blank">노션에서 열기 ↗</a></p>`:''}
+ const fm=Object.fromEntries(META.fields.map(f=>[f[0],f]));const cat=CUR.category||CAT;
+ derive(CUR);const avNow=CUR._avail&&CUR._avail!=='표시없음'?CUR._avail:'';const E=CUR.extra||{};
+ const hide=k=>(k==='usage'&&cat!=='오피스텔')||(['direction','typ'].includes(k)&&cat==='전자상가')||(['dong','typ','pyeong','direction','usage'].includes(k)&&cat==='주택·빌딩·토지');
+ const fld=k=>{if(hide(k)||!fm[k])return '';const [,n,t]=fm[k];const v=CUR[k]??'';
+  let inp;if(t==='multi')inp=`<div class="ms" data-k="${k}">${(META.options[k]||[]).map(o=>`<span class="chip ${String(v).split(', ').includes(o)?'on':''}">${esc(o)}</span>`).join('')}</div>`;
+  else if(t==='select')inp=`<select data-k="${k}"><option></option>${[...new Set([...(k==='danji'?ROWS.filter(x=>(x.category||'오피스텔')===CAT).map(x=>x.danji).filter(Boolean):[]),...META.options[k]])].map(o=>`<option ${o===v?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
+  else if(k==='memo')inp=`<textarea data-k="${k}" rows="3">${esc(v)}</textarea>`;
+  else inp=`<input data-k="${k}" type="${t==='date'?'date':'text'}" value="${esc(t==='num'&&v!==''?+v:v)}" ${t==='num'?'inputmode="decimal" placeholder="만원"':''}>`;
+  const tel=k==='owner_tel'||k==='tenant_tel'?(String(v).match(/0\d{1,2}[\d\- ]{7,10}\d/)||[''])[0]:'';
+  const extra=tel?`<span class="telb"><a class="b" href="tel:${tel.replace(/\D/g,'')}">📞 전화</a><button class="b" type="button" onclick="navigator.clipboard.writeText('${tel}').then(()=>toast('번호를 복사했어요')).catch(()=>prompt('번호','${tel}'))">복사</button></span>`:'';
+  const lab=`<label class="${WIDE[k]||''} ${String(v).trim()===''?'emp':''}">${({coagent:'공동중개 메모',co_office:'공동중개부동산',pyeong:cat==='아파트'?'평형(공급)':'평형(전용)',cur_deposit:'현 보증',cur_rent:'현 차임',manki:'만기'})[k]||n}${inp}${extra}</label>`;
+  if(k==='manki')return lab+`<label class="${E['중도퇴실']?'':'emp'}">중도퇴실 여부<select class="exk-in" data-key="중도퇴실"><option value=""></option>${EARLY.map(o=>`<option ${o===(E['중도퇴실']||'')?'selected':''}>${o}</option>`).join('')}</select></label><label class="${E['퇴실일']?'':'emp'}">퇴실(예정)일<input class="exk-in" data-key="퇴실일" type="date" value="${esc(E['퇴실일']||'')}"></label>`;
+  return lab};
+ const exk=k=>`<label class="w2 ${String(E[k]??'').trim()===''?'emp':''}">${esc(k)}<input class="exk-in" data-key="${esc(k)}" value="${esc(E[k]??'')}"></label>`;
+ const sec=(t,html)=>html.replace(/\s/g,'')?`<div class="dsec"><h4>${t}</h4><div class="form">${html}</div></div>`:'';
+ const fl=(m=>m?+m[1].slice(0,-2):null)(/(\d{3,4})/.exec(String(CUR.ho||'')));
+ const price=[CUR.sale?'매 '+won(CUR.sale):'',CUR.jeonse?'전 '+won(CUR.jeonse):'',CUR.deposit||CUR.rent?'월 '+won(CUR.deposit||0)+'/'+(CUR.rent||0):''].filter(Boolean).join(' · ');
+ const condX=['관리비','입주가능일','입주가능'].filter(k=>E[k]!=null&&E[k]!=='');
+ $('#d-body').innerHTML=`<div class="dsum"><div class="l1">${esc([CUR.danji,CUR.dong,CUR.ho].filter(Boolean).join(' ')||'새 매물')}${CUR.typ?` <span class="mut">· ${esc(CUR.typ)}</span>`:''} ${avHtml(avNow)}</div>
+  <div class="l2">${esc(CUR.deal||'')}${price?` <b>${esc(price)}</b>`:''}</div><button class="b" type="button" id="d-edit">✏️ 빈 칸도 보기</button></div>
  <div class="avbox" style="background:#f6f8fa;border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:12px">
   <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b>가능여부</b><span class="chips" id="av-chips">${AVAIL.filter(a=>a!=='표시없음').map(a=>`<span class="chip ${a===avNow?'on':''}" data-a="${esc(a)}">${esc(a)}</span>`).join('')}</span>
   <span class="mut">확인일</span><input type="date" id="av-date" value="${CUR._chk||''}"><button class="b" id="av-clear" type="button">지우기</button></div>
   <div class="mut" style="font-size:12px;margin-top:4px">저장될 값: <b id="av-show">${esc(CUR.title||'(없음)')}</b> · 버튼을 누르면 확인일이 오늘로 바뀝니다</div>
   <input type="hidden" data-k="title" id="av-title" value="${esc(CUR.title||'')}"></div>
- <div class="form">${(EXCOL[CUR.category||CAT]||[]).map(k=>`<label class="w2">${esc(k)}<input class="exk-in" data-key="${esc(k)}" value="${esc((CUR.extra||{})[k]??'')}"></label>`).join('')}<label class="w2">분류<select data-k="category">${CATS.map(c=>`<option ${c===(CUR.category||CAT)?'selected':''}>${c}</option>`).join('')}</select></label>${order.map(k=>{if(k==='usage'&&(CUR.category||CAT)==='아파트')return '';if(['usage','direction','typ'].includes(k)&&(CUR.category||CAT)==='전자상가')return '';if(['dong','typ','pyeong','direction','usage'].includes(k)&&(CUR.category||CAT)==='주택·빌딩·토지')return '';const [,n,t]=fm[k];const v=CUR[k]??'';
-  let inp;if(t==='multi')inp=`<div class="ms" data-k="${k}">${(META.options[k]||[]).map(o=>`<span class="chip ${String(v).split(', ').includes(o)?'on':''}">${esc(o)}</span>`).join('')}</div>`;
-  else if(t==='select')inp=`<select data-k="${k}"><option></option>${[...new Set([...(k==='danji'?ROWS.filter(x=>(x.category||'오피스텔')===CAT).map(x=>x.danji).filter(Boolean):[]),...META.options[k]])].map(o=>`<option ${o===v?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
-  else if(k==='memo')inp=`<textarea data-k="${k}" rows="3">${esc(v)}</textarea>`;
-  else inp=`<input data-k="${k}" type="${t==='date'?'date':'text'}" value="${esc(t==='num'&&v!==''?+v:v)}" ${t==='num'?'inputmode="decimal" placeholder="만원"':''}>`;
-  const lab=`<label class="${WIDE[k]||''}">${({coagent:'공동중개 메모',co_office:'공동중개부동산',pyeong:(CUR.category||CAT)==='아파트'?'평형(공급)':'평형(전용)'})[k]||n}${inp}</label>`;
-  if(k==='manki'){const e=CUR.extra||{};return lab+`<label>중도퇴실 여부<select class="exk-in" data-key="중도퇴실"><option value=""></option>${EARLY.map(o=>`<option ${o===(e['중도퇴실']||'')?'selected':''}>${o}</option>`).join('')}</select></label><label>퇴실(예정)일<input class="exk-in" data-key="퇴실일" type="date" value="${esc(e['퇴실일']||'')}"></label>`}
-  return lab}).join('')}</div><h3>추가정보 <button class="b" type="button" id="ex-add" style="font-size:12px;padding:2px 8px">+ 항목 추가</button></h3><div id="ex-box">${exShown(CUR.extra).map(([a,b])=>exRow(a,b)).join('')}</div><div id="d-sub" class="sub"><p class="mut">${id?'불러오는 중…':''}</p></div>`;
+ ${sec('조건',['deal','sale','jeonse','deposit','rent'].map(fld).join('')+condX.map(exk).join('')+['ad','ad_type','consult'].map(fld).join(''))}
+ ${sec('호실',['danji','dong','ho','typ','pyeong'].map(fld).join('')+(fl!=null?`<label>층<span class="ro">${fl}층${E['총층']?' / '+esc(E['총층'])+'층':''}</span></label>`:'')+['direction','usage'].map(fld).join(''))}
+ ${sec('임대인',['owner','owner_tel','owner_units','co_office','coagent'].map(fld).join(''))}
+ ${sec('현재 임대차',['status','tenant','tenant_tel','cur_deposit','cur_rent','manki'].map(fld).join(''))}
+ <div id="d-sub" class="sub"><p class="mut">${id?'불러오는 중…':''}</p></div>
+ <details class="dmore"><summary>더보기 (분류·비고·추가정보·원본 항목)</summary>${CUR.notion_url?`<p><a href="${esc(CUR.notion_url)}" target="_blank">노션에서 열기 ↗</a></p>`:''}
+  <div class="form"><label class="w2">분류<select data-k="category">${CATS.map(c=>`<option ${c===cat?'selected':''}>${c}</option>`).join('')}</select></label>${(EXCOL[cat]||[]).map(exk).join('')}${fld('memo')}</div>
+  <h3>추가정보 <button class="b" type="button" id="ex-add" style="font-size:12px;padding:2px 8px">+ 항목 추가</button></h3><div id="ex-box">${exShown(CUR.extra).filter(([a])=>!condX.includes(a)).map(([a,b])=>exRow(a,b)).join('')}</div></details>`;
+ const updEmp=()=>$('#d-body').querySelectorAll('.dsec').forEach(s=>s.classList.toggle('allemp',![...s.querySelectorAll('label')].some(l=>!l.classList.contains('emp'))));updEmp();
+ if(!id)$('#d-body').classList.add('edit');else $('#d-body').classList.remove('edit');
+ $('#d-edit').onclick=()=>{const on=$('#d-body').classList.toggle('edit');$('#d-edit').textContent=on?'✏️ 빈 칸 숨기기':'✏️ 빈 칸도 보기'};
  $('#d-body').querySelectorAll('.ms .chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
  const avSet=()=>{const on=$('#av-chips .chip.on');const dt=$('#av-date').value;const v=on?((dt?dt.slice(5,7)+dt.slice(8,10)+'.':'')+on.dataset.a):'';$('#av-title').value=v;$('#av-show').textContent=v||'(없음)'};
  $('#av-chips').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{const was=c.classList.contains('on');$('#av-chips').querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));if(!was){c.classList.add('on');const t=new Date(),p=n=>String(n).padStart(2,'0');$('#av-date').value=`${t.getFullYear()}-${p(t.getMonth()+1)}-${p(t.getDate())}`}avSet()});
