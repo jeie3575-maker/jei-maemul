@@ -122,6 +122,11 @@ const gRow = (m, cid, cname) => { const p = String(m.dealOrWarrantPrc || ''); co
   const [fl, tot] = String(m.floorInfo || '').split('/');
   return {'단지': cname, '동': m.buildingName || '', '거래': m.tradeTypeName, '가격(만원)': won2(dep), '월세(만원)': rent ? won2(rent) : null, '층': fl, '총층': tot, '타입': m.areaName, '방향': m.direction,
     '중개사': m.realtorName || '', '링크': `https://new.land.naver.com/complexes/${cid}?articleNo=${m.articleNo}`, '집주인': m.verificationTypeCode === 'OWNER', 'no': m.articleNo} };
+const AD_CHIPS = ['뱅크', '블로그', '타호실광고'];
+// 광고칸 메모(칩 외 글자)에서 실제 광고한 동·호수 추출 → [동 바꾼 사본, 호수]
+const adMemoUnit = L => { const memo = String(L.ad || '').split(', ').map(x => x.trim()).filter(x => x && !AD_CHIPS.includes(x)).join(' ');
+  const m = /(?:(\d{1,3})\s*동\s*)?(\d{3,4})\s*호/.exec(memo) || /^\s*(?:(\d{1,3})\s*동\s*)?(\d{3,4})\s*$/.exec(memo);
+  return m ? [m[1] ? {...L, dong: m[1] + '동'} : L, m[2]] : [L, null] };
 async function recon() {
   const {rows: rows0, time} = await loadRef('naver'); const ls = _cache.listings || await listingsAll();
   const G = (await loadRef('naver_groups')).rows || {};
@@ -146,16 +151,16 @@ async function recon() {
     for (const n of rows) (units[sameUnit(n)] ||= []).push(n);
   }
   const used = new Set(), out = [];
-  for (const L of ls) {
+  for (let L of ls) {
     const lcat = L.category || '오피스텔'; const dm = dnOf(lcat);
     if (!isActive(L) || !['오피스텔', '아파트'].includes(lcat) || !dm[L.danji]) continue;
-    const wantAd = /네이버|뱅크/.test(L.ad || ''); const fl = hoFloor(L.ho);
+    const wantAd = /네이버|뱅크/.test(L.ad || ''); const [L2, memoHo] = adMemoUnit(L); L = L2; const fl = hoFloor(memoHo || L.ho);
     for (const kind of dealKinds(L.deal)) {
       let c = mine.map((n, i) => [i, n]).filter(([, n]) => n['거래'] === kind && (n.cat || '오피스텔') === lcat && danjiMatch(L, n['단지'], dm) && dongOk(L, n) && floorOk(fl, n['층'], n['총층']));
       const otherType = c.filter(([, n]) => !typeOk(L.typ, n['타입'])).map(x => x[1]);
       c = c.filter(([, n]) => typeOk(L.typ, n['타입'])); const lp = ledgerPrice(L, kind);
       if (c.length > 1) { const pc = c.filter(([, n]) => adPrice(n)[0] === lp[0]); if (pc.length) c = pc }
-      const base = {id: L.id, danji: L.danji, dong: L.dong, ho: L.ho, typ: L.typ, kind, ledger_price: fmtPrice(lp), ad_flag: L.ad || '', category: L.category || '오피스텔'};
+      const base = {id: L.id, danji: L.danji, dong: L.dong, ho: L.ho, typ: L.typ, kind, ledger_price: fmtPrice(lp), ad_flag: L.ad || '', category: L.category || '오피스텔', memo_ho: memoHo || ''};
       if (!c.length) { if (wantAd) { let note = '장부엔 광고표시가 있는데 네이버에 내 광고 없음';
           if (otherType.length) note += ' · 같은 층대에 타입 다른 내 광고: ' + otherType.slice(0, 3).map(n => `${n['타입']} ${n['층']}층 ${fmtPrice(adPrice(n))}`).join(', ');
           out.push({...base, cat: '광고누락', note}) } continue }
