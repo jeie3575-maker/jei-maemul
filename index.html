@@ -114,9 +114,6 @@ const fmtWon = v => { if (v == null || v === '') return ''; v = Math.trunc(v); c
 const fmtPrice = p => fmtWon(p[0]) + (p[1] ? '/' + Math.trunc(p[1]) : '');
 const isActive = L => dealKinds(L.deal).length && !/계약완|매매완/.test(L.status || '');
 // 가능 판정(앱 index.html isAvail과 같은 규칙): '가능'(단 '가능?' 제외) 또는 '공동' 포함. 대조(isActive)는 거래유형·현상태 기준이라 가능여부를 보지 않음
-const avParts = t => { t = String(t || '').trim(); const m = /^\d{4}\s*\.?\s*(.*)$/.exec(t); return (m ? m[1] : t).split('·').map(x => x.trim()).filter(Boolean) };
-const isAvail = t => avParts(t).some(p => p !== '가능?' && /가능|공동/.test(p));
-const keepDeal = t => avParts(t).some(p => /가능|공동/.test(p));
 const sameUnit = a => [a['단지'], a['동'], a['거래'], a['타입'], String(a['층']), a['방향']].join('|');
 
 // ---- 네이버 '동일매물 묶기' 묶음(refdata 'naver_groups') ----
