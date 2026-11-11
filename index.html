@@ -487,7 +487,7 @@ async function openDrawer(id,tpl){if(FORM0!==null&&$('#drawer').classList.contai
  $('#d-title').textContent=id?`${CUR.danji||''} ${CUR.dong||''} ${CUR.ho||''}`:(tpl?'새 매물 (복사본 — 호수 등을 고치고 저장하세요)':'새 매물');$('#d-del').hidden=!id;$('#d-copy').hidden=!id;
  const fm=Object.fromEntries(META.fields.map(f=>[f[0],f]));const cat=CUR.category||CAT;
  derive(CUR);const avNow=CUR._avail&&CUR._avail!=='표시없음'?CUR._avail:'';const E=CUR.extra||{};
- const hide=k=>false;  // 상세 화면은 모든 분류·거래유형이 같은 칸·같은 순서
+ const hide=k=>k==='usage'&&['아파트','상가','오피스'].includes(cat);  // 용도는 아파트·상가·오피스에선 안 씀(값은 보존)
  const fld=k=>{if(hide(k)||!fm[k])return '';const [,n,t]=fm[k];const v=CUR[k]??'';
   let inp;if(t==='multi'&&(k==='ad'||k==='ad_type')){const ok=k==='ad'?AD_OK:ADT_OK,cur=String(v).split(', ').filter(Boolean);inp=`<div class="ms" data-k="${k}" data-keep="${esc(cur.filter(x=>!ok.includes(x)).join(', '))}">${ok.map(o=>`<span class="chip ${cur.includes(o)?'on':''}">${esc(o)}</span>`).join('')}</div>`}else if(t==='multi')inp=`<div class="ms" data-k="${k}">${(META.options[k]||[]).map(o=>`<span class="chip ${String(v).split(', ').includes(o)?'on':''}">${esc(o)}</span>`).join('')}</div>`;
   else if(t==='select')inp=`<select data-k="${k}"><option></option>${[...new Set([...(k==='danji'?ROWS.filter(x=>(x.category||'오피스텔')===CAT).map(x=>x.danji).filter(Boolean):[]),...META.options[k]])].map(o=>`<option ${o===v?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
@@ -524,7 +524,7 @@ async function openDrawer(id,tpl){if(FORM0!==null&&$('#drawer').classList.contai
  ${row(['sale','jeonse','deposit','rent'].map(fld).join(''))}
  ${row(['cur_deposit','cur_rent','status'].map(fld).join(''))}
  ${row(fld('manki'))}
- ${row(fld('ad')+fld('ad_type')+`<label class="w2 ${adMemo.length?'':'emp'}">메모<span class="ro">${esc(adMemo.join(', '))}</span></label>`)}
+ ${row(fld('ad')+fld('ad_type')+`<label class="w2 ${adMemo.length?'':'emp'}">메모<input id="ad-memo" value="${esc(adMemo.join(', '))}" placeholder="예: 대기, 공동부동산확인중"></label>`)}
  ${row(['owner','owner_tel'].map(fld).join(''))}
  ${row((own?fld('owner_units').replace(/ emp"/,'"'):fld('owner_units')).replace(/(<\/label>)$/,own+'$1')+`<label class="w2 ${String(E['임대인메모']??'').trim()===''?'emp':''}">메모<input class="exk-in" data-key="임대인메모" value="${esc(E['임대인메모']??'')}"></label>`)}
  ${row(['tenant','tenant_tel'].map(fld).join(''))}
@@ -533,7 +533,7 @@ async function openDrawer(id,tpl){if(FORM0!==null&&$('#drawer').classList.contai
  <div class="dsec nohide"><h4>추가정보 <button class="b" type="button" id="ex-add" style="font-size:12px;padding:2px 8px">+ 항목 추가</button>${CUR.notion_url?` <a href="${esc(CUR.notion_url)}" target="_blank" style="font-weight:400;font-size:12px">노션에서 열기 ↗</a>`:''}</h4><div class="form">${(EXCOL[cat]||[]).map(exk).join('')}</div><div id="ex-box">${exShown(CUR.extra).map(([a,b])=>exRow(a,b)).join('')}</div></div>
  <div id="d-sub" class="sub"><p class="mut">${id?'불러오는 중…':''}</p></div>`;
  const updEmp=()=>$('#d-body').querySelectorAll('.dsec:not(.nohide)').forEach(s=>s.classList.toggle('allemp',![...s.querySelectorAll('label')].some(l=>!l.classList.contains('emp'))));updEmp();
- $('#d-body').classList.add('edit');const grow=t=>{t.style.height='auto';t.style.height=t.scrollHeight+2+'px'};$('#d-body').querySelectorAll('textarea.grow').forEach(t=>{t.addEventListener('input',()=>grow(t));requestAnimationFrame(()=>grow(t))});$('#d-hide').onclick=()=>{const e=$('#d-body').classList.toggle('edit');$('#d-hide').textContent=e?'빈 칸 숨기기':'빈 칸도 보기'};  // 빈 칸도 항상 보임
+ $('#d-body').classList.add('edit');{const am=$('#ad-memo'),ams=$('#d-body').querySelector('.ms[data-k="ad"]');if(am&&ams)am.oninput=()=>{ams.dataset.keep=am.value.split(',').map(x=>x.trim()).filter(Boolean).join(', ')}}const grow=t=>{t.style.height='auto';t.style.height=t.scrollHeight+2+'px'};$('#d-body').querySelectorAll('textarea.grow').forEach(t=>{t.addEventListener('input',()=>grow(t));requestAnimationFrame(()=>grow(t))});$('#d-hide').onclick=()=>{const e=$('#d-body').classList.toggle('edit');$('#d-hide').textContent=e?'빈 칸 숨기기':'빈 칸도 보기'};  // 빈 칸도 항상 보임
  $('#d-body').querySelectorAll('.ms .chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
  const avSet=()=>{const on=[...$('#av-chips').querySelectorAll('.chip.on')].map(c=>c.dataset.a);const dt=$('#av-date').value;const v=on.length?((dt?dt.slice(5,7)+dt.slice(8,10)+'.':'')+on.join('·')):'';$('#av-title').value=v;$('#av-show').textContent=v||'(없음)'};let avSeq=0;$('#av-chips').querySelectorAll('.chip.on').forEach(c=>c.dataset.t=++avSeq);
  $('#av-chips').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{if(c.classList.contains('on')){c.classList.remove('on')}else{c.classList.add('on');c.dataset.t=++avSeq}const t=new Date(),p=n=>String(n).padStart(2,'0');$('#av-date').value=`${t.getFullYear()}-${p(t.getMonth()+1)}-${p(t.getDate())}`;avSet()});
