@@ -299,6 +299,11 @@ async function api(u, o = {}) {
     case '/api/recon': return await recon();
     case '/api/rt': return (await loadRef('rt')).rows;
     case '/api/rt_apt': return (await loadRef('rt_apt')).rows;
+    case '/api/client_create': { const d = JSON.parse(o.body); const {data, error} = await sb.rpc('create_client_page', {p_name: d.name || null, p_ids: d.ids, p_cond: d.cond || null, p_note: d.note || null, p_days: d.days || 30, p_by: null}); if (error) throw new Error(error.message); return data }
+    case '/api/client_list': return chk(await sb.from('client_pages').select('token,client_name,title,listing_ids,created,expires,fails,locked,views,last_view,created_by').order('created', {ascending: false}).limit(200));
+    case '/api/client_extend': { const d = JSON.parse(o.body); const {data, error} = await sb.rpc('extend_client_page', {p_token: d.token, p_days: d.days || 30}); if (error) throw new Error(error.message); return data }
+    case '/api/client_resetpw': { const d = JSON.parse(o.body); const {data, error} = await sb.rpc('reset_client_pw', {p_token: d.token}); if (error) throw new Error(error.message); return data }
+    case '/api/client_delete': chk(await sb.from('client_pages').delete().eq('token', q.token)); return {ok: true};
     case '/api/layout_band': return (await loadRef('layout_band')).rows;
     case '/api/dirfill': { const d = JSON.parse(o.body); for (let i = 0; i < d.ids.length; i += 200) chk(await sb.from('listings').update({direction: d.direction}).in('id', d.ids.slice(i, i + 200)).is('direction', null)); _cache.listings = null; return {ok: true, n: d.ids.length} }
     case '/api/stores': return (await loadRef('stores')).rows || {rows: []};
@@ -325,8 +330,8 @@ async function api(u, o = {}) {
   <div class="bar" id="fx-box" hidden style="display:none!important"><span class="mut">층</span><div class="chips" id="f-flp"></div><input id="fl1" inputmode="numeric" placeholder="부터" style="width:52px">~<input id="fl2" inputmode="numeric" placeholder="까지" style="width:52px"><span class="mut">| 향</span><div class="chips" id="f-dir"></div><span class="mut">| 평형</span><input id="py1" inputmode="decimal" placeholder="부터" style="width:52px">~<input id="py2" inputmode="decimal" placeholder="까지" style="width:52px"></div>
  <div class="bar" id="f-on" hidden style="display:none!important"></div>
  <div class="bar"><span class="mut">가능여부</span><div class="chips" id="f-avail"></div><span class="mut" hidden>| 광고타입</span><div class="chips" id="f-adt" hidden></div><span class="mut">| 용도</span><div class="chips" id="f-use"></div>
-  <span class="sp" style="flex:1"></span><span class="mut" style="font-size:12px">칸을 더블클릭하면 바로 수정</span> <span id="cnt" class="mut"></span><button class="b" id="dir-open" title="동·라인별로 방향을 정하면 그 라인의 빈 방향 호실을 한 번에 채웁니다">🧭 라인별 방향표</button><button class="b p" id="new">+ 매물 등록</button></div>
- <div id="dirpanel" hidden></div><div id="list"></div>
+  <span class="sp" style="flex:1"></span><span class="mut" style="font-size:12px">칸을 더블클릭하면 바로 수정</span> <span id="cnt" class="mut"></span><button class="b" id="cp-open" title="고른 매물로 손님 전용 페이지(링크+비밀번호 4자리)를 만듭니다">👤 손님 페이지</button><button class="b" id="dir-open" title="동·라인별로 방향을 정하면 그 라인의 빈 방향 호실을 한 번에 채웁니다">🧭 라인별 방향표</button><button class="b p" id="new">+ 매물 등록</button></div>
+ <div id="cppanel" hidden></div><div id="dirpanel" hidden></div><div id="list"></div>
 </section>
 <div id="t-co" hidden><input type="checkbox" id="co-empty" hidden><div id="co"></div></div>
 <section id="t-recon" hidden><div class="bar"><span id="recon-info" class="mut"></span><button class="b" id="recon-reload">새로고침</button></div>
@@ -346,7 +351,7 @@ async function api(u, o = {}) {
   <p class="mut">비밀 링크를 한 번 열면 그 기기는 180일 동안 기억됩니다. 링크는 텔레그램으로만 받고 다른 사람에게 보내지 마세요.</p></div>
 </section>
 </main>
-<div id="drawer"><div class="hd"><b id="d-title"></b><button class="b" id="d-copy">복사해서 새로 작성</button><button class="b d" id="d-del">삭제</button><button class="b p" id="d-save">저장</button><button class="b" id="d-close">닫기(자동 저장)</button></div><div class="bd" id="d-body"></div></div>
+<div id="drawer"><div class="hd"><b id="d-title"></b><button class="b" id="d-copy">복사해서 새로 작성</button><button class="b" id="d-cp" title="손님 페이지에 넣을 매물로 담아 둡니다">손님 페이지에 담기</button><button class="b d" id="d-del">삭제</button><button class="b p" id="d-save">저장</button><button class="b" id="d-close">닫기(자동 저장)</button></div><div class="bd" id="d-body"></div></div>
 <div id="toast"></div>
 <div id="gate" style="position:fixed;inset:0;background:#f6f7f9;z-index:50;display:flex;align-items:center;justify-content:center">
  <div class="box" style="text-align:center"><h3>🏡 제이부동산 매물장</h3><p id="gate-msg" class="mut">접속 확인 중…</p></div></div>
@@ -482,12 +487,47 @@ function inlineEdit(td){const id=+td.parentElement.dataset.id,k=td.dataset.ek,r=
  const i=td.querySelector('.ie');i.focus();i.select&&i.select();let done=false;
  const fin=async save=>{if(done)return;done=true;if(save&&i.value!==String(v)){try{await api('/api/listings',{method:'POST',body:JSON.stringify({id,category:r.category,[k]:i.value})});ROWS=await api('/api/listings');toast('저장했습니다')}catch(err){alert('저장 실패: '+err.message)}}renderList()};
  i.onkeydown=e=>{if(e.key==='Enter'&&!(k==='memo'&&e.shiftKey)){e.preventDefault();fin(true)}if(e.key==='Escape'){e.stopPropagation();fin(false)}};i.onblur=()=>fin(true)}
+// ---- 손님 개인 매물 페이지 (홈페이지 client.html, 비밀번호 4자리·30일·5회 잠금·열람 알림) ----
+const CP_SITE='https://jeie-realty.github.io/client.html#t=';
+const cpGet=()=>{try{return JSON.parse(localStorage.cpBasket||'[]')}catch(e){return []}},cpSet=a=>{try{localStorage.cpBasket=JSON.stringify(a)}catch(e){}};
+function cpBtn(){const b=$('#d-cp');if(!b||!CUR||!CUR.id)return;const on=cpGet().includes(CUR.id);b.textContent=on?'✓ 손님 페이지에 담김 (빼기)':'손님 페이지에 담기';const n=cpGet().length;$('#cp-open').textContent=`👤 손님 페이지${n?` (${n})`:''}`}
+$('#d-cp').onclick=()=>{let a=cpGet();a=a.includes(CUR.id)?a.filter(x=>x!==CUR.id):[...a,CUR.id];cpSet(a);cpBtn();toast(a.includes(CUR.id)?'손님 페이지에 담았어요':'뺐어요');if(!$('#cppanel').hidden)renderCP()};
+const cpUnit=r=>r?`${r.danji||''} ${r.dong||''} ${r.ho||''}`.replace(/\s+/g,' ').trim():'(지운 매물)';
+async function renderCP(){const P=$('#cppanel'),ids=cpGet(),rs=ids.map(i=>ROWS.find(r=>r.id===i));
+ P.innerHTML=`<div class="box" style="margin:8px 0;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:8px">
+ <div class="bar" style="margin:0 0 6px"><b>👤 손님 페이지 만들기</b><span class="mut">매물 상세에서 [손님 페이지에 담기]로 고른 뒤 만드세요. 손님에게는 단지·타입·면적·층대(저/중/고)·방향·가격만 보이고, 호수·임대인·연락처·메모는 안 보여요.</span><span class="sp" style="flex:1"></span><button class="b" id="cp-close">닫기</button></div>
+ <div style="display:flex;gap:16px;flex-wrap:wrap"><div style="flex:1 1 320px"><b>담은 매물 ${ids.length}개</b>
+ ${rs.map((r,i)=>`<div style="display:flex;gap:6px;align-items:center;margin:3px 0"><span style="flex:1">${i+1}. ${esc(cpUnit(r))} <span class="mut">${esc(r?.deal||'')} ${esc(r?._avail||'')}</span></span><button class="b" data-cprm="${ids[i]}">빼기</button></div>`).join('')||'<p class="mut">아직 없어요.</p>'}</div>
+ <div style="flex:1 1 320px"><label>손님 이름 <span class="mut">(매물장에만 저장, 페이지엔 '김○○ 님')</span><input id="cp-name" style="width:100%"></label>
+ <label>상담 조건 <span class="mut">(손님에게 보임)</span><textarea id="cp-cond" rows="2" style="width:100%" placeholder="예: 월세 · 보증 2천 이하 · 월 250 이하 · 12월 입주"></textarea></label>
+ <label>한 줄 메모 <span class="mut">(손님에게 보임 — 연락처·호수 쓰지 않기)</span><textarea id="cp-note" rows="2" style="width:100%"></textarea></label>
+ <label>보관 기간 <input id="cp-days" type="number" value="30" min="1" max="365" style="width:70px">일</label>
+ <button class="b p" id="cp-make" ${ids.length?'':'disabled'}>손님 페이지 만들기</button><div id="cp-result"></div></div></div>
+ <h4 style="margin:14px 0 6px">만든 페이지</h4><div id="cp-list" class="mut">불러오는 중…</div></div>`;
+ $('#cp-close').onclick=()=>P.hidden=true;P.querySelectorAll('[data-cprm]').forEach(b=>b.onclick=()=>{cpSet(cpGet().filter(x=>x!==+b.dataset.cprm));renderCP();cpBtn()});
+ $('#cp-make').onclick=async()=>{const name=$('#cp-name').value.trim();if(!name&&!confirm('손님 이름 없이 만들까요?'))return;
+  try{const r=await api('/api/client_create',{method:'POST',body:JSON.stringify({name,ids:cpGet(),cond:$('#cp-cond').value.trim(),note:$('#cp-note').value.trim(),days:+$('#cp-days').value||30})});
+   const txt=`[호반제이부동산] ${r.title}\n${CP_SITE}${r.token}\n비밀번호: ${r.pw}\n(${String(r.expires).slice(0,10)}까지 볼 수 있어요)`;
+   $('#cp-result').innerHTML=`<div class="note" style="margin-top:8px;white-space:pre-wrap;background:#fff7e6;padding:8px;border-radius:6px">${esc(txt)}</div><button class="b p" id="cp-copy">손님에게 보낼 문구 복사</button> <span class="mut">비밀번호는 지금만 보여요 (잊으면 [비번 새로])</span>`;
+   $('#cp-copy').onclick=()=>{navigator.clipboard.writeText(txt).then(()=>toast('복사했어요'))};cpSet([]);cpBtn();loadCPList()}catch(e){alert('만들기 실패: '+e.message)}};
+ loadCPList()}
+async function loadCPList(){const el=$('#cp-list');if(!el)return;try{const L=await api('/api/client_list');const now=new Date();
+ el.innerHTML=L.length?`<table><tr><th>손님</th><th>매물</th><th>만든 날</th><th>만료</th><th>열람</th><th>상태</th><th></th></tr>${L.map(p=>{const ex=new Date(p.expires),st=p.locked?'🔒 잠김':ex<now?'만료':'보는 중';
+  const units=(p.listing_ids||[]).map(i=>cpUnit(ROWS.find(r=>r.id===i))).join(', ');
+  return `<tr><td>${esc(p.client_name||p.title)}</td><td title="${esc(units)}">${(p.listing_ids||[]).length}개</td><td>${esc(String(p.created).slice(0,10))}</td><td>${esc(String(p.expires).slice(0,10))}</td><td>${p.views||0}회${p.last_view?` <span class="mut">(${esc(String(p.last_view).slice(5,16).replace('T',' '))})</span>`:''}</td><td>${st}</td>
+  <td><button class="b" data-cpx="${p.token}">30일 연장</button> <button class="b" data-cppw="${p.token}">비번 새로</button> <button class="b" data-cpl="${p.token}">링크 복사</button> <button class="b d" data-cpd="${p.token}">삭제</button></td></tr>`}).join('')}</table>`:'아직 만든 페이지가 없어요.';
+ el.querySelectorAll('[data-cpx]').forEach(b=>b.onclick=async()=>{await api('/api/client_extend',{method:'POST',body:JSON.stringify({token:b.dataset.cpx,days:30})});toast('30일 연장했어요');loadCPList()});
+ el.querySelectorAll('[data-cppw]').forEach(b=>b.onclick=async()=>{if(!confirm('비밀번호를 새로 만들까요? (잠금도 풀려요)'))return;const r=await api('/api/client_resetpw',{method:'POST',body:JSON.stringify({token:b.dataset.cppw})});alert('새 비밀번호: '+r.pw+'\n손님에게 다시 알려 주세요.');loadCPList()});
+ el.querySelectorAll('[data-cpl]').forEach(b=>b.onclick=()=>navigator.clipboard.writeText(CP_SITE+b.dataset.cpl).then(()=>toast('링크를 복사했어요 (비밀번호는 따로)')));
+ el.querySelectorAll('[data-cpd]').forEach(b=>b.onclick=async()=>{if(!confirm('이 손님 페이지를 지울까요? 링크가 바로 닫혀요.'))return;await api('/api/client_delete?token='+encodeURIComponent(b.dataset.cpd),{method:'POST'});loadCPList()})}
+ catch(e){el.textContent='목록을 못 불러왔어요: '+e.message}}
+$('#cp-open').onclick=()=>{const P=$('#cppanel');P.hidden=!P.hidden;if(!P.hidden)renderCP()};{const n=cpGet().length;if(n)$('#cp-open').textContent=`👤 손님 페이지 (${n})`}
 $('#dir-open').onclick=()=>{const P=$('#dirpanel');P.hidden=!P.hidden;if(!P.hidden)renderDir()};$('#q').oninput=renderList;$('#qf').onchange=renderList;['fl1','fl2','py1','py2'].forEach(k=>$('#'+k).oninput=e=>{FX[k]=e.target.value.trim();renderList()});$('#f-active').onchange=renderList;$('#f-ad').onchange=renderList;$('#new').onclick=()=>openDrawer(null);
 
 // ---------- 상세/편집 ----------
 const WIDE={owner_tel:'w3',tenant_tel:'w3',ad_type:'w2',memo:'w4',owner_units:'w2',deal:'w2',ad:'w4',usage:'w2',status:'w2',direction:'w2',title:'w2',coagent:'w2'};
 async function openDrawer(id,tpl){if(FORM0!==null&&$('#drawer').classList.contains('on')&&JSON.stringify(collectForm())!==FORM0){try{await saveForm(false)}catch(e){}}CUR=id?{...ROWS.find(r=>r.id===id)}:(tpl?{...tpl}:{danji:'',deal:'',category:CAT});
- $('#d-title').textContent=id?`${CUR.danji||''} ${CUR.dong||''} ${CUR.ho||''}`:(tpl?'새 매물 (복사본 — 호수 등을 고치고 저장하세요)':'새 매물');$('#d-del').hidden=!id;$('#d-copy').hidden=!id;
+ $('#d-title').textContent=id?`${CUR.danji||''} ${CUR.dong||''} ${CUR.ho||''}`:(tpl?'새 매물 (복사본 — 호수 등을 고치고 저장하세요)':'새 매물');$('#d-del').hidden=!id;$('#d-copy').hidden=!id;$('#d-cp').hidden=!id;cpBtn();
  const fm=Object.fromEntries(META.fields.map(f=>[f[0],f]));const cat=CUR.category||CAT;
  derive(CUR);const avNow=CUR._avail&&CUR._avail!=='표시없음'?CUR._avail:'';const E=CUR.extra||{};
  const hide=k=>k==='usage'&&['아파트','상가','오피스'].includes(cat);  // 용도는 아파트·상가·오피스에선 안 씀(값은 보존)
