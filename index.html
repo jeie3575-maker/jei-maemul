@@ -782,7 +782,7 @@ async function boot(){const g=$('#gate'),m=$('#gate-msg');
  const k=new URLSearchParams(location.hash.slice(1)).get('k')||new URLSearchParams(location.search).get('k');
  if(k){try{const [e,pw]=atob(k.replace(/-/g,'+').replace(/_/g,'/')).split('\n');const {error}=await sb.auth.signInWithPassword({email:e,password:pw});
    history.replaceState(null,'',location.pathname);if(error){m.textContent='링크가 만료되었거나 바뀌었습니다. 새 링크를 받아 주세요.';return}}catch(err){m.textContent='잘못된 링크입니다.';return}}
- const {data:{session}}=await sb.auth.getSession();
+ let session=null;try{session=(await Promise.race([sb.auth.getSession(),new Promise((_,j)=>setTimeout(()=>j(new Error('timeout')),8000))])).data.session}catch(err){try{Object.keys(localStorage).filter(x=>x.startsWith('sb-')).forEach(x=>localStorage.removeItem(x))}catch(e){}}
  if(!session){m.innerHTML='텔레그램으로 받은 <b>비밀 링크</b>로 접속해 주세요.';return}
  const nm=session.user.user_metadata?.name;if(nm&&!localStorage.author)localStorage.author=nm;
  sb.from('access_log').insert({email:session.user.email,name:nm||'',kind:k?'login':'open',ua:navigator.userAgent.slice(0,200)}).then(()=>{});
