@@ -322,7 +322,7 @@ async function api(u, o = {}) {
     case '/api/consult_list': return chk(await sb.from('consult_logs').select('phone,client_name,at,kind,text,want_deal,listing_ids').order('at', {ascending: false}).limit(5000));
     case '/api/consult_delete': { const d = JSON.parse(o.body); let r; if (d.id) r = await sb.from('consult_logs').delete().eq('id', +d.id).select('id'); else { const ph = String(d.phone || '').replace(/\D/g, ''); if (!d.all || ph.length < 8) throw new Error('지울 기록을 골라 주세요'); r = await sb.from('consult_logs').delete().eq('phone', ph).select('id') } return {ok: true, n: (chk(r) || []).length} }
     case '/api/consult_get': return chk(await sb.from('consult_logs').select('id,phone,client_name,at,kind,text,cond,listing_ids,by,move_in,want_deal,want_deposit,want_rent,agent_memo').eq('phone', String(q.phone || '').replace(/\D/g, '')).order('at', {ascending: true}));
-    case '/api/consult_add': { const d = JSON.parse(o.body); const {data, error} = await sb.rpc('add_consult', {p_phone: d.phone, p_name: d.name || null, p_text: d.text || null, p_move_in: d.move_in || null, p_deal: d.deal || null, p_deposit: d.deposit || null, p_rent: d.rent || null, p_memo: d.memo || null, p_by: (['실장','대표'].includes(d.by) ? d.by : null)}); if (error) throw new Error(error.message); return data }
+    case '/api/consult_add': { const d = JSON.parse(o.body); const em = ((await sb.auth.getUser()).data.user || {}).email || ''; const au = em.includes('daepyo') ? '대표' : /^jeie3575@/.test(em) ? '실장' : null; const {data, error} = await sb.rpc('add_consult', {p_phone: d.phone, p_name: d.name || null, p_text: d.text || null, p_move_in: d.move_in || null, p_deal: d.deal || null, p_deposit: d.deposit || null, p_rent: d.rent || null, p_memo: d.memo || null, p_by: au}); if (error) throw new Error(error.message); return data }
     case '/api/client_update': { const d = JSON.parse(o.body); const t = (v) => (v == null || String(v).trim() === '') ? null : String(v).trim();
       const ids = (d.ids || []).map(Number).filter(Boolean); if (!ids.length) throw new Error('매물을 하나 이상 담아 주세요');
       const cur = chk(await sb.from('client_pages').select('token,phone,client_name,expires').eq('token', d.token).single());
@@ -612,8 +612,8 @@ async function drawCSDetail(phone){CSP=phone;const el=$('#cs-detail');let L=[],P
  const live=P.find(p=>new Date(p.expires)>new Date()&&!p.locked)||P.find(p=>new Date(p.expires)>new Date())||null;
  CSB=[...new Set([...(live?live.listing_ids||[]:[]),...cpGet()])];
  const unit=i=>{const r=ROWS.find(x=>x.id===i);return r?`<a href="#" data-csopen="${i}">${esc(cpUnit(r))}</a>`:'(지운 매물)'};
- el.innerHTML=`<div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap"><h4 style="margin:0">${phone?esc(name||'이름 없음')+' · '+esc(fmtPh(phone)):'새 상담'}</h4>${phone?`<a href="tel:${esc(phone)}" class="mut">전화 걸기</a>`:''}<span style="margin-left:auto;display:flex;gap:6px">${phone?`<button class="b d" id="cs-delall">🗑 전체 삭제</button>`:''}<button class="b p" id="cs-add-top">저장</button></span></div>
- <div style="display:flex;gap:6px;margin:8px 0;align-items:stretch"><textarea id="cs-text" rows="2" style="flex:1;min-width:0" placeholder="상담 메모 입력 (⌘+Enter 저장 · 상담일지에만 남음)"></textarea><select id="cs-author" title="작성자" style="width:80px"><option value="">작성자</option>${CS_STAFF.map(t=>`<option ${t===csAuthor()?'selected':''}>${t}</option>`).join('')}</select><button class="b p" id="cs-text-add">추가</button></div>
+ el.innerHTML=`<div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap"><h4 style="margin:0">${phone?esc(name||'이름 없음')+' · '+esc(fmtPh(phone)):'새 상담'}</h4>${phone?`<a href="tel:${esc(phone)}" class="mut">전화 걸기</a>`:''}<span style="margin-left:auto;display:flex;gap:6px">${phone?`<button class="b d" id="cs-delall">🗑 전체 삭제</button>`:''}<button class="b p" id="cs-add">저장</button></span></div>
+ <div style="display:flex;gap:6px;margin:8px 0;align-items:stretch"><textarea id="cs-text" rows="2" style="flex:1;min-width:0" placeholder="상담 메모 입력 (⌘+Enter 저장 · 상담일지에만 남음 · 작성자는 로그인한 계정으로 자동)"></textarea></div><div id="cs-result"></div>
  ${phone?csStaffHtml(L):''}${phone?csStageHtml(phone,L):''}${phone?csCheckHtml(phone,L):''}${csPagesHtml(P)}
  <div style="max-height:min(60vh,520px);overflow:auto;margin:8px 0">${L.map(x=>`<div style="border-left:3px solid ${x.kind==='view'?'#7aa7ff':x.kind==='page'?'var(--acc,#f26b1d)':'#ccc'};padding:3px 10px;margin:6px 0">
   <div class="mut" style="font-size:12px">${esc(String(x.at).slice(0,16).replace('T',' '))} · ${CS_KIND[x.kind]||esc(x.kind)}${x.by&&x.by!=='client'?' · <b>'+esc(csBy(x.by))+'</b>':''} · ${CS_NOEDIT.includes(x.kind)?'':`<a href="#" data-csedit="${x.id}">수정</a> · `}<a href="#" data-csdel="${x.id}" style="color:#c33">삭제</a></div>
@@ -636,7 +636,7 @@ async function drawCSDetail(phone){CSP=phone;const el=$('#cs-detail');let L=[],P
    <div id="cs-basket"></div><input id="cs-add-q" list="cs-add-dl" placeholder="단지 동 호로 찾아서 담기 (예: 써밋 102 3815)" style="width:100%;margin-top:4px"><datalist id="cs-add-dl"></datalist>
    <label>손님에게 보일 한 줄 메모 <span class="mut">(손님 페이지에 보임 — 연락처·호수 쓰지 않기)</span><textarea id="cs-note" rows="2" style="width:100%">${esc(live?.note||'')}</textarea></label>
    ${live?`<div class="mut" style="font-size:13px">지금 손님 페이지(${esc(String(live.expires).slice(0,10))}까지)를 이 매물·조건으로 갱신해요. 비밀번호는 그대로예요${live.pw_plain?` (<b>${esc(live.pw_plain)}</b>)`:''}.</div>`:`<label>비밀번호 4자리 <span class="mut">(비우면 자동)</span><input id="cs-pw" inputmode="numeric" maxlength="4" placeholder="예: 1234" style="width:100px"></label>`}</div>
-  <div><button class="b p" id="cs-add"></button></div><div id="cs-result"></div></div>`;
+  </div>`;
  const drawB=()=>{$('#cs-bn').textContent=CSB.length?`${CSB.length}개`:'';$('#cs-basket').innerHTML=CSB.map((i,n)=>`<div style="display:flex;gap:6px;align-items:center;margin:3px 0"><span style="flex:1">${n+1}. ${unit(i)} <span class="mut">${esc(ROWS.find(r=>r.id===i)?.deal||'')} ${esc(ROWS.find(r=>r.id===i)?._avail||'')}</span></span><button class="b" data-csrm="${i}">빼기</button></div>`).join('')||'<p class="mut" style="margin:4px 0">아직 없어요. 매물을 담으면 저장할 때 손님 페이지가 같이 만들어져요.</p>';
   $('#cs-basket').querySelectorAll('[data-csrm]').forEach(b=>b.onclick=()=>{const id=+b.dataset.csrm;CSB=CSB.filter(x=>x!==id);cpSet(cpGet().filter(x=>x!==id));cpBtn();drawB()});
   $('#cs-basket').querySelectorAll('[data-csopen]').forEach(a=>a.onclick=e=>{e.preventDefault();openDrawer(+a.dataset.csopen)});
@@ -644,9 +644,8 @@ async function drawCSDetail(phone){CSP=phone;const el=$('#cs-detail');let L=[],P
  window.__csDrawB=drawB;drawB();
  const csF=()=>({nm:$('#cs-name').value.trim(),move_in:$('#cs-move').value.trim(),deal:$('#cs-deal').value,deposit:$('#cs-dep').value.trim(),rent:$('#cs-rent').value.trim(),memo:$('#cs-memo').value.trim(),note:$('#cs-note').value.trim()});const F0=phone?csF():{};
  const dlF=()=>$('#cs-d-bal')?{bal:$('#cs-d-bal').value,amt:$('#cs-d-amt').value.trim(),dd:$('#cs-d-dd').value}:null,D0=dlF();
- $('#cs-add-top').onclick=()=>$('#cs-add').click();$('#cs-text-add').onclick=()=>$('#cs-add').click();
  $('#cs-text').onkeydown=e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)){e.preventDefault();$('#cs-add').click()}};
- $('#cs-author').onchange=()=>{try{localStorage.csAuthor=$('#cs-author').value}catch(_){}};
+
  const sg=$('#cs-stage');if(sg){sg.onchange=()=>{$('#cs-stl').hidden=sg.value==='상담중'};const sq=$('#cs-stq');sq.oninput=()=>{const ws=sq.value.trim().split(/\s+/);if(sq.value.trim().length<2)return;$('#cs-stq-dl').innerHTML=ROWS.filter(r=>ws.every(x=>cpUnit(r).includes(x))).slice(0,30).map(r=>`<option value="${esc(cpUnit(r))}">`).join('')}}
  const fq=$('#cs-first');fq.oninput=()=>{const ws=fq.value.trim().split(/\s+/);if(fq.value.trim().length<2)return;$('#cs-first-dl').innerHTML=ROWS.filter(r=>ws.every(x=>cpUnit(r).includes(x))).slice(0,30).map(r=>`<option value="${esc(cpUnit(r))}">`).join('')};
  const aq=$('#cs-add-q');aq.oninput=()=>{const w=aq.value.trim();const r=ROWS.find(r=>cpUnit(r)===w);if(r){if(!CSB.includes(r.id))CSB.push(r.id);aq.value='';drawB();return}
@@ -661,19 +660,18 @@ async function drawCSDetail(phone){CSP=phone;const el=$('#cs-detail');let L=[],P
  if(phone){csStageBind(phone);csStaffBind(phone);csCheckBind(phone)}csPagesBind(el,phone);
  $('#cs-add').onclick=async()=>{const ph=(phone||($('#cs-ph')?.value||'')).replace(/\D/g,'');if(ph.length<8)return alert('전화번호를 넣어 주세요');
   const nm=$('#cs-name').value.trim(),text=$('#cs-text').value.trim(),note=$('#cs-note').value.trim(),f={move_in:$('#cs-move').value.trim(),deal:$('#cs-deal').value,deposit:$('#cs-dep').value.trim(),rent:$('#cs-rent').value.trim(),memo:$('#cs-memo').value.trim()};
-  const au=$('#cs-author').value;if(text&&!au)return alert('작성자(실장/대표)를 골라 주세요');
   const pw=($('#cs-pw')?.value||'').trim();if(pw&&!/^\d{4}$/.test(pw))return alert('비밀번호는 숫자 4자리로 넣어 주세요 (비우면 자동).');
   const sgV=$('#cs-stage')?.value||'상담중';let sgL=null;if(sgV!=='상담중'){const w=$('#cs-stq').value.trim(),r=ROWS.find(r=>cpUnit(r)===w);if(!r)return alert('계약 매물을 목록에서 골라 주세요 (단지 동 호)');sgL=r.id}
   const ctV=$('#cs-cat').value,sfV=$('#cs-staff')?.value,fsV=$('#cs-first').value.trim();const F1=csF(),fCh=Object.keys(F1).some(k=>k!=='note'&&F1[k]!==(F0[k]||'')),D1=dlF(),dCh=!!D1&&JSON.stringify(D1)!==JSON.stringify(D0);
   if(!CSB.length&&!text&&!fCh&&!dCh&&!(ctV&&ctV!==csLast(L,'cat'))&&!sfV&&sgV==='상담중'&&!(fsV&&fsV!==csLast(L,'first')))return alert('바뀐 내용이 없어요. 상담 메모나 조건·계약 정보를 적거나, 보여줄 매물을 담아 주세요');
   const btn=$('#cs-add');btn.disabled=true;let txt='';
   try{if(CSB.length&&live){await api('/api/client_update',{method:'POST',body:JSON.stringify({token:live.token,ids:CSB,name:nm,note,...f})});
-     if(text)await api('/api/consult_add',{method:'POST',body:JSON.stringify({phone:ph,name:nm,text,by:au||null})});
+     if(text)await api('/api/consult_add',{method:'POST',body:JSON.stringify({phone:ph,name:nm,text})});
      txt=`[호반제이부동산] 고르신 매물을 새로 정리했어요\n${CP_SITE}${live.token}\n(비밀번호는 지난번과 같아요 · ${String(live.expires).slice(0,10)}까지)`}
    else if(CSB.length){const r=await api('/api/client_create',{method:'POST',body:JSON.stringify({name:nm,phone:ph,pw,ids:CSB,note,...f,days:30})});
-     if(text)await api('/api/consult_add',{method:'POST',body:JSON.stringify({phone:ph,name:nm,text,by:au||null})});
+     if(text)await api('/api/consult_add',{method:'POST',body:JSON.stringify({phone:ph,name:nm,text})});
      txt=`[호반제이부동산] ${r.title}\n${CP_SITE}${r.token}\n비밀번호: ${r.pw}\n(홈페이지 [내 매물 보기]에서 전화번호+비밀번호로도 열려요 · ${String(r.expires).slice(0,10)}까지)`}
-   else if(text||fCh)await api('/api/consult_add',{method:'POST',body:JSON.stringify({phone:ph,name:nm,text,...f,by:au||null})});
+   else if(text||fCh)await api('/api/consult_add',{method:'POST',body:JSON.stringify({phone:ph,name:nm,text,...f})});
    if(CSB.length){cpSet([]);cpBtn()}
    const ct=$('#cs-cat').value;if(ct&&ct!==csLast(L,'cat'))await api('/api/consult_cat_set',{method:'POST',body:JSON.stringify({phone:ph,cat:ct})});
    const fs=$('#cs-first').value.trim();if(fs&&fs!==csLast(L,'first'))await api('/api/consult_first_set',{method:'POST',body:JSON.stringify({phone:ph,text:fs})});
@@ -711,8 +709,7 @@ function csStageHtml(phone,L){const c=CST[phone]||{},st=c.stage||'상담중',ids
  const auto=csAuto(phone)?`<div class="note" style="background:#fff4e6;padding:6px 10px;border-radius:6px;margin:6px 0">🔔 보여 준 매물 <a href="#" data-csopen="${c.auto_listing_id}">${esc(cpUnit(ROWS.find(r=>r.id===c.auto_listing_id)))}</a>의 가능여부가 '계약'으로 바뀌었어요 (${esc(String(c.auto_at||'').slice(0,10))}). <button class="b" id="cs-seen">확인했어요</button></div>`:'';
  return `<div style="margin:8px 0;padding:8px 10px;border:1px solid var(--line);border-radius:6px"><b>계약 진행</b> ${CS_STAGES.map(t=>`<button class="b${t===st?' p':''}" data-cst="${t}">${t}</button>`).join(' ')}
   ${st!=='상담중'?(()=>{const dv=csDealOf(L);return `<div style="display:grid;gap:6px;margin-top:8px"><div><b>최종 선택 매물</b> ${c.listing_id?`<a href="#" data-csopen="${c.listing_id}">${esc(cpUnit(ROWS.find(r=>r.id===c.listing_id))||'(지운 매물)')}</a>`:'<span class="mut">아직 안 골랐어요</span>'} <button class="b" id="cs-pick-ch">${c.listing_id?'바꾸기':'고르기'}</button></div>
-   <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px"><label>입주일(잔금일)<input id="cs-d-bal" type="date" value="${esc(dv.bal||'')}" style="width:100%"></label><label>계약금액<input id="cs-d-amt" value="${esc(dv.amt||'')}" placeholder="예: 보 5000 / 월 120" style="width:100%"></label><label>계약금 입금일<input id="cs-d-dd" type="date" value="${esc(dv.dd||'')}" style="width:100%"></label></div>
-   <div><button class="b p" id="cs-d-save">계약 정보 저장</button></div></div>`})():''}
+   <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px"><label>입주일(잔금일)<input id="cs-d-bal" type="date" value="${esc(dv.bal||'')}" style="width:100%"></label><label>계약금액<input id="cs-d-amt" value="${esc(dv.amt||'')}" placeholder="예: 보 5000 / 월 120" style="width:100%"></label><label>계약금 입금일<input id="cs-d-dd" type="date" value="${esc(dv.dd||'')}" style="width:100%"></label></div></div>`})():''}
   <div id="cs-pick" hidden style="margin-top:6px">어느 매물인가요? <select id="cs-pick-sel"><option value="">보여 준 매물에서 고르기</option>${ids.map(i=>`<option value="${i}">${esc(cpUnit(ROWS.find(r=>r.id===i)))}</option>`).join('')}</select>
    <input id="cs-pick-q" list="cs-pick-dl" placeholder="또는 단지 동 호 입력" style="width:200px"><datalist id="cs-pick-dl"></datalist> <button class="b p" id="cs-pick-ok">계약진행으로</button> <button class="b" id="cs-pick-x">취소</button></div>${auto}</div>`}
 function csStageBind(phone){const save=async(stage,lid)=>{try{await api('/api/consult_stage_set',{method:'POST',body:JSON.stringify({phone,stage,listing_id:lid||null})});toast('단계를 '+stage+'(으)로 바꿨어요');CST={};for(const x of await api('/api/consult_stage'))CST[x.phone]=x;CSL=await api('/api/consult_list');drawCSDetail(phone)}catch(e){alert('저장 실패: '+e.message)}};
@@ -721,7 +718,6 @@ function csStageBind(phone){const save=async(stage,lid)=>{try{await api('/api/co
  const ok=$('#cs-pick-ok');if(ok)ok.onclick=()=>{let lid=+$('#cs-pick-sel').value||null;const w=$('#cs-pick-q').value.trim();if(!lid&&w){const r=ROWS.find(r=>cpUnit(r)===w);if(!r)return alert('매물을 목록에서 골라 주세요');lid=r.id}if(!lid)return alert('어느 매물인지 골라 주세요');const cs=(CST[phone]||{}).stage;save(cs==='계약완료'?'계약완료':'계약진행',lid)};
  const x=$('#cs-pick-x');if(x)x.onclick=()=>$('#cs-pick').hidden=true;
  const pc=$('#cs-pick-ch');if(pc)pc.onclick=()=>{$('#cs-pick').hidden=false;$('#cs-pick-ok').textContent='이 매물로 정하기'};
- const ds=$('#cs-d-save');if(ds)ds.onclick=async()=>{try{await api('/api/consult_deal_set',{method:'POST',body:JSON.stringify({phone,bal:$('#cs-d-bal').value,amt:$('#cs-d-amt').value,dd:$('#cs-d-dd').value})});toast('계약 정보를 저장했어요');CSL=await api('/api/consult_list');drawCSDetail(phone)}catch(e){alert('저장 실패: '+e.message)}};
  const sn=$('#cs-seen');if(sn)sn.onclick=async()=>{await api('/api/consult_stage_seen',{method:'POST',body:JSON.stringify({phone})});CST[phone].auto_seen=true;drawCSDetail(phone)}}
 function openCS(phone){CSP=phone||'';document.querySelector('#tabs [data-t="cs"]').click();}
 
