@@ -613,8 +613,8 @@ async function drawCSDetail(phone){CSP=phone;const el=$('#cs-detail');let L=[],P
  CSB=[...new Set([...(live?live.listing_ids||[]:[]),...cpGet()])];
  const unit=i=>{const r=ROWS.find(x=>x.id===i);return r?`<a href="#" data-csopen="${i}">${esc(cpUnit(r))}</a>`:'(지운 매물)'};
  el.innerHTML=`<div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap"><h4 style="margin:0">${phone?esc(name||'이름 없음')+' · '+esc(fmtPh(phone)):'새 상담'}</h4>${phone?`<a href="tel:${esc(phone)}" class="mut">전화 걸기</a>`:''}<span style="margin-left:auto;display:flex;gap:6px">${phone?`<button class="b d" id="cs-delall">🗑 전체 삭제</button>`:''}<button class="b p" id="cs-add">저장</button></span></div>
- <div style="display:flex;gap:6px;margin:8px 0;align-items:stretch"><textarea id="cs-text" rows="2" style="flex:1;min-width:0" placeholder="상담 메모 입력 (⌘+Enter 저장 · 상담일지에만 남음 · 작성자는 로그인한 계정으로 자동)"></textarea></div><div id="cs-result"></div>
  ${phone?csStaffHtml(L):''}${phone?csStageHtml(phone,L):''}${phone?csCheckHtml(phone,L):''}${csPagesHtml(P)}
+ <div style="display:flex;gap:6px;margin:8px 0;align-items:stretch"><textarea id="cs-text" rows="2" style="flex:1;min-width:0" placeholder="상담 메모 입력 (⌘+Enter 저장 · 상담일지에만 남음 · 작성자는 로그인한 계정으로 자동)"></textarea></div><div id="cs-result"></div>
  <div style="max-height:min(60vh,520px);overflow:auto;margin:8px 0">${L.map(x=>`<div style="border-left:3px solid ${x.kind==='view'?'#7aa7ff':x.kind==='page'?'var(--acc,#f26b1d)':'#ccc'};padding:3px 10px;margin:6px 0">
   <div class="mut" style="font-size:12px">${esc(String(x.at).slice(0,16).replace('T',' '))} · ${CS_KIND[x.kind]||esc(x.kind)}${x.by&&x.by!=='client'?' · <b>'+esc(csBy(x.by))+'</b>':''} · ${CS_NOEDIT.includes(x.kind)?'':`<a href="#" data-csedit="${x.id}">수정</a> · `}<a href="#" data-csdel="${x.id}" style="color:#c33">삭제</a></div>
   ${x.kind==='check'?`<div class="mut">체크 ${csChkSum(x.text)} 완료</div>`:x.kind==='deal'?`<div>${esc(csDealTxt(x.text))}</div>`:`<div data-cstx="${x.id}" style="white-space:pre-wrap">${x.text?esc(x.text):''}</div>`}${cpCond(x)?`<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:13px">${[['입주일','move_in'],['희망거래유형','want_deal'],['희망보증금','want_deposit'],['희망월세','want_rent']].filter(([,k])=>x[k]).map(([l,k])=>`<span><span class="mut">${l}</span> ${esc(x[k])}</span>`).join('')}</div>`:''}${x.cond?`<div><span class="mut">원하는 조건</span> ${esc(x.cond)}</div>`:''}${x.agent_memo?`<div style="font-size:13px">📝 <span class="mut">중개사 메모</span> ${esc(x.agent_memo)}</div>`:''}
@@ -662,8 +662,8 @@ async function drawCSDetail(phone){CSP=phone;const el=$('#cs-detail');let L=[],P
   const nm=$('#cs-name').value.trim(),text=$('#cs-text').value.trim(),note=$('#cs-note').value.trim(),f={move_in:$('#cs-move').value.trim(),deal:$('#cs-deal').value,deposit:$('#cs-dep').value.trim(),rent:$('#cs-rent').value.trim(),memo:$('#cs-memo').value.trim()};
   const pw=($('#cs-pw')?.value||'').trim();if(pw&&!/^\d{4}$/.test(pw))return alert('비밀번호는 숫자 4자리로 넣어 주세요 (비우면 자동).');
   const sgV=$('#cs-stage')?.value||'상담중';let sgL=null;if(sgV!=='상담중'){const w=$('#cs-stq').value.trim(),r=ROWS.find(r=>cpUnit(r)===w);if(!r)return alert('계약 매물을 목록에서 골라 주세요 (단지 동 호)');sgL=r.id}
-  const ctV=$('#cs-cat').value,sfV=$('#cs-staff')?.value,fsV=$('#cs-first').value.trim();const F1=csF(),fCh=Object.keys(F1).some(k=>k!=='note'&&F1[k]!==(F0[k]||'')),D1=dlF(),dCh=!!D1&&JSON.stringify(D1)!==JSON.stringify(D0);
-  if(!CSB.length&&!text&&!fCh&&!dCh&&!(ctV&&ctV!==csLast(L,'cat'))&&!sfV&&sgV==='상담중'&&!(fsV&&fsV!==csLast(L,'first')))return alert('바뀐 내용이 없어요. 상담 메모나 조건·계약 정보를 적거나, 보여줄 매물을 담아 주세요');
+  const ctV=$('#cs-cat').value,sfV=$('#cs-staff')?.value,fsV=$('#cs-first').value.trim();const F1=csF(),fCh=Object.keys(F1).some(k=>k!=='note'&&F1[k]!==(F0[k]||'')),D1=dlF(),dCh=!!D1&&JSON.stringify(D1)!==JSON.stringify(D0),K1=window.__csCkRead&&phone?window.__csCkRead():null,kCh=!!K1&&JSON.stringify(K1)!==window.__csCk0;
+  if(!CSB.length&&!text&&!fCh&&!dCh&&!kCh&&!(ctV&&ctV!==csLast(L,'cat'))&&!sfV&&sgV==='상담중'&&!(fsV&&fsV!==csLast(L,'first')))return alert('바뀐 내용이 없어요. 상담 메모나 조건·계약 정보·체크리스트를 적거나, 보여줄 매물을 담아 주세요');
   const btn=$('#cs-add');btn.disabled=true;let txt='';
   try{if(CSB.length&&live){await api('/api/client_update',{method:'POST',body:JSON.stringify({token:live.token,ids:CSB,name:nm,note,...f})});
      if(text)await api('/api/consult_add',{method:'POST',body:JSON.stringify({phone:ph,name:nm,text})});
@@ -675,6 +675,7 @@ async function drawCSDetail(phone){CSP=phone;const el=$('#cs-detail');let L=[],P
    if(CSB.length){cpSet([]);cpBtn()}
    const ct=$('#cs-cat').value;if(ct&&ct!==csLast(L,'cat'))await api('/api/consult_cat_set',{method:'POST',body:JSON.stringify({phone:ph,cat:ct})});
    const fs=$('#cs-first').value.trim();if(fs&&fs!==csLast(L,'first'))await api('/api/consult_first_set',{method:'POST',body:JSON.stringify({phone:ph,text:fs})});
+   if(kCh)await api('/api/consult_check_set',{method:'POST',body:JSON.stringify({phone:ph,items:K1})});
    if(dCh)await api('/api/consult_deal_set',{method:'POST',body:JSON.stringify({phone:ph,...D1})});
    if(sgV!=='상담중'){await api('/api/consult_stage_set',{method:'POST',body:JSON.stringify({phone:ph,stage:sgV,listing_id:sgL})});CST={};for(const x of await api('/api/consult_stage'))CST[x.phone]=x}
    const sf=$('#cs-staff')?.value;if(sf)await api('/api/consult_staff_set',{method:'POST',body:JSON.stringify({phone:ph,staff:sf})});
@@ -696,14 +697,15 @@ function csCheckHtml(phone,L){const st=(CST[phone]||{}).stage||'상담중',a=csC
  if(st==='상담중'&&!has)return '';const n=a.filter(x=>x.d).length;
  return `<details ${st==='계약진행'?'open':''} style="margin:8px 0;padding:8px 10px;border:1px solid var(--line);border-radius:6px"><summary><b>☑ 계약 체크리스트</b> <span class="mut">${n}/${a.length} 완료</span></summary>
   <div id="cs-chk" style="display:grid;gap:3px;margin-top:6px">${a.map((x,i)=>`<div style="display:flex;gap:6px;align-items:center"><label style="flex:0 0 250px;display:flex;gap:4px;align-items:center${x.d?';color:#2b8a3e':''}"><input type="checkbox" data-ckd="${i}" ${x.d?'checked':''}> <span data-ckt="${i}">${esc(x.t)}</span></label><input data-ckv="${i}" value="${esc(x.v)}" placeholder="날짜·금액·메모" style="flex:1;min-width:0">${CS_CHECK.includes(x.t)?'':`<button class="b" data-ckx="${i}" title="이 항목 빼기">✕</button>`}</div>`).join('')}</div>
-  <div style="display:flex;gap:6px;margin-top:6px"><input id="cs-ck-new" placeholder="항목 추가 (예: 커튼레일설치, 보증보험 서류)" style="flex:1"><button class="b" id="cs-ck-add">추가</button><button class="b p" id="cs-ck-save">체크 저장</button></div></details>`}
-function csCheckBind(phone){const box=$('#cs-chk');if(!box)return;
+  <div style="display:flex;gap:6px;margin-top:6px"><input id="cs-ck-new" placeholder="항목 추가 (예: 커튼레일설치, 보증보험 서류)" style="flex:1"><button class="b" id="cs-ck-add">추가</button><span class="mut" style="align-self:center;font-size:12px">체크·내용은 위 [저장]으로 저장돼요</span></div></details>`}
+function csCheckBind(phone){const box=$('#cs-chk');window.__csCkRead=null;if(!box)return;
  const read=()=>[...box.querySelectorAll('[data-ckt]')].map(s=>{const i=s.dataset.ckt;return {t:s.textContent,v:box.querySelector(`[data-ckv="${i}"]`).value.trim(),d:box.querySelector(`[data-ckd="${i}"]`).checked}});
- const save=async a=>{try{await api('/api/consult_check_set',{method:'POST',body:JSON.stringify({phone,items:a})});toast('체크리스트를 저장했어요');CSL=await api('/api/consult_list');drawCSList();drawCSDetail(phone)}catch(e){alert('저장 실패: '+e.message)}};
- box.querySelectorAll('[data-ckd]').forEach(c=>c.onchange=()=>save(read()));
- box.querySelectorAll('[data-ckx]').forEach(b=>b.onclick=()=>{const a=read();a.splice(+b.dataset.ckx,1);save(a)});
- $('#cs-ck-add').onclick=()=>{const t=$('#cs-ck-new').value.trim();if(!t)return;save([...read(),{t,v:'',d:false}])};
- $('#cs-ck-save').onclick=()=>save(read())}
+ window.__csCkRead=read;window.__csCk0=JSON.stringify(read());
+ const rm=b=>b.onclick=()=>b.closest('div').remove();box.querySelectorAll('[data-ckx]').forEach(rm);
+ box.addEventListener('change',e=>{const c=e.target.closest('[data-ckd]');if(c)c.closest('label').style.color=c.checked?'#2b8a3e':''});
+ $('#cs-ck-add').onclick=()=>{const t=$('#cs-ck-new').value.trim();if(!t)return;const i='n'+Date.now();const d=document.createElement('div');d.style.cssText='display:flex;gap:6px;align-items:center';
+  d.innerHTML=`<label style="flex:0 0 250px;display:flex;gap:4px;align-items:center"><input type="checkbox" data-ckd="${i}"> <span data-ckt="${i}">${esc(t)}</span></label><input data-ckv="${i}" placeholder="날짜·금액·메모" style="flex:1;min-width:0"><button class="b" data-ckx="${i}" title="이 항목 빼기">✕</button>`;
+  box.appendChild(d);rm(d.querySelector('[data-ckx]'));$('#cs-ck-new').value=''}}
 function csShown(L){const ids=[];for(const x of L)for(const i of (x.listing_ids||[]))if(!ids.includes(i))ids.push(i);return ids}
 function csStageHtml(phone,L){const c=CST[phone]||{},st=c.stage||'상담중',ids=csShown(L);
  const auto=csAuto(phone)?`<div class="note" style="background:#fff4e6;padding:6px 10px;border-radius:6px;margin:6px 0">🔔 보여 준 매물 <a href="#" data-csopen="${c.auto_listing_id}">${esc(cpUnit(ROWS.find(r=>r.id===c.auto_listing_id)))}</a>의 가능여부가 '계약'으로 바뀌었어요 (${esc(String(c.auto_at||'').slice(0,10))}). <button class="b" id="cs-seen">확인했어요</button></div>`:'';
