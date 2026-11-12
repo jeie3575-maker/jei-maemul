@@ -315,6 +315,7 @@ async function api(u, o = {}) {
     case '/api/consult_stage_seen': { const d = JSON.parse(o.body); chk(await sb.from('consult_stage').update({auto_seen: true}).eq('phone', d.phone)); return {ok: true} }
     case '/api/consult_staff_set': { const d = JSON.parse(o.body); if (!['대표','실장'].includes(d.staff)) throw new Error('담당자를 골라 주세요'); const who = ((await sb.auth.getUser()).data.user || {}).email || null; chk(await sb.from('consult_logs').insert({phone: String(d.phone || '').replace(/\D/g, ''), kind: 'staff', text: d.staff, by: who})); return {ok: true} }
     case '/api/consult_check_set': { const d = JSON.parse(o.body); const it = (d.items || []).filter(x => x && String(x.t || '').trim()).slice(0, 60).map(x => ({t: String(x.t).trim().slice(0, 80), v: String(x.v || '').trim().slice(0, 200), d: !!x.d})); const who = ((await sb.auth.getUser()).data.user || {}).email || null; chk(await sb.from('consult_logs').insert({phone: String(d.phone || '').replace(/\D/g, ''), kind: 'check', text: JSON.stringify({items: it}), by: who})); return {ok: true} }
+    case '/api/consult_first_set': { const d = JSON.parse(o.body); const t = String(d.text || '').trim().slice(0, 200); if (!t) throw new Error('처음 문의한 매물을 적어 주세요'); const who = ((await sb.auth.getUser()).data.user || {}).email || null; chk(await sb.from('consult_logs').insert({phone: String(d.phone || '').replace(/\D/g, ''), kind: 'first', text: t, by: who})); return {ok: true} }
     case '/api/consult_cat_set': { const d = JSON.parse(o.body); if (!['아파트','오피스텔','상가','오피스'].includes(d.cat)) throw new Error('분류를 골라 주세요'); const who = ((await sb.auth.getUser()).data.user || {}).email || null; chk(await sb.from('consult_logs').insert({phone: String(d.phone || '').replace(/\D/g, ''), kind: 'cat', text: d.cat, by: who})); return {ok: true} }
     case '/api/consult_list': return chk(await sb.from('consult_logs').select('phone,client_name,at,kind,text,want_deal,listing_ids').order('at', {ascending: false}).limit(5000));
     case '/api/consult_delete': { const d = JSON.parse(o.body); let r; if (d.id) r = await sb.from('consult_logs').delete().eq('id', +d.id).select('id'); else { const ph = String(d.phone || '').replace(/\D/g, ''); if (!d.all || ph.length < 8) throw new Error('지울 기록을 골라 주세요'); r = await sb.from('consult_logs').delete().eq('phone', ph).select('id') } return {ok: true, n: (chk(r) || []).length} }
@@ -559,7 +560,7 @@ async function cpPick(){if(!CUR||!CUR.id)return;const lid=CUR.id,unitTxt=cpUnit(
  $('#cpk-x').onclick=close;$('#cp-pick').onclick=e=>{if(e.target.id==='cp-pick')close()};$('#cpk-new').onclick=()=>{close();cpToggleNew()};$('#cpk-q').oninput=draw;draw()}
 const cpUnit=r=>r?`${r.danji||''} ${r.dong||''} ${r.ho||''}`.replace(/\s+/g,' ').trim():'(지운 매물)';
 // ---- 📒 상담일지: 손님 전화번호별 기록 (Supabase consult_logs, 로그인한 직원만) ----
-const CS_KIND={inquiry:'📩 홈페이지 문의',page:'📄 손님 페이지',view:'👀 열람',memo:'📝 메모',phone:'☎️ 번호 변경',pw:'🔑 비번 새로',stage:'🏷 단계',staff:'👤 담당자',cat:'🏢 희망분류',check:'☑ 계약 체크',contract:'🔔 계약 확인(자동)'};
+const CS_KIND={inquiry:'📩 홈페이지 문의',page:'📄 손님 페이지',view:'👀 열람',memo:'📝 메모',phone:'☎️ 번호 변경',pw:'🔑 비번 새로',stage:'🏷 단계',staff:'👤 담당자',cat:'🏢 희망분류',first:'🚩 처음 문의 매물',check:'☑ 계약 체크',contract:'🔔 계약 확인(자동)'};
 const CS_CHECK=['입주날짜, 계약기간, 계약금액 확인','계약금','계약서작성 일자 확인','신분증 (통장사본 및 사업자등록증)','계약서 작성','계약금, 잔금 영수증','엘레베이터 예약','입주청소 일자 및 시간','관리비정산','인수품확인서','수수료 양타/단타'];
 const csChkParse=t=>{try{return (JSON.parse(t||'{}').items||[])}catch(e){return []}},csChkSum=t=>{const a=csChkParse(t);return a.filter(x=>x.d).length+'/'+a.length};
 const CS_STAGES=['상담중','계약진행','계약완료'],CS_SC={'상담중':'#888','계약진행':'#e8590c','계약완료':'#2b8a3e'};let CST={},CSF='',CSS='',CSC='';const CS_CATS=['아파트','오피스텔','상가','오피스'],CS_STAFF=['대표','실장'],CS_STC={'대표':'#1c7ed6','실장':'#9c36b5'};
@@ -618,6 +619,7 @@ async function drawCSDetail(phone){CSP=phone;const el=$('#cs-detail');let L=[],P
  <div style="display:grid;gap:6px;border-top:1px solid var(--line);padding-top:8px">${phone?'':`<label>전화번호 <b style="color:var(--acc,#c00)">필수</b><input id="cs-ph" inputmode="tel" placeholder="010-1234-5678" style="width:100%"></label>`}
   ${phone?'':`<label>담당자 <select id="cs-staff"><option value="">-</option>${CS_STAFF.map(t=>`<option>${t}</option>`).join('')}</select></label>`}
   <label>손님 이름 <span class="mut">(손님 페이지엔 '김○○ 님')</span><input id="cs-name" value="${esc(name)}" style="width:100%"></label>
+  <label>처음 문의한 매물 <span class="mut">(손님이 처음 연락한 매물 · 단지 동 호로 찾거나 그대로 적기)</span><input id="cs-first" list="cs-first-dl" value="${esc(csLast(L,'first'))}" placeholder="예: 써밋 102 3815 / 네이버 광고 보고 문의" style="width:100%"><datalist id="cs-first-dl"></datalist></label>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><label>입주일<input id="cs-move" value="${esc(live?.move_in||last('move_in'))}" placeholder="예: 12월 중" style="width:100%"></label><label>희망분류<select id="cs-cat" style="width:100%">${['',...CS_CATS].map(v=>`<option value="${v}" ${v&&v===csLast(L,'cat')?'selected':''}>${v||'-'}</option>`).join('')}</select></label><label>희망거래유형<select id="cs-deal" style="width:100%">${['','매매','전세','월세','전세,월세'].map(v=>`<option value="${v}" ${v===(live?.want_deal||last('want_deal'))?'selected':''}>${v||'-'}</option>`).join('')}</select></label>
   <label>희망보증금<input id="cs-dep" value="${esc(live?.want_deposit||last('want_deposit'))}" placeholder="예: 5억 이하" style="width:100%"></label><label>희망월세<input id="cs-rent" value="${esc(live?.want_rent||last('want_rent'))}" placeholder="예: 250 이하" style="width:100%"></label></div>
   <label>중개사 메모 <span class="mut">(매물장·상담일지에서만 보임 — 손님 페이지엔 절대 안 나감)</span><input id="cs-memo" value="${esc(live?.agent_memo||last('agent_memo'))}" style="width:100%"></label>
@@ -632,6 +634,7 @@ async function drawCSDetail(phone){CSP=phone;const el=$('#cs-detail');let L=[],P
   $('#cs-basket').querySelectorAll('[data-csopen]').forEach(a=>a.onclick=e=>{e.preventDefault();openDrawer(+a.dataset.csopen)});
   $('#cs-add').textContent=CSB.length?(live?'저장 (상담일지 + 손님 페이지 갱신)':'저장 (상담일지 + 손님 페이지 만들기)'):'저장 (상담일지)'};
  window.__csDrawB=drawB;drawB();
+ const fq=$('#cs-first');fq.oninput=()=>{const ws=fq.value.trim().split(/\s+/);if(fq.value.trim().length<2)return;$('#cs-first-dl').innerHTML=ROWS.filter(r=>ws.every(x=>cpUnit(r).includes(x))).slice(0,30).map(r=>`<option value="${esc(cpUnit(r))}">`).join('')};
  const aq=$('#cs-add-q');aq.oninput=()=>{const w=aq.value.trim();const r=ROWS.find(r=>cpUnit(r)===w);if(r){if(!CSB.includes(r.id))CSB.push(r.id);aq.value='';drawB();return}
   if(w.length<2)return;const ws=w.split(/\s+/);$('#cs-add-dl').innerHTML=ROWS.filter(r=>ws.every(x=>cpUnit(r).includes(x))).slice(0,30).map(r=>`<option value="${esc(cpUnit(r))}">`).join('')};
  el.querySelectorAll('[data-csopen]').forEach(a=>a.onclick=e=>{e.preventDefault();openDrawer(+a.dataset.csopen)});
@@ -642,7 +645,7 @@ async function drawCSDetail(phone){CSP=phone;const el=$('#cs-detail');let L=[],P
  $('#cs-add').onclick=async()=>{const ph=(phone||($('#cs-ph')?.value||'')).replace(/\D/g,'');if(ph.length<8)return alert('전화번호를 넣어 주세요');
   const nm=$('#cs-name').value.trim(),text=$('#cs-text').value.trim(),note=$('#cs-note').value.trim(),f={move_in:$('#cs-move').value.trim(),deal:$('#cs-deal').value,deposit:$('#cs-dep').value.trim(),rent:$('#cs-rent').value.trim(),memo:$('#cs-memo').value.trim()};
   const pw=($('#cs-pw')?.value||'').trim();if(pw&&!/^\d{4}$/.test(pw))return alert('비밀번호는 숫자 4자리로 넣어 주세요 (비우면 자동).');
-  const ctV=$('#cs-cat').value,sfV=$('#cs-staff')?.value;if(!CSB.length&&!text&&!Object.values(f).some(Boolean)&&!(ctV&&ctV!==csLast(L,'cat'))&&!sfV)return alert('상담 메모나 조건을 적거나, 보여줄 매물을 담아 주세요');
+  const ctV=$('#cs-cat').value,sfV=$('#cs-staff')?.value,fsV=$('#cs-first').value.trim();if(!CSB.length&&!text&&!Object.values(f).some(Boolean)&&!(ctV&&ctV!==csLast(L,'cat'))&&!sfV&&!(fsV&&fsV!==csLast(L,'first')))return alert('상담 메모나 조건을 적거나, 보여줄 매물을 담아 주세요');
   const btn=$('#cs-add');btn.disabled=true;let txt='';
   try{if(CSB.length&&live){await api('/api/client_update',{method:'POST',body:JSON.stringify({token:live.token,ids:CSB,name:nm,note,...f})});
      if(text)await api('/api/consult_add',{method:'POST',body:JSON.stringify({phone:ph,name:nm,text})});
@@ -653,6 +656,7 @@ async function drawCSDetail(phone){CSP=phone;const el=$('#cs-detail');let L=[],P
    else if(text||Object.values(f).some(Boolean))await api('/api/consult_add',{method:'POST',body:JSON.stringify({phone:ph,name:nm,text,...f})});
    if(CSB.length){cpSet([]);cpBtn()}
    const ct=$('#cs-cat').value;if(ct&&ct!==csLast(L,'cat'))await api('/api/consult_cat_set',{method:'POST',body:JSON.stringify({phone:ph,cat:ct})});
+   const fs=$('#cs-first').value.trim();if(fs&&fs!==csLast(L,'first'))await api('/api/consult_first_set',{method:'POST',body:JSON.stringify({phone:ph,text:fs})});
    const sf=$('#cs-staff')?.value;if(sf)await api('/api/consult_staff_set',{method:'POST',body:JSON.stringify({phone:ph,staff:sf})});
    CSL=await api('/api/consult_list');drawCSList();await drawCSDetail(ph);toast('저장했어요');
    if(txt){$('#cs-result').innerHTML=`<div class="note" style="margin-top:8px;white-space:pre-wrap;background:#fff7e6;padding:8px;border-radius:6px">${esc(txt)}</div><button class="b p" id="cs-copy">손님에게 보낼 문구 복사</button>`;$('#cs-copy').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('복사했어요'));navigator.clipboard.writeText(txt).catch(()=>{})}}
