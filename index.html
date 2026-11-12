@@ -304,6 +304,7 @@ async function api(u, o = {}) {
     case '/api/recon': return await recon();
     case '/api/rt': return (await loadRef('rt')).rows;
     case '/api/rt_apt': return (await loadRef('rt_apt')).rows;
+    case '/api/my_edits': return (await all(() => sb.from('history').select('listing_id,at').neq('who', 'sync').not('who', 'like', '%@example.com').order('id'))).map(h => [h.listing_id, h.at]);
     case '/api/client_create': { const d = JSON.parse(o.body); const {data, error} = await sb.rpc('create_client_page', {p_name: d.name || null, p_phone: d.phone, p_ids: d.ids, p_pw: d.pw || null, p_move_in: d.move_in || null, p_deal: d.deal || null, p_deposit: d.deposit || null, p_rent: d.rent || null, p_note: d.note || null, p_memo: d.memo || null, p_days: d.days || 30, p_by: null}); if (error) throw new Error(error.message); return data }
     case '/api/client_list': { const cols = 'token,client_name,phone,title,listing_ids,created,expires,fails,locked,views,last_view,created_by,move_in,want_deal,want_deposit,want_rent,agent_memo,note'; let r = await sb.from('client_pages').select(cols + ',pw_plain').order('created', {ascending: false}).limit(200); if (r.error && /pw_plain/.test(r.error.message)) r = await sb.from('client_pages').select(cols).order('created', {ascending: false}).limit(200); return chk(r) }
     case '/api/client_extend': { const d = JSON.parse(o.body); const {data, error} = await sb.rpc('extend_client_page', {p_token: d.token, p_days: d.days || 30}); if (error) throw new Error(error.message); return data }
@@ -350,7 +351,7 @@ async function api(u, o = {}) {
  <div class="bar"><div class="chips" id="f-kind"></div><span class="mut">|</span>
   <label><input type="checkbox" id="f-active" checked> 진행 중인 매물만</label>
   <label><input type="checkbox" id="f-ad"> 광고(네이버·뱅크) 표시된 것만</label>
-  <button class="b" id="f-new" title="고른 기간에 수정된 매물만, 최근 수정순">✏️ 최근 수정</button><span id="nw-box" hidden><input type="date" id="nw1"> ~ <input type="date" id="nw2"></span>
+  <button class="b" id="f-new" title="실장·대표가 직접 고친 매물만(일괄 작업 제외), 고른 기간, 최근 수정순">✏️ 최근 수정</button><span id="nw-box" hidden><input type="date" id="nw1"> ~ <input type="date" id="nw2"></span>
   </div>
   <div class="bar" id="fx-box" hidden style="display:none!important"><span class="mut">층</span><div class="chips" id="f-flp"></div><input id="fl1" inputmode="numeric" placeholder="부터" style="width:52px">~<input id="fl2" inputmode="numeric" placeholder="까지" style="width:52px"><span class="mut">| 향</span><div class="chips" id="f-dir"></div><span class="mut">| 평형</span><input id="py1" inputmode="decimal" placeholder="부터" style="width:52px">~<input id="py2" inputmode="decimal" placeholder="까지" style="width:52px"></div>
  <div class="bar" id="f-on" hidden style="display:none!important"></div>
@@ -386,6 +387,9 @@ const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"]/g,c=>
 const CATS=['오피스텔','아파트','상가','오피스','전자상가','주택·빌딩·토지'];let CAT=localStorage.cat||'오피스텔';
 let META,ROWS=[],F={danji:new Set(),kind:new Set(),avail:new Set(),adt:new Set(),use:new Set(),lease:new Set(),typ:new Set(),dong:new Set(),dir:new Set()},FX={fl1:'',fl2:'',py1:'',py2:''},SORT={k:'_def',d:1},CUR=null,NEW30=false;
 function kday(ms){return new Date(ms+9*36e5).toISOString().slice(0,10)}
+let MYED=null;async function loadMyEd(){try{const a=await api('/api/my_edits');const m={};a.forEach(([id,at])=>{const d=kdate(at);if(d)(m[id]=m[id]||[]).push(d)});MYED=m}catch(e){MYED={}}}
+function kdate(u){u=String(u||'');if(!u)return '';if(/T|\+/.test(u)){const t=Date.parse(u);return isNaN(t)?u.slice(0,10):kday(t)}return u.slice(0,10)}
+function myEdDate(r,a,b){const L=(MYED||{})[r.id]||[];let best='';for(const d of L)if((!a||d>=a)&&(!b||d<=b)&&d>best)best=d;return best}
 function updDate(r){const u=String(r.updated||'');if(!u)return '';if(/T|\+/.test(u)){const t=Date.parse(u);return isNaN(t)?u.slice(0,10):kday(t)}return u.slice(0,10)}
 const toast=t=>{const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2600)};
 const won=v=>{if(v==null||v==='')return'';v=Math.round(v);const e=Math.floor(v/10000),m=v%10000;return e&&m?`${e}억 ${m.toLocaleString()}`:e?`${e}억`:m.toLocaleString()};
@@ -463,7 +467,7 @@ function renderFx(base){const inD=base.filter(r=>!F.danji.size||F.danji.has(r.da
  $('#f-on').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{const k=c.dataset.k,v=c.dataset.v;if(k==='fl'){FX.fl1=FX.fl2='';$('#fl1').value=$('#fl2').value=''}else if(k==='py'){FX.py1=FX.py2='';$('#py1').value=$('#py2').value=''}else if(k==='q'){$('#q').value=''}else F[k].delete(v);renderList()});
  const rb=$('#f-reset');if(rb)rb.onclick=()=>clearFilters();return tm}
 function filtered(){const q=$('#q').value.trim().toLowerCase();const tm=typeMap(ROWS.filter(r=>(r.category||'오피스텔')===CAT&&(!F.danji.size||F.danji.has(r.danji))));return ROWS.filter(r=>{if((r.category||'오피스텔')!==CAT)return false;if(!fxPass(r,tm))return false;
- if(NEW30){r._reg=updDate(r);const a=$('#nw1').value,b=$('#nw2').value;if(!r._reg||(a&&r._reg<a)||(b&&r._reg>b))return false}if($('#f-active').checked&&!active(r))return false;if($('#f-ad').checked&&!/네이버|뱅크/.test(r.ad||''))return false;
+ if(NEW30){r._reg=myEdDate(r,$('#nw1').value,$('#nw2').value);if(!r._reg)return false}if($('#f-active').checked&&!active(r))return false;if($('#f-ad').checked&&!/네이버|뱅크/.test(r.ad||''))return false;
  if(F.danji.size&&!F.danji.has(r.danji))return false;if(F.avail.size&&!(r._avs||[r._avail]).some(a=>F.avail.has(a)))return false;if(F.adt.size&&!String(r.ad_type||'').split(', ').some(x=>F.adt.has(x)))return false;if(CAT==='오피스텔'&&F.use.size&&!String(r.usage||'(미입력)').split(', ').some(x=>F.use.has(x)))return false;if(F.kind.size&&!kinds(r.deal).some(k=>F.kind.has(k)))return false;
  if(!qPass(r,q))return false;return true})}
 
@@ -671,7 +675,7 @@ function csStageBind(phone){const save=async(stage,lid)=>{try{await api('/api/co
 function openCS(phone){CSP=phone||'';document.querySelector('#tabs [data-t="cs"]').click();}
 
 $('#cp-open').onclick=()=>openCS(CSP||'');{const n=cpGet().length;if(n)$('#cp-open').textContent=`👤 손님 페이지 (${n})`}
-$('#dir-open').onclick=()=>{const P=$('#dirpanel');P.hidden=!P.hidden;if(!P.hidden)renderDir()};$('#q').oninput=renderList;$('#qf').onchange=renderList;['fl1','fl2','py1','py2'].forEach(k=>$('#'+k).oninput=e=>{FX[k]=e.target.value.trim();renderList()});$('#f-active').onchange=renderList;$('#f-ad').onchange=renderList;$('#nw1').onchange=$('#nw2').onchange=renderList;$('#f-new').onclick=()=>{NEW30=!NEW30;$('#nw-box').hidden=!NEW30;if(NEW30&&!$('#nw1').value){$('#nw1').value=kday(Date.now()-30*864e5);$('#nw2').value=kday(Date.now())}$('#f-new').classList.toggle('on',NEW30);$('#f-new').style.background=NEW30?'#2d6cdf':'';$('#f-new').style.color=NEW30?'#fff':'';renderList()};$('#new').onclick=()=>openDrawer(null);
+$('#dir-open').onclick=()=>{const P=$('#dirpanel');P.hidden=!P.hidden;if(!P.hidden)renderDir()};$('#q').oninput=renderList;$('#qf').onchange=renderList;['fl1','fl2','py1','py2'].forEach(k=>$('#'+k).oninput=e=>{FX[k]=e.target.value.trim();renderList()});$('#f-active').onchange=renderList;$('#f-ad').onchange=renderList;$('#nw1').onchange=$('#nw2').onchange=renderList;$('#f-new').onclick=()=>{NEW30=!NEW30;$('#nw-box').hidden=!NEW30;if(NEW30&&!$('#nw1').value){$('#nw1').value=kday(Date.now()-30*864e5);$('#nw2').value=kday(Date.now())}$('#f-new').classList.toggle('on',NEW30);if(NEW30){$('#cnt').textContent='불러오는 중…';loadMyEd().then(renderList)}$('#f-new').style.background=NEW30?'#2d6cdf':'';$('#f-new').style.color=NEW30?'#fff':'';renderList()};$('#new').onclick=()=>openDrawer(null);
 
 // ---------- 상세/편집 ----------
 const WIDE={owner_tel:'w3',tenant_tel:'w3',ad_type:'w2',memo:'w4',owner_units:'w2',deal:'w2',ad:'w4',usage:'w2',status:'w2',direction:'w2',title:'w2',coagent:'w2'};
