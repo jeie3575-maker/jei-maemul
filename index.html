@@ -550,7 +550,7 @@ async function cpPick(){if(!CUR||!CUR.id)return;const lid=CUR.id,unitTxt=cpUnit(
  $('#cpk-x').onclick=close;$('#cp-pick').onclick=e=>{if(e.target.id==='cp-pick')close()};$('#cpk-new').onclick=()=>{close();cpToggleNew()};$('#cpk-q').oninput=draw;draw()}
 const cpUnit=r=>r?`${r.danji||''} ${r.dong||''} ${r.ho||''}`.replace(/\s+/g,' ').trim():'(지운 매물)';
 // ---- 📒 상담일지: 손님 전화번호별 기록 (Supabase consult_logs, 로그인한 직원만) ----
-const CS_KIND={page:'📄 손님 페이지',view:'👀 열람',memo:'📝 메모',phone:'☎️ 번호 변경',pw:'🔑 비번 새로',stage:'🏷 단계',staff:'👤 담당자',cat:'🏢 희망분류',contract:'🔔 계약 확인(자동)'};
+const CS_KIND={inquiry:'📩 홈페이지 문의',page:'📄 손님 페이지',view:'👀 열람',memo:'📝 메모',phone:'☎️ 번호 변경',pw:'🔑 비번 새로',stage:'🏷 단계',staff:'👤 담당자',cat:'🏢 희망분류',contract:'🔔 계약 확인(자동)'};
 const CS_STAGES=['상담중','계약진행','계약완료'],CS_SC={'상담중':'#888','계약진행':'#e8590c','계약완료':'#2b8a3e'};let CST={},CSF='',CSS='',CSC='';const CS_CATS=['아파트','오피스텔','상가','오피스'],CS_STAFF=['대표','실장'],CS_STC={'대표':'#1c7ed6','실장':'#9c36b5'};
 const fmtPh=p=>{p=String(p||'');return p.length===11?`${p.slice(0,3)}-${p.slice(3,7)}-${p.slice(7)}`:p.length===10?`${p.slice(0,3)}-${p.slice(3,6)}-${p.slice(6)}`:p};
 let CSL=null,CSP='';
