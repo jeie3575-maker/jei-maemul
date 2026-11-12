@@ -421,13 +421,15 @@ const EXCOL={'전자상가':['주소','지분/평단가'],'주택·빌딩·토�
 const AVAIL=['가능','공동','공동가능','연락안됨','보류','급매','전속','계약완료','급매가능','공실','퇴거예정','가능?','가계약','홀딩','모집보류','계약','표시없음'];const AVW=['가능','가능?','공동','연락안됨','보류','확인중'];
 // 가능 판정 한 곳: '가능'(단 '가능?' 제외) 또는 '공동' 포함. '공동가능'·'급매가능'도 가능. 연락안됨·보류·가능?는 가능 아님
 const avParts=t=>{t=String(t||'').trim();const m=/^\d{4}\s*\.?\s*(.*)$/.exec(t);return (m?m[1]:t).replace(/공동가능/g,'공동·가능').split('·').map(s=>s.replace(/\s*\(\d+\)\s*$/,'').trim()).filter(Boolean)};
+// 표시·저장 순서: 가능 → 공동 → 급매 → 나머지 (11/12 요청)
+const avRank=x=>/공동/.test(x)?1:/급매/.test(x)&&!/가능/.test(x)?2:/가능/.test(x)?0:3;const avSort=a=>a.map((x,i)=>[x,i]).sort((p,q)=>avRank(p[0])-avRank(q[0])||p[1]-q[1]).map(p=>p[0]);
 const isAvail=t=>avParts(t).some(p=>p!=='가능?'&&/가능|공동/.test(p));
 // 거래유형 유지 판정(예외): 가능·가능?·공동 중 하나라도 있으면 거래유형을 지우지 않음
 const keepDeal=t=>avParts(t).some(p=>/가능|공동/.test(p));
 function derive(r){if(r._d)return r;const t=(r.title||'').trim();const m=/^(\d{2})(\d{2})\s*\.?\s*(.*)$/.exec(t);
  let st=(m?m[3]:t).replace(/\s*\(\d+\)\s*$/,'').trim(),chk='';
  if(m){const now=new Date(),y=now.getFullYear();let d=new Date(y,+m[1]-1,+m[2]);if(d-now>7*864e5)d=new Date(y-1,+m[1]-1,+m[2]);if(!isNaN(d))chk=`${d.getFullYear()}-${m[1]}-${m[2]}`}
- let ps=st.split('·').map(s=>s.trim()).filter(Boolean).map(s=>/보류/.test(s)&&s!=='모집보류'?'보류':s);st=ps.join('·');if(/급매/.test(r.deal||'')&&!ps.includes('급매'))ps=[...ps,'급매'];if((r.extra||{})['전속']&&!ps.includes('전속'))ps=[...ps,'전속'];r._avs=ps.length?ps:['표시없음'];r._avail=st||'표시없음';r._chk=chk;r._d=1;return r}
+ let ps=st.split('·').map(s=>s.trim()).filter(Boolean).map(s=>/보류/.test(s)&&s!=='모집보류'?'보류':s);ps=avSort(ps);st=ps.join('·');if(/급매/.test(r.deal||'')&&!ps.includes('급매'))ps=[...ps,'급매'];if((r.extra||{})['전속']&&!ps.includes('전속'))ps=[...ps,'전속'];r._avs=ps.length?ps:['표시없음'];r._avail=st||'표시없음';r._chk=chk;r._d=1;return r}
 const avHtml=a=>a&&a!=='표시없음'?String(a).split('·').map(x=>`<span class="av av-${esc(x)}">${esc(x)}</span>`).join(' '):'';
 const active=r=>kinds(r.deal).length&&!/계약완|매매완/.test(r.status||'');
 const askPrice=r=>{const k=kinds(r.deal),o=[];if(k.includes('매매')&&r.sale)o.push('매 '+won(r.sale));if(k.includes('전세'))o.push('전 '+won(r.jeonse||r.deposit));if(k.includes('월세'))o.push('월 '+won(r.deposit)+'/'+(r.rent??''));return o.join(' · ')};
@@ -791,7 +793,7 @@ async function openDrawer(id,tpl){if(FORM0!==null&&$('#drawer').classList.contai
  const updEmp=()=>$('#d-body').querySelectorAll('.dsec:not(.nohide)').forEach(s=>s.classList.toggle('allemp',![...s.querySelectorAll('label')].some(l=>!l.classList.contains('emp'))));updEmp();
  $('#d-body').classList.add('edit');$('#js-chk').onchange=e=>{const on=e.target.checked;$('#js-val').value=on?'Y':'';$('#js-dl').hidden=$('#js-date').hidden=!on;if(!on)$('#js-date').value=''};{const am=$('#ad-memo'),ams=$('#d-body').querySelector('.ms[data-k="ad"]');if(am&&ams)am.oninput=()=>{ams.dataset.keep=am.value.split(',').map(x=>x.trim()).filter(Boolean).join(', ')}}const grow=t=>{t.style.height='auto';t.style.height=t.scrollHeight+2+'px'};$('#d-body').querySelectorAll('textarea.grow').forEach(t=>{t.addEventListener('input',()=>grow(t));requestAnimationFrame(()=>grow(t))});$('#d-hide').onclick=()=>{const e=$('#d-body').classList.toggle('edit');$('#d-hide').textContent=e?'빈 칸 숨기기':'빈 칸도 보기'};  // 빈 칸도 항상 보임
  $('#d-body').querySelectorAll('.ms .chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
- const avSet=()=>{const on=[...$('#av-chips').querySelectorAll('.chip.on')].map(c=>c.dataset.a);const dt=$('#av-date').value;const v=on.length?((dt?dt.slice(5,7)+dt.slice(8,10)+'.':'')+on.join('·')):'';$('#av-title').value=v;$('#av-show').textContent=v||'(없음)'};let avSeq=0;$('#av-chips').querySelectorAll('.chip.on').forEach(c=>c.dataset.t=++avSeq);
+ const avSet=()=>{const on=[...$('#av-chips').querySelectorAll('.chip.on')].map(c=>c.dataset.a);const dt=$('#av-date').value;const v=on.length?((dt?dt.slice(5,7)+dt.slice(8,10)+'.':'')+avSort(on).join('·')):'';$('#av-title').value=v;$('#av-show').textContent=v||'(없음)'};let avSeq=0;$('#av-chips').querySelectorAll('.chip.on').forEach(c=>c.dataset.t=++avSeq);
  $('#av-chips').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{if(c.classList.contains('on')){c.classList.remove('on')}else{c.classList.add('on');c.dataset.t=++avSeq}const t=new Date(),p=n=>String(n).padStart(2,'0');$('#av-date').value=`${t.getFullYear()}-${p(t.getMonth()+1)}-${p(t.getDate())}`;avSet()});
  $('#av-date').onchange=avSet;const dms=$('#d-body').querySelector('.ms[data-k="deal"]');const urgChip=()=>dms&&[...dms.querySelectorAll('.chip')].find(c=>c.textContent==='급매');
  $('#av-urgent').onchange=e=>{const c=urgChip();if(c)c.classList.toggle('on',e.target.checked)};if(dms)dms.addEventListener('click',()=>setTimeout(()=>{const c=urgChip();$('#av-urgent').checked=!!(c&&c.classList.contains('on'))},0));
