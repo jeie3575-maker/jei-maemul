@@ -618,11 +618,17 @@ async function drawCSDetail(phone){CSP=phone;const el=$('#cs-detail');let L=[],P
   <div class="mut" style="font-size:12px">${esc(String(x.at).slice(0,16).replace('T',' '))} · ${CS_KIND[x.kind]||esc(x.kind)}${x.by&&x.by!=='client'?' · '+esc(String(x.by).split('@')[0]):''} · ${CS_NOEDIT.includes(x.kind)?'':`<a href="#" data-csedit="${x.id}">수정</a> · `}<a href="#" data-csdel="${x.id}" style="color:#c33">삭제</a></div>
   ${x.kind==='check'?`<div class="mut">체크 ${csChkSum(x.text)} 완료</div>`:x.kind==='deal'?`<div>${esc(csDealTxt(x.text))}</div>`:`<div data-cstx="${x.id}" style="white-space:pre-wrap">${x.text?esc(x.text):''}</div>`}${cpCond(x)?`<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:13px">${[['입주일','move_in'],['희망거래유형','want_deal'],['희망보증금','want_deposit'],['희망월세','want_rent']].filter(([,k])=>x[k]).map(([l,k])=>`<span><span class="mut">${l}</span> ${esc(x[k])}</span>`).join('')}</div>`:''}${x.cond?`<div><span class="mut">원하는 조건</span> ${esc(x.cond)}</div>`:''}${x.agent_memo?`<div style="font-size:13px">📝 <span class="mut">중개사 메모</span> ${esc(x.agent_memo)}</div>`:''}
   ${(x.listing_ids||[]).length&&x.kind==='page'?`<div class="mut" style="font-size:13px">보여 준 매물: ${(x.listing_ids||[]).map(unit).join(', ')}</div>`:''}</div>`).join('')||(phone?'<p class="mut">아직 기록이 없어요.</p>':'')}</div>
- <div style="display:grid;gap:6px;border-top:1px solid var(--line);padding-top:8px">${phone?'':`<label>전화번호 <b style="color:var(--acc,#c00)">필수</b><input id="cs-ph" inputmode="tel" placeholder="010-1234-5678" style="width:100%"></label>`}
-  ${phone?'':`<label>담당자 <select id="cs-staff"><option value="">-</option>${CS_STAFF.map(t=>`<option>${t}</option>`).join('')}</select></label>`}
+ <div style="display:grid;gap:6px;border-top:1px solid var(--line);padding-top:8px">
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;align-items:end">
   <label>손님 이름 <span class="mut">(손님 페이지엔 '김○○ 님')</span><input id="cs-name" value="${esc(name)}" style="width:100%"></label>
+  ${phone?'':`<label>전화번호 <b style="color:var(--acc,#c00)">필수</b><input id="cs-ph" inputmode="tel" placeholder="010-1234-5678" style="width:100%"></label>`}
+  <label>희망분류<select id="cs-cat" style="width:100%">${['',...CS_CATS].map(v=>`<option value="${v}" ${v&&v===csLast(L,'cat')?'selected':''}>${v||'-'}</option>`).join('')}</select></label><label>희망거래유형<select id="cs-deal" style="width:100%">${['','매매','전세','월세','전세,월세'].map(v=>`<option value="${v}" ${v===(live?.want_deal||last('want_deal'))?'selected':''}>${v||'-'}</option>`).join('')}</select></label>
+  ${phone?'':`<label>담당자 <select id="cs-staff" style="width:100%"><option value="">-</option>${CS_STAFF.map(t=>`<option>${t}</option>`).join('')}</select></label>
+  <label>단계 <select id="cs-stage" style="width:100%">${CS_STAGES.map(t=>`<option>${t}</option>`).join('')}</select></label>
+  <label id="cs-stl" hidden>계약 매물 <input id="cs-stq" list="cs-stq-dl" placeholder="단지 동 호" style="width:100%"><datalist id="cs-stq-dl"></datalist></label>`}
+  </div>
   <label>처음 문의한 매물 <span class="mut">(손님이 처음 연락한 매물 · 단지 동 호로 찾거나 그대로 적기)</span><input id="cs-first" list="cs-first-dl" value="${esc(csLast(L,'first'))}" placeholder="예: 써밋 102 3815 / 네이버 광고 보고 문의" style="width:100%"><datalist id="cs-first-dl"></datalist></label>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><label>입주일<input id="cs-move" value="${esc(live?.move_in||last('move_in'))}" placeholder="예: 12월 중" style="width:100%"></label><label>희망분류<select id="cs-cat" style="width:100%">${['',...CS_CATS].map(v=>`<option value="${v}" ${v&&v===csLast(L,'cat')?'selected':''}>${v||'-'}</option>`).join('')}</select></label><label>희망거래유형<select id="cs-deal" style="width:100%">${['','매매','전세','월세','전세,월세'].map(v=>`<option value="${v}" ${v===(live?.want_deal||last('want_deal'))?'selected':''}>${v||'-'}</option>`).join('')}</select></label>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px"><label>입주일<input id="cs-move" value="${esc(live?.move_in||last('move_in'))}" placeholder="예: 12월 중" style="width:100%"></label>
   <label>희망보증금<input id="cs-dep" value="${esc(live?.want_deposit||last('want_deposit'))}" placeholder="예: 5억 이하" style="width:100%"></label><label>희망월세<input id="cs-rent" value="${esc(live?.want_rent||last('want_rent'))}" placeholder="예: 250 이하" style="width:100%"></label></div>
   <label>중개사 메모 <span class="mut">(매물장·상담일지에서만 보임 — 손님 페이지엔 절대 안 나감)</span><input id="cs-memo" value="${esc(live?.agent_memo||last('agent_memo'))}" style="width:100%"></label>
   <label>상담 메모 <span class="mut">(상담일지에만 남음)</span><textarea id="cs-text" rows="3" style="width:100%" placeholder="오늘 상담 내용"></textarea></label>
@@ -636,6 +642,7 @@ async function drawCSDetail(phone){CSP=phone;const el=$('#cs-detail');let L=[],P
   $('#cs-basket').querySelectorAll('[data-csopen]').forEach(a=>a.onclick=e=>{e.preventDefault();openDrawer(+a.dataset.csopen)});
   $('#cs-add').textContent=CSB.length?(live?'저장 (상담일지 + 손님 페이지 갱신)':'저장 (상담일지 + 손님 페이지 만들기)'):'저장 (상담일지)'};
  window.__csDrawB=drawB;drawB();
+ const sg=$('#cs-stage');if(sg){sg.onchange=()=>{$('#cs-stl').hidden=sg.value==='상담중'};const sq=$('#cs-stq');sq.oninput=()=>{const ws=sq.value.trim().split(/\s+/);if(sq.value.trim().length<2)return;$('#cs-stq-dl').innerHTML=ROWS.filter(r=>ws.every(x=>cpUnit(r).includes(x))).slice(0,30).map(r=>`<option value="${esc(cpUnit(r))}">`).join('')}}
  const fq=$('#cs-first');fq.oninput=()=>{const ws=fq.value.trim().split(/\s+/);if(fq.value.trim().length<2)return;$('#cs-first-dl').innerHTML=ROWS.filter(r=>ws.every(x=>cpUnit(r).includes(x))).slice(0,30).map(r=>`<option value="${esc(cpUnit(r))}">`).join('')};
  const aq=$('#cs-add-q');aq.oninput=()=>{const w=aq.value.trim();const r=ROWS.find(r=>cpUnit(r)===w);if(r){if(!CSB.includes(r.id))CSB.push(r.id);aq.value='';drawB();return}
   if(w.length<2)return;const ws=w.split(/\s+/);$('#cs-add-dl').innerHTML=ROWS.filter(r=>ws.every(x=>cpUnit(r).includes(x))).slice(0,30).map(r=>`<option value="${esc(cpUnit(r))}">`).join('')};
@@ -650,7 +657,8 @@ async function drawCSDetail(phone){CSP=phone;const el=$('#cs-detail');let L=[],P
  $('#cs-add').onclick=async()=>{const ph=(phone||($('#cs-ph')?.value||'')).replace(/\D/g,'');if(ph.length<8)return alert('전화번호를 넣어 주세요');
   const nm=$('#cs-name').value.trim(),text=$('#cs-text').value.trim(),note=$('#cs-note').value.trim(),f={move_in:$('#cs-move').value.trim(),deal:$('#cs-deal').value,deposit:$('#cs-dep').value.trim(),rent:$('#cs-rent').value.trim(),memo:$('#cs-memo').value.trim()};
   const pw=($('#cs-pw')?.value||'').trim();if(pw&&!/^\d{4}$/.test(pw))return alert('비밀번호는 숫자 4자리로 넣어 주세요 (비우면 자동).');
-  const ctV=$('#cs-cat').value,sfV=$('#cs-staff')?.value,fsV=$('#cs-first').value.trim();if(!CSB.length&&!text&&!Object.values(f).some(Boolean)&&!(ctV&&ctV!==csLast(L,'cat'))&&!sfV&&!(fsV&&fsV!==csLast(L,'first')))return alert('상담 메모나 조건을 적거나, 보여줄 매물을 담아 주세요');
+  const sgV=$('#cs-stage')?.value||'상담중';let sgL=null;if(sgV!=='상담중'){const w=$('#cs-stq').value.trim(),r=ROWS.find(r=>cpUnit(r)===w);if(!r)return alert('계약 매물을 목록에서 골라 주세요 (단지 동 호)');sgL=r.id}
+  const ctV=$('#cs-cat').value,sfV=$('#cs-staff')?.value,fsV=$('#cs-first').value.trim();if(!CSB.length&&!text&&!Object.values(f).some(Boolean)&&!(ctV&&ctV!==csLast(L,'cat'))&&!sfV&&sgV==='상담중'&&!(fsV&&fsV!==csLast(L,'first')))return alert('상담 메모나 조건을 적거나, 보여줄 매물을 담아 주세요');
   const btn=$('#cs-add');btn.disabled=true;let txt='';
   try{if(CSB.length&&live){await api('/api/client_update',{method:'POST',body:JSON.stringify({token:live.token,ids:CSB,name:nm,note,...f})});
      if(text)await api('/api/consult_add',{method:'POST',body:JSON.stringify({phone:ph,name:nm,text})});
@@ -662,6 +670,7 @@ async function drawCSDetail(phone){CSP=phone;const el=$('#cs-detail');let L=[],P
    if(CSB.length){cpSet([]);cpBtn()}
    const ct=$('#cs-cat').value;if(ct&&ct!==csLast(L,'cat'))await api('/api/consult_cat_set',{method:'POST',body:JSON.stringify({phone:ph,cat:ct})});
    const fs=$('#cs-first').value.trim();if(fs&&fs!==csLast(L,'first'))await api('/api/consult_first_set',{method:'POST',body:JSON.stringify({phone:ph,text:fs})});
+   if(sgV!=='상담중'){await api('/api/consult_stage_set',{method:'POST',body:JSON.stringify({phone:ph,stage:sgV,listing_id:sgL})});CST={};for(const x of await api('/api/consult_stage'))CST[x.phone]=x}
    const sf=$('#cs-staff')?.value;if(sf)await api('/api/consult_staff_set',{method:'POST',body:JSON.stringify({phone:ph,staff:sf})});
    CSL=await api('/api/consult_list');drawCSList();await drawCSDetail(ph);toast('저장했어요');
    if(txt){$('#cs-result').innerHTML=`<div class="note" style="margin-top:8px;white-space:pre-wrap;background:#fff7e6;padding:8px;border-radius:6px">${esc(txt)}</div><button class="b p" id="cs-copy">손님에게 보낼 문구 복사</button>`;$('#cs-copy').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('복사했어요'));navigator.clipboard.writeText(txt).catch(()=>{})}}
