@@ -431,7 +431,7 @@ function derive(r){if(r._d)return r;const t=(r.title||'').trim();const m=/^(\d{2
  if(m){const now=new Date(),y=now.getFullYear();let d=new Date(y,+m[1]-1,+m[2]);if(d-now>7*864e5)d=new Date(y-1,+m[1]-1,+m[2]);if(!isNaN(d))chk=`${d.getFullYear()}-${m[1]}-${m[2]}`}
  let ps=st.split('·').map(s=>s.trim()).filter(Boolean).map(s=>/보류/.test(s)&&s!=='모집보류'?'보류':s);ps=avSort(ps);st=ps.join('·');if(/급매/.test(r.deal||'')&&!ps.includes('급매'))ps=[...ps,'급매'];if((r.extra||{})['전속']&&!ps.includes('전속'))ps=[...ps,'전속'];r._avs=ps.length?ps:['표시없음'];r._avail=st||'표시없음';r._chk=chk;r._d=1;return r}
 const avHtml=a=>a&&a!=='표시없음'?String(a).split('·').map(x=>`<span class="av av-${esc(x)}">${esc(x)}</span>`).join(' '):'';
-const active=r=>kinds(r.deal).length&&(/가능/.test(r.title||'')&&!/불가/.test(r.title||'')||!/계약완|매매완/.test(r.status||''));
+const active=r=>/가능/.test(r.title||'')&&!/불가/.test(r.title||'');
 const askPrice=r=>{const k=kinds(r.deal),o=[];if(k.includes('매매')&&r.sale)o.push('매 '+won(r.sale));if(k.includes('전세'))o.push('전 '+won(r.jeonse||r.deposit));if(k.includes('월세'))o.push('월 '+won(r.deposit)+'/'+(r.rent??''));return o.join(' · ')};
 const dday=s=>s?Math.round((new Date(s)-new Date(new Date().toDateString()))/864e5):null;
 const ddHtml=s=>{const d=dday(s);if(d==null)return'';return `<span class="dd ${d<0?'r':d<=31?'r':d<=92?'o':''}">${d<0?'지남 '+(-d)+'일':'D-'+d}</span>`};
