@@ -351,7 +351,7 @@ async function api(u, o = {}) {
 <main>
 <section id="t-list">
  <div class="bar" id="catbar"></div>
- <div class="bar"><select id="qf" title="검색 대상"><option value="">전체</option><option value="dong">동</option><option value="ho">호수</option><option value="typ">타입</option><option value="owner">임대인</option><option value="tel">연락처</option><option value="memo">메모</option></select><input id="q" placeholder="검색 (단지·동·호·임대인·연락처·비고·상담일지…)" style="width:240px">
+ <div class="bar"><select id="qf" title="검색 대상"><option value="">전체</option><option value="dong">동</option><option value="ho">호수</option><option value="typ">타입</option><option value="owner">임대인</option><option value="tel">연락처</option><option value="memo">메모</option></select><input id="q" placeholder="검색 (여러 조건: 센트럴파크 104동 24층 142타입)" title="띄어쓰기로 조건을 여러 개 쓰면 모두 맞는 것만 보여요. 동·층·타입은 끝에 붙여 쓰기" style="width:240px">
   <div class="chips" id="f-danji"></div></div>
  <div class="bar"><div class="chips" id="f-kind"></div><span class="mut">|</span>
   <label><input type="checkbox" id="f-active" checked> 진행 중인 매물만</label>
@@ -457,7 +457,8 @@ function fltLoad(){try{setTimeout(()=>F.adt&&F.adt.clear(),0);const s=JSON.parse
 function fxPass(r,tm){if(F.typ.size)F.typ.clear();if(F.dong.size)F.dong.clear();if(F.dir.size)F.dir.clear();FX.fl1=FX.fl2=FX.py1=FX.py2='';if(F.typ.size&&!F.typ.has(tkeyOf(r,tm)))return false;if(F.dong.size&&!F.dong.has(nDongLbl(r)))return false;if(F.dir.size&&!F.dir.has(r.direction||'(미입력)'))return false;
  const fl=flOf(r);if((FX.fl1!==''||FX.fl2!=='')&&(fl==null||(FX.fl1!==''&&fl<+FX.fl1)||(FX.fl2!==''&&fl>+FX.fl2)))return false;
  const py=r.pyeong==null||r.pyeong===''?null:+r.pyeong;if((FX.py1!==''||FX.py2!=='')&&(py==null||(FX.py1!==''&&py<+FX.py1)||(FX.py2!==''&&py>+FX.py2)))return false;return true}
-function qPass(r,q){if(!q)return true;const f=$('#qf').value,low=v=>String(v??'').toLowerCase();
+function qPass(r,q){if(!q)return true;const f=$('#qf').value;if(f)return qPass1(r,q,f);const low=v=>String(v??'').toLowerCase();return q.split(/\s+/).filter(Boolean).every(t=>{if(/^\d+층$/.test(t))return flOf(r)===+t.slice(0,-1);if(/.+타입$/.test(t))return low(r.typ).includes(t.slice(0,-2));if(/^([a-z]|\d+)동$/i.test(t))return qPass1(r,t,'dong');if(/.+동$/.test(t))return qPass1(r,t,'dong')||qPass1(r,t,'');return qPass1(r,t,'')})}
+function qPass1(r,q,f){const low=v=>String(v??'').toLowerCase();
  if(f==='dong'){const qq=q.replace(/동$/,'').trim();return /^([a-z]|\d+)$/i.test(qq)?nDong(r.dong)===qq.toUpperCase():low(r.dong).includes(qq)}if(f==='ho')return low(r.ho).includes(q);if(f==='typ')return low(r.typ).includes(q);if(f==='owner')return low(r.owner).includes(q);
  if(f==='tel')return low(r.owner_tel).replace(/\D/g,'').includes(q.replace(/\D/g,''))&&q.replace(/\D/g,'')!=='';if(f==='memo')return low(r.memo).includes(q)||low(r.log_txt).includes(q);
  return META.fields.some(([k])=>low(r[k]).includes(q))||low(r.log_txt).includes(q)||JSON.stringify(r.extra||'').toLowerCase().includes(q)}
