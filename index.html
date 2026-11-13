@@ -353,6 +353,7 @@ async function api(u, o = {}) {
  <div class="bar" id="catbar"></div>
  <div class="bar"><select id="qf" title="검색 대상"><option value="">전체</option><option value="dong">동</option><option value="ho">호수</option><option value="typ">타입</option><option value="owner">임대인</option><option value="tel">연락처</option><option value="memo">메모</option></select><input id="q" placeholder="검색 (여러 조건: 센트럴파크 104동 24층 142타입)" title="띄어쓰기로 조건을 여러 개 쓰면 모두 맞는 것만 보여요. 동·층·타입은 끝에 붙여 쓰기" style="width:240px">
   <div class="chips" id="f-danji"></div></div>
+ <div id="q-help" style="font-size:11px;color:#888;margin:-4px 0 6px 2px">💡 여러 조건은 띄어쓰기로 이어 쓰기 (검색 대상 '전체'일 때) — 예: <b>센트럴파크 104동 24층 142타입</b> · 동·층·타입은 끝에 붙여 쓰기 · 순서 상관없음</div>
  <div class="bar"><div class="chips" id="f-kind"></div><span class="mut">|</span>
   <label><input type="checkbox" id="f-active" checked> 진행 중인 매물만</label>
   <label><input type="checkbox" id="f-ad"> 광고(네이버·뱅크) 표시된 것만</label>
