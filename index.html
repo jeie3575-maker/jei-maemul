@@ -436,6 +436,17 @@ const avHtml=a=>a&&a!=='표시없음'?String(a).split('·').map(x=>`<span class=
 const active=r=>/가능/.test(r.title||'')&&!/불가/.test(r.title||'');
 const ourC=r=>{const a=(r.extra||{})['우리계약'];return Array.isArray(a)&&a.length?a:null};const ourLine=c=>`${String(c.cd).slice(2).replace(/-/g,'.')} 계약 · ${c.tp||''} ${c.amt||''}${c.mk?' · 만기 '+String(c.mk).slice(2).replace(/-/g,'.'):''}`;
 const ourHtml=r=>{const a=ourC(r);if(!a)return '';const c=a[0],t=new Date(),td=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0'),old=c.mk&&c.mk<td;return `<span class="our${old?' old':''}" title="${esc(a.map(ourLine).join('\n'))}">우리계약 ${esc(String(c.cd).slice(2).replace(/-/g,'.'))}${old?' (만기지남)':''}</span>`};
+
+let OUR_EDIT=null,OUR_ID=null;
+function ourBox(r,ed){if(ed===undefined&&OUR_ID!==r.id){OUR_ID=r.id;OUR_EDIT=null}ed=ed===undefined?OUR_EDIT:ed;const a=ourC(r)||[];const form=(c,i)=>`<div style="margin:6px 0;padding:8px;border:1px solid #9db8f5;border-radius:8px;background:#f5f9ff"><label>계약일 <input type="date" id="our-cd" value="${esc(c.cd||'')}"></label> <label>거래 <select id="our-tp">${['월세','전세','매매'].map(t=>`<option ${t===(c.tp||'월세')?'selected':''}>${t}</option>`).join('')}</select></label> <label>금액(만원) <input id="our-amt" value="${esc(c.amt||'')}" placeholder="예: 2000/226 또는 40000" style="width:130px"></label> <label>만기일 <input type="date" id="our-mk" value="${esc(c.mk||'')}"></label> <button class="b" type="button" data-our="save" data-i="${i}">저장</button> <button class="b" type="button" data-our="cancel">취소</button></div>`;
+ return `<div class="dsec nohide" id="our-box"><h4>🏠 우리 계약 <span class="mut" style="font-weight:400;font-size:12px">용산호반제이</span> <button class="b" type="button" data-our="add" style="font-size:12px;padding:2px 8px">＋ 우리 계약 추가</button></h4>${a.map((c,i)=>ed===i?form(c,i):`<div style="font-size:13px;line-height:1.9">${esc(ourLine(c))} <button class="b" type="button" data-our="edit" data-i="${i}" style="font-size:11px;padding:1px 6px">수정</button> <button class="b" type="button" data-our="del" data-i="${i}" style="font-size:11px;padding:1px 6px">삭제</button></div>`).join('')}${ed==='new'?form({},-1):''}${!a.length&&ed!=='new'?'<div class="mut" style="font-size:12px">우리가 계약한 기록이 없습니다.</div>':''}</div>`}
+async function ourSave(list){const ex={...(CUR.extra||{})};if(list.length)ex['우리계약']=list;else delete ex['우리계약'];const ext=Object.keys(ex).length?ex:null;
+ await api('/api/listings',{method:'POST',body:JSON.stringify({id:CUR.id,category:CUR.category,extra:ext})});CUR.extra=ext;const r=ROWS.find(x=>x.id===CUR.id);if(r)r.extra=ext;OUR_EDIT=null;const b=$('#our-box');if(b)b.outerHTML=ourBox(CUR);renderList();toast('저장했습니다')}
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-our]');if(!b||!CUR)return;e.preventDefault();const act=b.dataset.our,i=+b.dataset.i,cur=[...(ourC(CUR)||[])];
+ const redraw=()=>{const x=$('#our-box');if(x)x.outerHTML=ourBox(CUR)};
+ if(act==='add'){OUR_EDIT='new';redraw()}else if(act==='edit'){OUR_EDIT=i;redraw()}else if(act==='cancel'){OUR_EDIT=null;redraw()}
+ else if(act==='del'){if(!confirm('이 계약 기록을 지울까요?\n'+ourLine(cur[i])))return;cur.splice(i,1);try{await ourSave(cur)}catch(err){alert('저장 실패: '+err.message)}}
+ else if(act==='save'){const cd=$('#our-cd').value,tp=$('#our-tp').value,amt=$('#our-amt').value.trim(),mk=$('#our-mk').value;if(!cd){alert('계약일을 넣어 주세요');return}const c={cd,mk,amt,tp};if(i>=0)cur[i]=c;else cur.push(c);cur.sort((a,b)=>String(b.cd).localeCompare(String(a.cd)));try{await ourSave(cur)}catch(err){alert('저장 실패: '+err.message)}}});
 const askPrice=r=>{const k=kinds(r.deal),o=[];if(k.includes('매매')&&r.sale)o.push('매 '+won(r.sale));if(k.includes('전세'))o.push('전 '+won(r.jeonse||r.deposit));if(k.includes('월세'))o.push('월 '+won(r.deposit)+'/'+(r.rent??''));return o.join(' · ')};
 const dday=s=>s?Math.round((new Date(s)-new Date(new Date().toDateString()))/864e5):null;
 const ddHtml=s=>{const d=dday(s);if(d==null)return'';return `<span class="dd ${d<0?'r':d<=31?'r':d<=92?'o':''}">${d<0?'지남 '+(-d)+'일':'D-'+d}</span>`};
@@ -783,7 +794,7 @@ async function openDrawer(id,tpl){if(FORM0!==null&&$('#drawer').classList.contai
  ${row(['danji','dong','ho'].map(fld).join(''))}
  ${row(['typ','pyeong'].map(fld).join(''))}
  ${row(['direction','usage'].map(fld).join(''))}
- ${ourC(CUR)?`<div class="dsec nohide"><h4>🏠 우리 계약 <span class="mut" style="font-weight:400;font-size:12px">용산호반제이 장부</span></h4><div style="font-size:13px;line-height:1.7">${ourC(CUR).map(c=>esc(ourLine(c))).join('<br>')}</div></div>`:''}
+ ${ourBox(CUR)}
  ${row(fld('deal'))}
  ${row(['sale','jeonse','deposit','rent'].map(fld).join(''))}
  ${row(['cur_deposit','cur_rent','status'].map(fld).join(''))}
