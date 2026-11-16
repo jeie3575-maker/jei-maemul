@@ -346,7 +346,7 @@ async function api(u, o = {}) {
 </script>
 <style>#tabs button[data-t=io],#tg{display:none}</style></head><body>
 <header><b>🏡 제이부동산 매물장</b><nav id="tabs">
-<button data-t="list" class="on">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 상담일지</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
+<button data-t="sise">💹 시세</button><button data-t="list" class="on">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 상담일지</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
 <span class="sp"></span><small id="info"></small><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
 <main>
 <section id="t-list">
@@ -373,6 +373,7 @@ async function api(u, o = {}) {
 <section id="t-call" hidden><div class="bar"><div class="chips" id="call-st"></div><span class="mut">|</span><div class="chips" id="call-cat"></div><select id="call-dj"></select><span class="sp" style="flex:1"></span><span id="call-cnt" class="mut"></span></div>
  <div class="bar mut" style="font-size:12px">네이버 광고 대조 + 만기 1.5개월 안 매물을 임대인별로 묶었어요. 순서: 매물 받기(타사광고) → 만기 임박 → 가능·가격 확인. 버튼을 누르면 상담일지에 "날짜 통화 – 결과"가 남아요. 부재·나중에는 다음날 다시 나와요.</div>
  <div id="call"></div></section>
+<section id="t-sise" hidden><div class="bar"><div class="chips" id="sise-cat"></div><select id="sise-dj"></select><span class="mut" id="sise-info"></span></div><div id="sise"></div></section>
 <section id="t-manki" hidden><div class="bar"><span class="mut">분류</span><div class="chips" id="manki-cat"></div></div><div class="cards" id="manki-cards"></div>
  <div class="bar"><button class="b" id="tg">텔레그램으로 3개월 이내 만기 보내기</button><span class="mut">현 보증금/차임과 만기 기준. 기간 지난 것은 최근 1개월까지 표시</span></div>
  <div id="manki"></div></section>
@@ -452,7 +453,7 @@ const dday=s=>s?Math.round((new Date(s)-new Date(new Date().toDateString()))/864
 const ddHtml=s=>{const d=dday(s);if(d==null)return'';return `<span class="dd ${d<0?'r':d<=31?'r':d<=92?'o':''}">${d<0?'지남 '+(-d)+'일':'D-'+d}</span>`};
 
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
- document.querySelectorAll('main>section').forEach(s=>s.hidden=s.id!=='t-'+b.dataset.t);({recon:loadRecon,manki:renderManki,list:renderList,co:renderCo,rta:renderRta,call:renderCall,cs:renderCS})[b.dataset.t]?.()});
+ document.querySelectorAll('main>section').forEach(s=>s.hidden=s.id!=='t-'+b.dataset.t);({recon:loadRecon,manki:renderManki,list:renderList,co:renderCo,rta:renderRta,call:renderCall,cs:renderCS,sise:renderSise})[b.dataset.t]?.()});
 
 function chips(el,opts,set,cb,counts){el.innerHTML=opts.map(o=>`<span class="chip ${set.has(o)?'on':''}" data-v="${esc(o)}">${esc(o)}${counts?`<i>${counts[o]||0}</i>`:''}</span>`).join('');
  el.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{const v=c.dataset.v;set.has(v)?set.delete(v):set.add(v);cb()})}
@@ -1029,6 +1030,28 @@ $('#recon-reload').onclick=()=>loadRecon(true);
 
 // ---------- 만기 ----------
 let MB='1개월내';
+
+let SSCAT='오피스텔',SSDJ='';
+async function renderSise(){
+ if(!RTA){try{RTA=await api('/api/rt_apt')}catch(e){RTA=[]}}
+ const d0=new Date();d0.setMonth(d0.getMonth()-6);const lim=d0.toISOString().slice(0,10);
+ const src=SSCAT==='아파트'?RTA:(RT||[]);
+ const all=src.filter(x=>x['계약일']>=lim&&!x['해제']);
+ const dj=[...new Set(all.map(x=>x['단지']))].sort();if(SSDJ&&!dj.includes(SSDJ))SSDJ='';
+ $('#sise-cat').innerHTML=['오피스텔','아파트'].map(c=>`<span class="chip ${c===SSCAT?'on':''}" data-v="${c}">${c}</span>`).join('');
+ $('#sise-cat').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{SSCAT=c.dataset.v;SSDJ='';renderSise()});
+ $('#sise-dj').innerHTML='<option value="">단지 전체</option>'+dj.map(d=>`<option ${d===SSDJ?'selected':''}>${esc(d)}</option>`).join('');
+ $('#sise-dj').onchange=e=>{SSDJ=e.target.value;renderSise()};
+ const rs=all.filter(x=>!SSDJ||x['단지']===SSDJ);
+ $('#sise-info').textContent=`${lim} ~ 오늘 · 신고 ${rs.length.toLocaleString()}건 (해제 제외, 중위값)`;
+ const med=a=>{a=a.filter(v=>typeof v==='number'&&!isNaN(v)).sort((x,y)=>x-y);if(!a.length)return null;const m=a.length>>1;return a.length%2?a[m]:Math.round((a[m-1]+a[m])/2)};
+ const G={};for(const x of rs){const a=Math.round(+x['전용㎡']);if(!a)continue;const k=x['단지']+'|'+a;(G[k]||(G[k]={dj:x['단지'],a,t:{매매:[],전세:[],월세:[]}})).t[x['거래']]?.push(x)}
+ const cell=(l,kind)=>{if(!l.length)return'<td class="n mut">-</td>';l=l.slice().sort((p,q)=>p['계약일']<q['계약일']?1:-1);const L=l[0];
+  const f=x=>kind==='매매'?won(x['매매가(만)']):kind==='전세'?won(x['보증금(만)']):won(x['보증금(만)'])+'/'+x['월세(만)'];
+  const m=kind==='매매'?won(med(l.map(x=>+x['매매가(만)']))):kind==='전세'?won(med(l.map(x=>+x['보증금(만)']))):won(med(l.map(x=>+x['보증금(만)'])))+'/'+med(l.map(x=>+x['월세(만)']));
+  return `<td class="n" title="최근 ${L['계약일']} ${L['층']}층 ${f(L)}"><b>${m}</b> <span class="mut">(${l.length}건)</span><br><span class="mut" style="font-size:11px">최근 ${L['계약일'].slice(5)} ${L['층']}층 ${f(L)}</span></td>`};
+ const rows=Object.values(G).sort((p,q)=>p.dj<q.dj?-1:p.dj>q.dj?1:p.a-q.a);
+ $('#sise').innerHTML=rows.length?`<table><thead><tr><th>단지</th><th class="n">전용㎡(평)</th><th class="n">매매</th><th class="n">전세</th><th class="n">월세 보증/월</th></tr></thead><tbody>${rows.map(g=>`<tr style="cursor:default"><td>${esc(g.dj)}</td><td class="n">${g.a}㎡ (${(g.a/3.3058).toFixed(1)}평)</td>${cell(g.t.매매,'매매')}${cell(g.t.전세,'전세')}${cell(g.t.월세,'월세')}</tr>`).join('')}</tbody></table>`:'<div class="empty">최근 6개월 신고가 없어요</div>'}
 let MKCAT=new Set(),MKSORT={k:'manki',d:1};
 function renderManki(){ROWS.forEach(derive);const b=r=>{const d=dday(r.manki);if(d==null)return null;if(d<0)return d>=-31?'만기지남':null;if(d<=31)return'1개월내';if(d<=92)return'3개월내';if(d<=184)return'6개월내';return null};
  const MC=['오피스텔','아파트','상가','오피스','주택·빌딩·토지'];const cc={};ROWS.forEach(r=>{if(b(r)){const c=r.category||'오피스텔';cc[c]=(cc[c]||0)+1}});
