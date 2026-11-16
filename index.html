@@ -23,7 +23,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}td.n{padding-right:
 .t-타사광고\(집주인O\){background:#fff8c5;color:#7d4e00}.t-허위의심\(집주인X\){background:#ffebe9;color:#a40e26;font-weight:600}.t-광고표시없음{background:#ddf4ff;color:#0969da}.t-일치{background:#dafbe1;color:var(--grn)}
 .av{display:inline-block;padding:0 7px;border-radius:10px;font-size:12px;font-weight:600;background:#eef1f5;color:#57606a}
 .av-계약완료{background:#d0d7de;color:#24292f}.av-가능,.av-급매가능,.av-공실,.av-퇴거예정{background:#1a7f37;color:#fff}.av-가계약,.av-홀딩{background:#fff1e5;color:#bc4c00}.av-공동가능,.av-공동{background:#aceebb;color:#0f5323}.av-가능\?{background:#fff8c5;color:#7d4e00}.av-연락안됨{background:#ffebe9;color:#d1242f}
-tr.g-가능,tr.g-급매가능,tr.g-공실,tr.g-퇴거예정{background:#eafbea}tr.g-공동가능,tr.g-공동{background:#f3fcf3}
+tr.g-가능,tr.g-급매가능,tr.g-공실,tr.g-퇴거예정{background:#eafbea}tr.g-공동가능,tr.g-공동{background:#f3fcf3}.our{display:inline-block;background:#e6efff;color:#1a4fd6;border:1px solid #9db8f5;border-radius:10px;padding:0 6px;font-size:11px;font-weight:600;margin-left:4px;white-space:nowrap;cursor:help}.our.old{background:#f1f1f1;color:#777;border-color:#ccc}
 .dd{font-weight:600}.dd.r{color:var(--red)}.dd.o{color:var(--org)}.mut{color:var(--mut)}
 #drawer{position:fixed;top:0;right:0;width:min(760px,100%);height:100%;background:#fff;box-shadow:-6px 0 24px #0002;transform:translateX(105%);transition:.18s;z-index:10;display:flex;flex-direction:column}
 #drawer.on{transform:none}#drawer .hd{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line)}
@@ -356,6 +356,7 @@ async function api(u, o = {}) {
  <div id="q-help" style="font-size:11px;color:#888;margin:-4px 0 6px 2px">💡 여러 조건은 띄어쓰기로 이어 쓰기 (검색 대상 '전체'일 때) — 예: <b>센트럴파크 104동 24층 142타입</b> · 동·층·타입은 끝에 붙여 쓰기 · 순서 상관없음</div>
  <div class="bar"><div class="chips" id="f-kind"></div><span class="mut">|</span>
   <label><input type="checkbox" id="f-active" checked> 진행 중인 매물만</label>
+  <label title="우리 부동산에서 계약한 호실만 (진행 중 조건은 무시)"><input type="checkbox" id="f-our"> 우리 계약만</label>
   <label><input type="checkbox" id="f-ad"> 광고(네이버·뱅크) 표시된 것만</label>
   <button class="b" id="f-new" title="실장·대표가 직접 고친 매물만(일괄 작업 제외), 고른 기간, 최근 수정순">✏️ 최근 수정</button><span id="nw-box" hidden><input type="date" id="nw1"> ~ <input type="date" id="nw2"></span>
   </div>
@@ -418,7 +419,7 @@ function rtFor(r){if(r._rt)return r._rt;const names=DNM[r.danji]||[];let pool=[]
  const sum=[ms?'매 '+won(ms):'',js?'전 '+won(js):'',ws.length?'월 '+won(wd)+'/'+wr:''].filter(Boolean).join(' · ');
  return r._rt={exact,same,area,sum,n1:y1.length,last:exact[0]?`${exact[0]['계약일'].slice(2,7).replace('-','.')} ${rtPrice(exact[0])}`:''}}
 const exRow=(a,b)=>`<div class="ex-row" style="display:flex;gap:6px;margin:4px 0"><input class="ex-k" value="${esc(a)}" placeholder="항목" style="width:180px"><input class="ex-v" value="${esc(b)}" placeholder="내용" style="flex:1"><button class="b d ex-del" type="button">삭제</button></div>`;
-const EXCOL={'전자상가':['주소','지분/평단가'],'주택·빌딩·토지':['주소','연면적평','대지지분(평)']};const EX_HIDE=[...new Set([...Object.values(EXCOL).flat(),'중도퇴실','퇴실일','임대인메모','전속','전속만료'])];const EARLY=['만기 퇴실','중도퇴실 예정','중도퇴실 완료','계약 연장'];const exShown=e=>Object.entries(e||{}).filter(([a])=>!EX_HIDE.includes(a));
+const EXCOL={'전자상가':['주소','지분/평단가'],'주택·빌딩·토지':['주소','연면적평','대지지분(평)']};const EX_HIDE=[...new Set([...Object.values(EXCOL).flat(),'중도퇴실','퇴실일','임대인메모','전속','전속만료','우리계약'])];const EARLY=['만기 퇴실','중도퇴실 예정','중도퇴실 완료','계약 연장'];const exShown=e=>Object.entries(e||{}).filter(([a])=>!EX_HIDE.includes(a));
 const AVAIL=['가능','공동','공동가능','연락안됨','보류','급매','전속','계약완료','급매가능','공실','퇴거예정','가능?','가계약','홀딩','모집보류','계약','표시없음'];const AVW=['가능','가능?','공동','연락안됨','보류','확인중'];
 // 가능 판정 한 곳: '가능'(단 '가능?' 제외) 또는 '공동' 포함. '공동가능'·'급매가능'도 가능. 연락안됨·보류·가능?는 가능 아님
 const avParts=t=>{t=String(t||'').trim();const m=/^\d{4}\s*\.?\s*(.*)$/.exec(t);return (m?m[1]:t).replace(/공동가능/g,'공동·가능').split('·').map(s=>s.replace(/\s*\(\d+\)\s*$/,'').trim()).filter(Boolean)};
@@ -433,6 +434,8 @@ function derive(r){if(r._d)return r;const t=(r.title||'').trim();const m=/^(\d{2
  let ps=st.split('·').map(s=>s.trim()).filter(Boolean).map(s=>/보류/.test(s)&&s!=='모집보류'?'보류':s);ps=avSort(ps);st=ps.join('·');if(/급매/.test(r.deal||'')&&!ps.includes('급매'))ps=[...ps,'급매'];if((r.extra||{})['전속']&&!ps.includes('전속'))ps=[...ps,'전속'];r._avs=ps.length?ps:['표시없음'];r._avail=st||'표시없음';r._chk=chk;r._d=1;return r}
 const avHtml=a=>a&&a!=='표시없음'?String(a).split('·').map(x=>`<span class="av av-${esc(x)}">${esc(x)}</span>`).join(' '):'';
 const active=r=>/가능/.test(r.title||'')&&!/불가/.test(r.title||'');
+const ourC=r=>{const a=(r.extra||{})['우리계약'];return Array.isArray(a)&&a.length?a:null};const ourLine=c=>`${String(c.cd).slice(2).replace(/-/g,'.')} 계약 · ${c.tp||''} ${c.amt||''}${c.mk?' · 만기 '+String(c.mk).slice(2).replace(/-/g,'.'):''}`;
+const ourHtml=r=>{const a=ourC(r);if(!a)return '';const c=a[0],t=new Date(),td=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0'),old=c.mk&&c.mk<td;return `<span class="our${old?' old':''}" title="${esc(a.map(ourLine).join('\n'))}">우리계약 ${esc(String(c.cd).slice(2).replace(/-/g,'.'))}${old?' (만기지남)':''}</span>`};
 const askPrice=r=>{const k=kinds(r.deal),o=[];if(k.includes('매매')&&r.sale)o.push('매 '+won(r.sale));if(k.includes('전세'))o.push('전 '+won(r.jeonse||r.deposit));if(k.includes('월세'))o.push('월 '+won(r.deposit)+'/'+(r.rent??''));return o.join(' · ')};
 const dday=s=>s?Math.round((new Date(s)-new Date(new Date().toDateString()))/864e5):null;
 const ddHtml=s=>{const d=dday(s);if(d==null)return'';return `<span class="dd ${d<0?'r':d<=31?'r':d<=92?'o':''}">${d<0?'지남 '+(-d)+'일':'D-'+d}</span>`};
@@ -476,7 +479,7 @@ function renderFx(base){const inD=base.filter(r=>!F.danji.size||F.danji.has(r.da
  $('#f-on').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{const k=c.dataset.k,v=c.dataset.v;if(k==='fl'){FX.fl1=FX.fl2='';$('#fl1').value=$('#fl2').value=''}else if(k==='py'){FX.py1=FX.py2='';$('#py1').value=$('#py2').value=''}else if(k==='q'){$('#q').value=''}else F[k].delete(v);renderList()});
  const rb=$('#f-reset');if(rb)rb.onclick=()=>clearFilters();return tm}
 function filtered(){const q=$('#q').value.trim().toLowerCase();const tm=typeMap(ROWS.filter(r=>(r.category||'오피스텔')===CAT&&(!F.danji.size||F.danji.has(r.danji))));return ROWS.filter(r=>{if((r.category||'오피스텔')!==CAT)return false;if(!fxPass(r,tm))return false;
- if(NEW30){r._reg=myEdDate(r,$('#nw1').value,$('#nw2').value);if(!r._reg)return false}if($('#f-active').checked&&!active(r))return false;if($('#f-ad').checked&&!/네이버|뱅크/.test(r.ad||''))return false;
+ if(NEW30){r._reg=myEdDate(r,$('#nw1').value,$('#nw2').value);if(!r._reg)return false}const our=$('#f-our')&&$('#f-our').checked;if(our&&!ourC(r))return false;if(!our&&$('#f-active').checked&&!active(r))return false;if($('#f-ad').checked&&!/네이버|뱅크/.test(r.ad||''))return false;
  if(F.danji.size&&!F.danji.has(r.danji))return false;if(F.avail.size&&!(r._avs||[r._avail]).some(a=>F.avail.has(a)))return false;if(F.adt.size&&!String(r.ad_type||'').split(', ').some(x=>F.adt.has(x)))return false;if(CAT==='오피스텔'&&F.use.size&&!String(r.usage||'(미입력)').split(', ').some(x=>F.use.has(x)))return false;if(F.kind.size&&!kinds(r.deal).some(k=>F.kind.has(k)))return false;
  if(!qPass(r,q))return false;return true})}
 
@@ -486,7 +489,7 @@ const COLS=[['_reg','수정일'],['_avail','가능여부'],['_chk','확인일'],
 function renderCats(){const n={};ROWS.forEach(r=>{const c=r.category||'오피스텔';n[c]=(n[c]||0)+1});
  $('#catbar').innerHTML=CATS.map(c=>`<button class="cat ${c===CAT?'on':''}" data-c="${c}" ${n[c]?'':'disabled title="아직 옮기지 않음"'}>${c} ${n[c]?n[c].toLocaleString():'—'}</button>`).join('');
  $('#catbar').querySelectorAll('.cat').forEach(b=>b.onclick=()=>{if(b.dataset.c!==CAT){for(const k in F)F[k].clear();for(const k in FX){FX[k]='';const e=$('#'+k);if(e)e.value=''}$('#dirpanel').hidden=true}CAT=localStorage.cat=b.dataset.c;fltLoad();renderList()})}
-function clearFilters(){NEW30=false;const nb=$('#f-new');if(nb){nb.classList.remove('on');nb.style.background=nb.style.color='';$('#nw-box').hidden=true}for(const k in F)F[k].clear();for(const k in FX){FX[k]='';const e=$('#'+k);if(e)e.value=''}$('#q').value='';$('#qf').value='';renderList()}
+function clearFilters(){NEW30=false;const nb=$('#f-new');if(nb){nb.classList.remove('on');nb.style.background=nb.style.color='';$('#nw-box').hidden=true}for(const k in F)F[k].clear();for(const k in FX){FX[k]='';const e=$('#'+k);if(e)e.value=''}$('#q').value='';$('#qf').value='';if($('#f-our'))$('#f-our').checked=false;renderList()}
 function renderList(){if(!META)return;ROWS.forEach(derive);renderCats();const base=ROWS.filter(r=>(r.category||'오피스텔')===CAT&&(!$('#f-active').checked||active(r)));const cnt={};base.forEach(r=>cnt[r.danji]=(cnt[r.danji]||0)+1);
  chips($('#f-danji'),Object.keys(cnt).filter(d=>d&&d!=='null').sort((a,b)=>cnt[b]-cnt[a]),F.danji,renderList,cnt);renderFx(base);fltSave();chips($('#f-kind'),['매매','전세','월세'],F.kind,renderList);
  const ac={},tc={};base.forEach(r=>{(r._avs||[r._avail]).forEach(a=>ac[a]=(ac[a]||0)+1);String(r.ad_type||'').split(', ').filter(Boolean).forEach(x=>tc[x]=(tc[x]||0)+1)});
@@ -501,7 +504,7 @@ function drawTable(el,rs,cat,srt,rerender,setSort){const hasEx=rs.some(r=>exShow
  
  if(!cat)COLS2.unshift(['category','분류']);el.innerHTML=`<table><thead><tr>${COLS2.map(([k,l,t])=>`<th data-k="${k}" class="${t||''}">${k==='pyeong'&&cat==='아파트'?'공급평':l}${srt.k===k?(srt.d>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>${rs.slice(0,1500).map(r=>`<tr data-id="${r.id}" class="g-${esc((r._avs||[r._avail])[0])}">${COLS2.map(([k,,t])=>{if(k==='_early'){const e=r.extra||{};const v=e['중도퇴실']||'';return `<td data-exk="중도퇴실" class="${/중도퇴실/.test(v)?'':'mut'}" title="더블클릭해서 수정">${v?(/중도퇴실/.test(v)?'<b style="color:#c0392b">'+esc(v)+'</b>':esc(v)):''}${e['퇴실일']?' · '+esc(String(e['퇴실일']).slice(2).replace(/-/g,'.')):''}</td>`}if(['_jibun','_yeon','_daeji','_addr'].includes(k)){const ek={_jibun:'지분/평단가',_yeon:'연면적평',_daeji:'대지지분(평)',_addr:'주소'}[k];const v=(r.extra||{})[ek]??'';return `<td data-exk="${ek}">${esc(v)}</td>`}if(k==='_extra'){const e=exShown(r.extra).map(([a,b])=>`${a}: ${b}`).join(' · ');return `<td class="memo mut" title="${esc(e)}">${esc(e)}</td>`}if(k==='_avail')return `<td>${avHtml(r._avail)}${/급매/.test((r.deal||'')+(r._avail||''))?'<span class="gm">급매</span>':''}${(r.extra||{})['전속']?'<span class="jsk">전속</span>':''}</td>`;if(k==='_lease'){const t=leaseFor(r);return t?`<td class="${t.old?'mut':''}" title="${esc(t.tip)}">${t.html}</td>`:'<td></td>'}if(k==='_rtx'){const t=RTIDX?rtFor(r):{};return `<td title="${t.exact?.length||0}건">${esc(t.last||'')}</td>`}if(k==='_rta'){const t=RTIDX?rtFor(r):{};return `<td class="mut" title="최근 1년 ${t.n1||0}건 중간값">${esc(t.sum||'')}</td>`}if(k==='category')return `<td><b>${esc(r.category||'오피스텔')}</b></td>`;if(k==='_chk')return `<td class="mut">${r._chk?r._chk.slice(2).replace(/-/g,'.'):''}</td>`;
   if(k==='_log')return `<td class="mut" title="${esc((r.log_txt||'').slice(0,300))}">${r.log_n?`💬${r.log_n} ${String(r.log_last||'').slice(2,10)}`:''}</td>`;let v=k==='_ask'?askPrice(r):r[k];if(['cur_deposit'].includes(k))v=won(v);if(k==='manki')v=r.manki?`${r.manki} ${ddHtml(r.manki)}`:'';else v=k==='_ask'?esc(v):esc(v);
-  return `<td ${INLINE.includes(k)?`data-ek="${k}"`:''} class="${t||''} ${k==='memo'?'memo':''}" ${k==='memo'?`title="${esc(r.memo)}"`:''}>${v??''}</td>`}).join('')}</tr>`).join('')}</tbody></table>${rs.length>1500?'<p class="mut">1,500건까지만 표시합니다. 검색으로 좁혀 주세요.</p>':''}`;
+  return `<td ${INLINE.includes(k)?`data-ek="${k}"`:''} class="${t||''} ${k==='memo'?'memo':''}" ${k==='memo'?`title="${esc(r.memo)}"`:''}>${v??''}${k==='ho'?ourHtml(r):''}</td>`}).join('')}</tr>`).join('')}</tbody></table>${rs.length>1500?'<p class="mut">1,500건까지만 표시합니다. 검색으로 좁혀 주세요.</p>':''}`;
  el.querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.k==='_ask'?'sale':th.dataset.k;setSort({k,d:srt.k===k?-srt.d:1});rerender()});
  el.querySelectorAll('tbody tr').forEach(tr=>tr.onclick=e=>{if(e.target.closest('.ie'))return;clearTimeout(window.__ct);window.__ct=setTimeout(()=>openDrawer(+tr.dataset.id),260)});
  el.querySelectorAll('td[data-ek]').forEach(td=>td.ondblclick=e=>{e.stopPropagation();clearTimeout(window.__ct);inlineEdit(td)})
@@ -516,7 +519,7 @@ function renderCards(rs){const tel=r=>{const m=String(r.owner_tel||'').match(/01
  const lastLog=r=>{const t=String(r.log_txt||'').split(' / ').filter(Boolean);return t.length?t[t.length-1]:''};
  const big=r=>{const k=kinds(r.deal),o=[];if(k.includes('매매')&&r.sale)o.push(won(r.sale));if(k.includes('전세'))o.push(won(r.jeonse||r.deposit));if(k.includes('월세'))o.push(won(r.deposit)+'/'+(r.rent??''));return o.join(' · ')};
  $('#list').innerHTML=rs.slice(0,1500).map(r=>{const e=r.extra||{},tn=tel(r),fl=flOf(r),ls=CAT==='아파트'&&typeof leaseFor==='function'?leaseFor(r):null;
-  return `<div class="mc g-${esc((r._avs||[r._avail])[0])}" data-id="${r.id}"><div class="l1">${esc([r.danji,r.dong,r.ho].filter(Boolean).join(' '))}${r.typ?` <span class="mut" style="font-weight:500">· ${esc(r.typ)}</span>`:''} ${avHtml(r._avail)}${/급매/.test((r.deal||'')+(r._avail||''))?'<span class="gm">급매</span>':''}${(r.extra||{})['전속']?'<span class="jsk">전속</span>':''}</div>
+  return `<div class="mc g-${esc((r._avs||[r._avail])[0])}" data-id="${r.id}"><div class="l1">${esc([r.danji,r.dong,r.ho].filter(Boolean).join(' '))}${r.typ?` <span class="mut" style="font-weight:500">· ${esc(r.typ)}</span>`:''} ${avHtml(r._avail)}${/급매/.test((r.deal||'')+(r._avail||''))?'<span class="gm">급매</span>':''}${(r.extra||{})['전속']?'<span class="jsk">전속</span>':''}${ourHtml(r)}</div>
   <div class="l2"><span class="dl">${esc(r.deal||'')}</span>${esc(big(r))}</div>
   <div class="l3">${[r.pyeong!=null&&r.pyeong!==''?`${r.pyeong}평`:'',fl?`${fl}층`:'',r.direction?`${r.direction}향`:'',r.manki?`만기 ${r.manki}`:'',e['중도퇴실']?`<b style="color:#c0392b">${esc(e['중도퇴실'])}${e['퇴실일']?' '+esc(e['퇴실일']):''}</b>`:'',ls?'신고 '+ls.html:''].filter(Boolean).join(' · ')}</div>
   <div class="l4"><span>${esc(r.owner||'')}</span>${tn?`<a href="tel:${tn}" class="mtel">📞 전화</a>`:''}</div>
@@ -738,7 +741,7 @@ function csStageBind(phone){const save=async(stage,lid)=>{try{await api('/api/co
 function openCS(phone){CSP=phone||'';document.querySelector('#tabs [data-t="cs"]').click();}
 
 $('#cp-open').onclick=()=>openCS(CSP||'');{const n=cpGet().length;if(n)$('#cp-open').textContent=`👤 손님 페이지 (${n})`}
-$('#dir-open').onclick=()=>{const P=$('#dirpanel');P.hidden=!P.hidden;if(!P.hidden)renderDir()};$('#q').oninput=renderList;$('#qf').onchange=renderList;['fl1','fl2','py1','py2'].forEach(k=>$('#'+k).oninput=e=>{FX[k]=e.target.value.trim();renderList()});$('#f-active').onchange=renderList;$('#f-ad').onchange=renderList;$('#nw1').onchange=$('#nw2').onchange=renderList;$('#f-new').onclick=()=>{NEW30=!NEW30;$('#nw-box').hidden=!NEW30;if(NEW30&&!$('#nw1').value){$('#nw1').value=kday(Date.now()-30*864e5);$('#nw2').value=kday(Date.now())}$('#f-new').classList.toggle('on',NEW30);if(NEW30){$('#cnt').textContent='불러오는 중…';loadMyEd().then(renderList)}$('#f-new').style.background=NEW30?'#2d6cdf':'';$('#f-new').style.color=NEW30?'#fff':'';renderList()};$('#new').onclick=()=>openDrawer(null);
+$('#dir-open').onclick=()=>{const P=$('#dirpanel');P.hidden=!P.hidden;if(!P.hidden)renderDir()};$('#q').oninput=renderList;$('#qf').onchange=renderList;['fl1','fl2','py1','py2'].forEach(k=>$('#'+k).oninput=e=>{FX[k]=e.target.value.trim();renderList()});$('#f-active').onchange=renderList;$('#f-our').onchange=renderList;$('#f-ad').onchange=renderList;$('#nw1').onchange=$('#nw2').onchange=renderList;$('#f-new').onclick=()=>{NEW30=!NEW30;$('#nw-box').hidden=!NEW30;if(NEW30&&!$('#nw1').value){$('#nw1').value=kday(Date.now()-30*864e5);$('#nw2').value=kday(Date.now())}$('#f-new').classList.toggle('on',NEW30);if(NEW30){$('#cnt').textContent='불러오는 중…';loadMyEd().then(renderList)}$('#f-new').style.background=NEW30?'#2d6cdf':'';$('#f-new').style.color=NEW30?'#fff':'';renderList()};$('#new').onclick=()=>openDrawer(null);
 
 // ---------- 상세/편집 ----------
 const WIDE={owner_tel:'w3',tenant_tel:'w3',ad_type:'w2',memo:'w4',owner_units:'w2',deal:'w2',ad:'w4',usage:'w2',status:'w2',direction:'w2',title:'w2',coagent:'w2'};
@@ -780,6 +783,7 @@ async function openDrawer(id,tpl){if(FORM0!==null&&$('#drawer').classList.contai
  ${row(['danji','dong','ho'].map(fld).join(''))}
  ${row(['typ','pyeong'].map(fld).join(''))}
  ${row(['direction','usage'].map(fld).join(''))}
+ ${ourC(CUR)?`<div class="dsec nohide"><h4>🏠 우리 계약 <span class="mut" style="font-weight:400;font-size:12px">용산호반제이 장부</span></h4><div style="font-size:13px;line-height:1.7">${ourC(CUR).map(c=>esc(ourLine(c))).join('<br>')}</div></div>`:''}
  ${row(fld('deal'))}
  ${row(['sale','jeonse','deposit','rent'].map(fld).join(''))}
  ${row(['cur_deposit','cur_rent','status'].map(fld).join(''))}
