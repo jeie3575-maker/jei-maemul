@@ -515,6 +515,7 @@ async function api(u, o = {}) {
   <label title="우리 부동산에서 계약한 호실만 (진행 중 조건은 무시)"><input type="checkbox" id="f-our"> 우리 계약만</label>
   <label><input type="checkbox" id="f-ad"> 광고(네이버·뱅크) 표시된 것만</label>
   <button class="b" id="f-new" title="실장·대표가 직접 고친 매물만(일괄 작업 제외), 고른 기간, 최근 수정순">✏️ 최근 수정</button><span id="nw-box" hidden><input type="date" id="nw1"> ~ <input type="date" id="nw2"></span>
+  <button class="b" id="f-clear" title="걸어 둔 필터·검색을 모두 풀어요 (분류 탭은 그대로)">✖ 필터 전체 해제</button>
   </div>
   <div class="bar" id="fx-box" hidden style="display:none!important"><span class="mut">층</span><div class="chips" id="f-flp"></div><input id="fl1" inputmode="numeric" placeholder="부터" style="width:52px">~<input id="fl2" inputmode="numeric" placeholder="까지" style="width:52px"><span class="mut">| 향</span><div class="chips" id="f-dir"></div><span class="mut">| 평형</span><input id="py1" inputmode="decimal" placeholder="부터" style="width:52px">~<input id="py2" inputmode="decimal" placeholder="까지" style="width:52px"></div>
  <div class="bar" id="f-on" hidden style="display:none!important"></div>
@@ -658,7 +659,8 @@ const COLS=[['_reg','수정일'],['_avail','가능여부'],['_chk','확인일'],
 function renderCats(){const n={};ROWS.forEach(r=>{const c=r.category||'오피스텔';n[c]=(n[c]||0)+1});
  $('#catbar').innerHTML=CATS.map(c=>`<button class="cat ${c===CAT?'on':''}" data-c="${c}" ${n[c]?'':'disabled title="아직 옮기지 않음"'}>${c} ${n[c]?n[c].toLocaleString():'—'}</button>`).join('')+`<button id="qa-open" type="button" title="건물명·동·호·가격만 넣고 바로 등록">+ 매물등록</button>`;document.getElementById('qa-open').onclick=qaOpen;
  $('#catbar').querySelectorAll('.cat').forEach(b=>b.onclick=()=>{if(b.dataset.c!==CAT){for(const k in F)F[k].clear();for(const k in FX){FX[k]='';const e=$('#'+k);if(e)e.value=''}$('#dirpanel').hidden=true}CAT=localStorage.cat=b.dataset.c;fltLoad();renderList()})}
-function clearFilters(){NEW30=false;const nb=$('#f-new');if(nb){nb.classList.remove('on');nb.style.background=nb.style.color='';$('#nw-box').hidden=true}for(const k in F)F[k].clear();for(const k in FX){FX[k]='';const e=$('#'+k);if(e)e.value=''}$('#q').value='';$('#qf').value='';if($('#f-our'))$('#f-our').checked=false;renderList()}
+function clearFilters(){NEW30=false;const nb=$('#f-new');if(nb){nb.classList.remove('on');nb.style.background=nb.style.color='';$('#nw-box').hidden=true}for(const k in F)F[k].clear();for(const k in FX){FX[k]='';const e=$('#'+k);if(e)e.value=''}$('#q').value='';$('#qf').value='';if($('#f-our'))$('#f-our').checked=false;if($('#f-ad'))$('#f-ad').checked=false;if($('#f-active'))$('#f-active').checked=true;renderList()}
+{const cb=document.getElementById('f-clear');if(cb)cb.onclick=()=>{clearFilters();toast('필터를 모두 풀었어요')}}
 function renderList(){if(!META)return;ROWS.forEach(derive);renderCats();const base=ROWS.filter(r=>(r.category||'오피스텔')===CAT&&(!$('#f-active').checked||active(r)));const cnt={};base.forEach(r=>cnt[r.danji]=(cnt[r.danji]||0)+1);
  chips($('#f-danji'),Object.keys(cnt).filter(d=>d&&d!=='null').sort((a,b)=>cnt[b]-cnt[a]),F.danji,renderList,cnt);renderFx(base);fltSave();chips($('#f-kind'),['매매','전세','월세'],F.kind,renderList);
  const ac={},tc={};base.forEach(r=>{(r._avs||[r._avail]).forEach(a=>ac[a]=(ac[a]||0)+1);String(r.ad_type||'').split(', ').filter(Boolean).forEach(x=>tc[x]=(tc[x]||0)+1)});
