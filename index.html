@@ -66,6 +66,29 @@ tbody tr:hover{background:#fff8dc}
 #promo .pb{padding:14px 18px}#promo textarea{width:100%;min-height:210px;line-height:1.6;font-size:14px}
 #promo .pt{display:flex;gap:6px;margin-bottom:8px}#promo .pt button{flex:1}#promo .pt .on{background:var(--navy);color:#fff;border-color:var(--navy)}
 #drawer .bd{overflow-x:auto}#drawer .sub table,#drawer .nt{width:100%}#drawer .sub td,#drawer .nt td{white-space:normal}
+
+/* 11/17 상세페이지 가시성 */
+#drawer .bd{background:#eef1f6}
+#drawer .dsec{background:#fff;border:1px solid #c9d1de;border-radius:10px;padding:10px 14px 12px;margin:0 0 12px;box-shadow:0 1px 3px #14213d14}
+#drawer .dsec h4{font-size:14px;font-weight:800;color:var(--navy);background:#fff6d6;border-left:5px solid var(--gold);border-radius:4px;padding:5px 10px;margin:0 0 10px}
+#drawer .form label{font-size:12.5px;font-weight:700;color:#3a4658}
+#drawer .form input,#drawer .form select,#drawer .form textarea{font-size:15px;font-weight:600;padding:7px 9px;border:1.5px solid #b4bfd0;border-radius:7px;background:#fbfcfe}
+#drawer .form input:focus,#drawer .form select:focus,#drawer .form textarea:focus{outline:0;border-color:var(--gold2);box-shadow:0 0 0 3px #f2b70533;background:#fff}
+#drawer .avbox{background:#fff!important;border:1px solid #c9d1de!important}
+#drawer .chip{font-size:13px;padding:4px 11px;border:1.5px solid #b4bfd0}
+#drawer .chip.on{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:700}
+.dptabs{display:flex;align-items:center;gap:8px;margin:0 0 10px;flex-wrap:wrap}
+.dpt{font:inherit;font-size:15px;font-weight:800;padding:7px 22px;border:2px solid #b4bfd0;border-radius:999px;background:#fff;color:#4a5668;cursor:pointer}
+.dpt.on{background:var(--navy);border-color:var(--navy);color:#fff;box-shadow:inset 0 -3px 0 var(--gold)}
+.dpsum{font-size:16px;font-weight:800;color:var(--navy);margin-left:8px}
+.dprice .form label.pv-off{display:none!important}.dprice .form label.pv-on{display:flex!important}
+#qa{position:fixed;inset:0;background:#0007;z-index:30;display:flex;align-items:center;justify-content:center}
+#qa .box{background:#fff;border-radius:14px;width:min(560px,94%);max-height:92vh;overflow:auto;box-shadow:0 12px 40px #0006}
+#qa .ph{background:var(--navy);color:#fff;padding:14px 18px;border-radius:14px 14px 0 0;display:flex;align-items:center;gap:10px}#qa .ph b{flex:1;font-size:16px}
+#qa .pb{padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:12px}#qa label{display:flex;flex-direction:column;font-size:13px;font-weight:700;color:#3a4658;gap:4px}#qa label.w2{grid-column:span 2}
+#qa input,#qa select{font-size:16px;font-weight:600;padding:9px 10px;border:1.5px solid #b4bfd0;border-radius:8px}#qa input:focus,#qa select:focus{outline:0;border-color:var(--gold2);box-shadow:0 0 0 3px #f2b70533}
+#qa .dptabs{grid-column:span 2;margin:0}#qa .pf{grid-column:span 2;display:flex;gap:8px;align-items:center;flex-wrap:wrap}#qa .qsum{font-weight:800;color:var(--navy)}
+#qa-open{font:inherit;font-weight:800;font-size:14px;padding:6px 14px;border:0;border-radius:8px;background:var(--gold);color:var(--navy);cursor:pointer}#qa-open:hover{background:var(--gold2)}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.SB_URL="https://ctgaawyuwqihybxrdcgt.supabase.co";window.SB_ANON="sb_publishable_g-3Lbb_ygZL5gTvDvU06OA_HoWDzGaE";window.META={"fields": [["title", "가능여부", "text"], ["danji", "단지", "select"], ["dong", "동", "text"], ["ho", "호", "text"], ["typ", "타입", "text"], ["pyeong", "평형(전용)", "num"], ["direction", "방향", "multi"], ["deal", "거래유형", "multi"], ["sale", "매매가", "num"], ["jeonse", "전세가", "num"], ["deposit", "보증금", "num"], ["rent", "월세", "num"], ["cur_deposit", "보증(현)", "num"], ["cur_rent", "차임(현)", "num"], ["manki", "만기(년)", "date"], ["status", "현상태", "multi"], ["usage", "용도", "multi"], ["ad", "광고", "multi"], ["ad_type", "광고타입", "multi"], ["consult", "상담", "select"], ["owner", "임대인", "text"], ["owner_tel", "임대인연락처", "text"], ["tenant", "임차인", "text"], ["tenant_tel", "임차인연락처", "text"], ["owner_units", "임대인소유물건", "text"], ["coagent", "공동중개부동산", "text"], ["co_office", "공동중개부동산(사무소)", "text"], ["memo", "비고", "text"]], "options": {"danji": ["래미안", "써밋", "호반", "DK", "시티파크", "파크타워", "아스테리움", "에테르나인용산", "트럼프", "한강대우디오빌", "기타"], "deal": ["매매", "급매", "임대전세", "임대월세", "반전세", "단기", "예정", "지분매매", "분양가", "매매완료"], "direction": ["동", "서", "남", "북", "남동", "남서", "북동", "서북"], "status": ["공실", "입주", "전세완", "월세완", "반전세", "단기", "계약완", "매매완"], "usage": ["주거", "겸용", "일반사업자", "간이사업자", "법인사업자", "일반임대사업자", "주택임대사업자", "사업자", "사업자X/전입X", "확인필요"], "ad": ["뱅크", "네이버", "당근", "블로그", "공동", "대기", "공동부동산확인중", "광고가능- 등록하기", "공동부거절", "임대인요청으로 광고X"], "consult": ["시작 전", "진행 중", "완료"], "ad_type": ["신홍보", "전자홍보", "V2", "VR홍보"]}, "danji_naver": {"래미안": ["래미안용산더센트럴"], "써밋": ["용산푸르지오써밋"], "호반": ["용산호반써밋에이디션"], "DK": ["DK밸리뷰용산"], "시티파크": ["용산시티파크1단지", "용산시티파크2단지"], "파크타워": ["파크타워"], "아스테리움": ["아스테리움용산"], "에테르나인용산": ["에테르나인용산"]}};</script>
 <script>// 클라우드(Supabase) 버전 백엔드: 로컬 server.py 의 /api/* 를 브라우저에서 그대로 흉내낸다.
@@ -371,7 +394,7 @@ async function api(u, o = {}) {
 <style>#tabs button[data-t=io],#tg{display:none}</style></head><body>
 <header><b>🏡 제이부동산 매물장</b><nav id="tabs">
 <button data-t="sise">💹 시세</button><button data-t="list" class="on">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 상담일지</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
-<span class="sp"></span><small id="info"></small><button class="fsb" id="fs-" title="글씨 작게">가−</button><button class="fsb" id="fs+" title="글씨 크게">가+</button><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
+<button id="qa-open" title="건물명·동·호·가격만 넣고 바로 등록">+ 매물등록</button><span class="sp"></span><small id="info"></small><button class="fsb" id="fs-" title="글씨 작게">가−</button><button class="fsb" id="fs+" title="글씨 크게">가+</button><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
 <main>
 <section id="t-list">
  <div class="bar" id="catbar"></div>
@@ -600,6 +623,38 @@ function promoOpen(){if(!CUR||!CUR.id)return;const r=CUR;let tab='naver',extra='
  el.querySelector('#pm-x').onclick=()=>el.remove();el.onclick=e=>{if(e.target===el)el.remove()};
  el.querySelector('#pm-c').onclick=async()=>{try{await navigator.clipboard.writeText(ta.value)}catch(e){ta.select();document.execCommand('copy')}toast('복사했어요')};draw()}
 $('#d-promo').onclick=promoOpen;
+// ---- 11/17 상단 간편 매물등록 ----
+function qaOpen(){document.getElementById('qa')?.remove();const el=document.createElement('div');el.id='qa';
+ const dj=[...new Set(ROWS.map(x=>x.danji).filter(Boolean))].sort();let deal='월세';
+ el.innerHTML=`<div class="box"><div class="ph"><b>+ 매물 간편 등록</b><button class="b" id="qa-x">닫기</button></div><div class="pb">
+  <label>분류<select id="qa-cat">${CATS.map(c=>`<option ${c===CAT?'selected':''}>${c}</option>`).join('')}</select></label>
+  <label>건물명(단지)<input id="qa-dj" list="qa-dl" placeholder="예: 래미안" autocomplete="off"><datalist id="qa-dl">${dj.map(d=>`<option value="${esc(d)}">`).join('')}</datalist></label>
+  <label>동<input id="qa-dong" placeholder="예: A/서관, 103동" autocomplete="off"></label>
+  <label>호실<input id="qa-ho" placeholder="예: 1511" autocomplete="off"></label>
+  <div class="dptabs" id="qa-tabs">${['매매','전세','월세'].map(t=>`<button type="button" class="dpt ${t===deal?'on':''}" data-t="${t}">${t}</button>`).join('')}</div>
+  <label id="qa-l1">보증금 (만원)<input id="qa-p1" inputmode="decimal" placeholder="예: 5000 또는 1억 5000" autocomplete="off"></label>
+  <label id="qa-l2">월세 (만원)<input id="qa-p2" inputmode="decimal" placeholder="예: 400" autocomplete="off"></label>
+  <div class="pf"><span class="qsum" id="qa-sum"></span><span class="sp" style="flex:1"></span><button class="b" id="qa-more">저장 후 상세 열기</button><button class="b p" id="qa-save">저장 (Enter)</button></div></div></div>`;
+ document.body.appendChild(el);const g=i=>el.querySelector('#'+i);
+ const num=s=>{s=String(s||'').replace(/,/g,'').trim();if(!s)return '';const m=/^(?:(\d+(?:\.\d+)?)\s*억)?\s*(\d+)?$/.exec(s);if(!m)return NaN;return Math.round((+m[1]||0)*10000+(+m[2]||0))};
+ const draw=()=>{g('qa-tabs').querySelectorAll('.dpt').forEach(b=>b.classList.toggle('on',b.dataset.t===deal));
+  g('qa-l1').firstChild.textContent=deal==='매매'?'매매가 (만원)':deal==='전세'?'전세가 (만원)':'보증금 (만원)';g('qa-l2').style.display=deal==='월세'?'':'none';
+  const a=num(g('qa-p1').value),b=num(g('qa-p2').value);g('qa-sum').textContent=a===''||isNaN(a)?'':deal==='월세'?`보증금 ${won(a)} - 월세 ${b===''||isNaN(b)?0:b}`:`${deal} ${won(a)}`};
+ g('qa-tabs').onclick=e=>{const b=e.target.closest('.dpt');if(b){deal=b.dataset.t;draw();g('qa-p1').focus()}};
+ ['qa-p1','qa-p2'].forEach(i=>g(i).oninput=draw);draw();
+ const close=()=>el.remove();g('qa-x').onclick=close;el.onclick=e=>{if(e.target===el)close()};
+ const save=async open=>{const dn=g('qa-dj').value.trim(),dg=g('qa-dong').value.trim(),ho=g('qa-ho').value.trim(),cat=g('qa-cat').value;
+  if(!dn){alert('건물명을 넣어 주세요');g('qa-dj').focus();return}
+  const a=num(g('qa-p1').value),b=num(g('qa-p2').value);if(isNaN(a)||isNaN(b)){alert('금액은 숫자(만원)나 "1억 5000"처럼 넣어 주세요');return}
+  const dup=ROWS.find(r=>(r.category||'오피스텔')===cat&&(r.danji||'')===dn&&(r.dong||'')===dg&&String(r.ho||'')===ho&&ho);
+  if(dup&&!confirm(`이미 같은 매물이 있어요 (${cpUnit(dup)}). 그래도 새로 등록할까요?`))return;
+  const d={category:cat,danji:dn,dong:dg,ho,deal:deal==='매매'?'매매':deal==='전세'?'임대전세':'임대월세'};
+  if(deal==='매매')d.sale=String(a);else if(deal==='전세')d.jeonse=String(a);else{d.deposit=String(a);d.rent=String(b)}
+  g('qa-save').disabled=true;try{const r=await api('/api/listings',{method:'POST',body:JSON.stringify(d)});ROWS=await api('/api/listings');renderList();toast('등록했어요: '+cpUnit(d));close();if(open)openDrawer(r.id)}catch(err){g('qa-save').disabled=false;alert('저장 실패: '+err.message)}};
+ g('qa-save').onclick=()=>save(false);g('qa-more').onclick=()=>save(true);
+ el.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();save(false)}if(e.key==='Escape')close()});g('qa-dj').focus()}
+document.getElementById('qa-open').onclick=qaOpen;
+
 
 function cpToggleNew(){let a=cpGet();a=a.includes(CUR.id)?a.filter(x=>x!==CUR.id):[...a,CUR.id];cpSet(a);cpBtn();toast(a.includes(CUR.id)?'손님 페이지에 담았어요':'뺐어요');if(CSB&&window.__csDrawB){const on=a.includes(CUR.id);CSB=on?(CSB.includes(CUR.id)?CSB:[...CSB,CUR.id]):CSB.filter(x=>x!==CUR.id);window.__csDrawB()}}
 // [손님 페이지에 담기] → 어떤 손님 페이지에 담을지 고르기 (상담일지 손님 목록 · 최근순 · 검색) / '새 상담으로 담기'
@@ -844,14 +899,10 @@ async function openDrawer(id,tpl){if(FORM0!==null&&$('#drawer').classList.contai
   <div class="mut" style="font-size:12px;margin-top:4px">여러 개 고를 수 있어요 · 저장될 값: <b id="av-show">${esc(CUR.title||'(없음)')}</b></div>
   <input type="hidden" data-k="title" id="av-title" value="${esc(CUR.title||'')}"></div>
  ${row(`<label class="w2">분류<select data-k="category">${CATS.map(c=>`<option ${c===cat?'selected':''}>${c}</option>`).join('')}</select></label>`)}
- ${row(['danji','dong','ho'].map(fld).join(''))}
- ${row(['typ','pyeong'].map(fld).join(''))}
- ${row(['direction','usage'].map(fld).join(''))}
+ ${sec('📍 매물 정보',['danji','dong','ho','typ','pyeong','direction','usage'].map(fld).join(''))}
  ${ourBox(CUR)}
- ${row(fld('deal'))}
- ${row(['sale','jeonse','deposit','rent'].map(fld).join(''))}
- ${row(['cur_deposit','cur_rent','status'].map(fld).join(''))}
- ${row(fld('manki'))}
+ <div class="dsec dprice"><h4>💰 거래·가격 <span class="mut" style="font-weight:400">(단위: 만원)</span></h4><div id="dp-tabs"></div><div class="form">${fld('deal')}${['sale','jeonse','deposit','rent'].map(fld).join('')}</div></div>
+ ${sec('🏠 현재 임차 · 만기',['cur_deposit','cur_rent','status','manki'].map(fld).join(''))}
  ${row(fld('ad')+fld('ad_type')+`<label class="w2 ${adMemo.length?'':'emp'}">메모<input id="ad-memo" value="${esc(adMemo.join(', '))}" placeholder="예: 대기, 공동부동산확인중"></label>`)}
  ${row(['owner','owner_tel'].map(fld).join(''))}
  ${row((own?fld('owner_units').replace(/ emp"/,'"'):fld('owner_units')).replace(/(<\/label>)$/,own+'$1')+`<label class="w2 ${String(E['임대인메모']??'').trim()===''?'emp':''}">메모<input class="exk-in" data-key="임대인메모" value="${esc(E['임대인메모']??'')}"></label>`)}
@@ -865,7 +916,25 @@ async function openDrawer(id,tpl){if(FORM0!==null&&$('#drawer').classList.contai
  $('#d-body').querySelectorAll('.ms .chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
  const avSet=()=>{const on=[...$('#av-chips').querySelectorAll('.chip.on')].map(c=>c.dataset.a);const dt=$('#av-date').value;const v=on.length?((dt?dt.slice(5,7)+dt.slice(8,10)+'.':'')+avSort(on).join('·')):'';$('#av-title').value=v;$('#av-show').textContent=v||'(없음)'};let avSeq=0;$('#av-chips').querySelectorAll('.chip.on').forEach(c=>c.dataset.t=++avSeq);
  $('#av-chips').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{if(c.classList.contains('on')){c.classList.remove('on')}else{c.classList.add('on');c.dataset.t=++avSeq}const t=new Date(),p=n=>String(n).padStart(2,'0');$('#av-date').value=`${t.getFullYear()}-${p(t.getMonth()+1)}-${p(t.getDate())}`;avSet()});
- $('#av-date').onchange=avSet;const dms=$('#d-body').querySelector('.ms[data-k="deal"]');const urgChip=()=>dms&&[...dms.querySelectorAll('.chip')].find(c=>c.textContent==='급매');
+ $('#av-date').onchange=avSet;
+ (function(){const dm=$('#d-body').querySelector('.ms[data-k="deal"]'),box=$('#dp-tabs');if(!dm||!box)return;
+  const MAP={'매매':['매매','급매','지분매매'],'전세':['임대전세'],'월세':['임대월세','반전세','단기']},FLD={'매매':['sale'],'전세':['jeonse'],'월세':['deposit','rent']};
+  const lab=k=>{const e=$('#d-body').querySelector('[data-k="'+k+'"]');return e?e.closest('label'):null};
+  const chips=t=>[...dm.querySelectorAll('.chip')].filter(c=>MAP[t].includes(c.textContent));
+  const val=k=>{const e=$('#d-body').querySelector('[data-k="'+k+'"]');return e?e.value:''};
+  const isOn=t=>chips(t).some(c=>c.classList.contains('on'))||FLD[t].some(k=>val(k)!=='');
+  box.className='dptabs';
+  const draw=()=>{box.innerHTML=['매매','전세','월세'].map(t=>`<button type="button" class="dpt ${isOn(t)?'on':''}" data-t="${t}">${t}</button>`).join('')+`<span class="dpsum" id="dp-sum"></span>`;
+   for(const t of Object.keys(FLD))for(const k of FLD[t]){const l=lab(k);if(l){l.classList.toggle('pv-on',isOn(t));l.classList.toggle('pv-off',!isOn(t))}}
+   const lb=lab('deposit');if(lb&&lb.firstChild)lb.firstChild.textContent=isOn('월세')?'보증금 (월세일 때)':'보증금';
+   const s=[];if(isOn('매매')&&val('sale'))s.push('매매 '+won(+val('sale')));if(isOn('전세')&&val('jeonse'))s.push('전세 '+won(+val('jeonse')));if(isOn('월세')&&(val('deposit')||val('rent')))s.push('월세 '+won(+val('deposit')||0)+' - '+(val('rent')||0));
+   $('#dp-sum').textContent=s.join('   ·   ')};
+  box.onclick=e=>{const b=e.target.closest('.dpt');if(!b)return;const t=b.dataset.t;if(b.classList.contains('on')&&chips(t).some(c=>c.classList.contains('on'))){chips(t).forEach(c=>c.classList.remove('on'))}else{const c=chips(t)[0];if(c&&!chips(t).some(x=>x.classList.contains('on')))c.classList.add('on')}
+   // 값만 있고 칩이 없는 경우: 탭을 끄려면 값은 그대로 두고 표시만 유지
+   draw()};
+  dm.addEventListener('click',()=>setTimeout(draw,0));$('#d-body').addEventListener('input',e=>{if(e.target.matches('[data-k=sale],[data-k=jeonse],[data-k=deposit],[data-k=rent]'))$('#dp-sum')&&draw()});
+  draw()})();
+ const dms=$('#d-body').querySelector('.ms[data-k="deal"]');const urgChip=()=>dms&&[...dms.querySelectorAll('.chip')].find(c=>c.textContent==='급매');
  $('#av-urgent').onchange=e=>{const c=urgChip();if(c)c.classList.toggle('on',e.target.checked)};if(dms)dms.addEventListener('click',()=>setTimeout(()=>{const c=urgChip();$('#av-urgent').checked=!!(c&&c.classList.contains('on'))},0));
  $('#d-body').querySelectorAll('[data-open]').forEach(a=>a.onclick=e=>{e.preventDefault();openDrawer(+a.dataset.open)});
  const exWire=()=>$('#ex-box').querySelectorAll('.ex-del').forEach(x=>x.onclick=()=>x.parentElement.remove());exWire();
