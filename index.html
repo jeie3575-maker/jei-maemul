@@ -787,7 +787,7 @@ function promoOpen(){if(!CUR||!CUR.id)return;const r=CUR;let tab='blog',extra=''
  el.querySelector('#pm-c').onclick=async()=>{try{await navigator.clipboard.writeText(ta.value)}catch(e){ta.select();document.execCommand('copy')}toast('복사했어요')};draw()}
 // ---- 🏛 건축물대장 + 📋 확인·설명서 초안 ----
 async function bldAll(){if(window.__bld)return window.__bld;try{const d=await api('/api/bldreg');window.__bld=d.complexes||{}}catch(e){window.__bld={}}return window.__bld}
-const bldKey=(dj,dong)=>{dj=String(dj||'');return /래미안/.test(dj)?'래미안':/센트럴/.test(dj)?'센트럴파크':/아스테리움/.test(dj)?'아스테리움':/에테르/.test(dj)?'에테르나인용산':/푸르지오|^써밋$/.test(dj)?'써밋':/호반|에이디션/.test(dj)?'호반':/파크타워/.test(dj)?'파크타워':/^DK|DK밸리/.test(dj)?'DK':/시티파크/.test(dj)?(/^2|2단지/.test(String(dong||''))?'시티파크2':'시티파크1'):null};
+const bldKey=(dj,dong)=>{dj=String(dj||'');return /래미안/.test(dj)?'래미안':/센트럴/.test(dj)?'센트럴파크':/아스테리움/.test(dj)?'아스테리움':/에테르/.test(dj)?'에테르나인용산':/에피소드/.test(dj)?'에피소드':/푸르지오|^써밋$/.test(dj)?'써밋':/호반|에이디션/.test(dj)?'호반':/파크타워/.test(dj)?'파크타워':/^DK|DK밸리/.test(dj)?'DK':/시티파크/.test(dj)?(/^2|2단지/.test(String(dong||''))?'시티파크2':'시티파크1'):null};
 const uNum=u=>{const s=String(u.ho||'');const p=s.split('-');return (p.length>1?p[p.length-1]:s).replace(/\D/g,'')};
 function bldFind(c,r){const hn=String(r.ho||'').replace(/\D/g,'');if(!hn)return [];const dd=String(r.dong||'').replace(/\D/g,''),dl=(/^[A-Za-z]/.exec(String(r.dong||''))||[''])[0].toUpperCase();
  const ex=c.units.filter(u=>String(u.ho||'').replace(/호$/,'')===String(r.ho||'').trim());if(ex.length===1)return ex;
