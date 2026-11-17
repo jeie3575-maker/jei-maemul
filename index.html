@@ -205,6 +205,11 @@ body.paneonly #drawer .form{grid-template-columns:repeat(2,minmax(0,1fr))}body.p
 body.side2 #drawer,body.paneonly #drawer,body.side2 #drawer .bd,body.paneonly #drawer .bd{min-width:0}body.side2 #drawer .form label,body.paneonly #drawer .form label{min-width:0}body.side2 #drawer .form input,body.side2 #drawer .form select,body.side2 #drawer .form textarea,body.paneonly #drawer .form input,body.paneonly #drawer .form select,body.paneonly #drawer .form textarea{min-width:0;width:100%;max-width:100%}body.side2 #drawer .bd,body.paneonly #drawer .bd{overflow-x:hidden}
 .tmenu{position:fixed!important;z-index:60!important;-webkit-tap-highlight-color:transparent}.tmenu button{touch-action:manipulation;min-height:44px}
 body.side2 #drawer{width:min(1200px,calc(100vw - 420px))}body.side2 #drawer2{width:calc(100vw - min(1200px,calc(100vw - 420px)))}
+#promo.bldm .box{width:min(900px,calc(100vw - 24px))}#promo .bl{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:4px 16px;font-size:14px}#promo .bl b{color:var(--navy);margin-right:6px}#promo h4{margin:6px 0;color:var(--navy);font-size:15px}
+#promo .bw{background:#fff1f0;border:1px solid #f4b4ae;border-radius:8px;padding:6px 10px;margin-top:8px;font-weight:700;color:#a40e26}#promo .bo{background:#eef9f0;border:1px solid #b6e2c0;border-radius:8px;padding:6px 10px;margin-top:8px;font-weight:700;color:#1a7f37}
+.bt{width:100%;border-collapse:collapse;font-size:13.5px}.bt th,.bt td{border:1px solid #9aa6b8;padding:6px 8px;vertical-align:top;text-align:left}.bt th{background:#eef1f5;width:15%;font-weight:700;white-space:normal}.bt tr th[colspan]{background:var(--navy);color:#fff;width:auto}
+.ba{color:#1a4fd6;font-weight:700}.bm{display:inline-block;min-width:110px;background:#fff8c5;border-bottom:1.5px dashed #bc8f00;padding:0 4px;outline:0}.bm:empty::before{content:attr(data-ph);color:#8a6d00;font-size:12px}
+@media print{body>*:not(#promo){display:none!important}#promo{position:static!important;background:none!important;display:block!important}#promo .box{box-shadow:none!important;width:100%!important;max-height:none!important;border-radius:0}#promo .ph{display:none!important}#promo .bm{background:none!important;border-bottom:1px solid #999}#promo .bm:empty::before{content:'';}}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.SB_URL="https://ctgaawyuwqihybxrdcgt.supabase.co";window.SB_ANON="sb_publishable_g-3Lbb_ygZL5gTvDvU06OA_HoWDzGaE";window.META={"fields": [["title", "가능여부", "text"], ["danji", "단지", "select"], ["dong", "동", "text"], ["ho", "호", "text"], ["typ", "타입", "text"], ["pyeong", "평형(전용)", "num"], ["direction", "방향", "multi"], ["deal", "거래유형", "multi"], ["sale", "매매가", "num"], ["jeonse", "전세가", "num"], ["deposit", "보증금", "num"], ["rent", "월세", "num"], ["cur_deposit", "보증(현)", "num"], ["cur_rent", "차임(현)", "num"], ["manki", "만기(년)", "date"], ["status", "현상태", "multi"], ["usage", "용도", "multi"], ["ad", "광고", "multi"], ["ad_type", "광고타입", "multi"], ["consult", "상담", "select"], ["owner", "임대인", "text"], ["owner_tel", "임대인연락처", "text"], ["tenant", "임차인", "text"], ["tenant_tel", "임차인연락처", "text"], ["owner_units", "임대인소유물건", "text"], ["coagent", "공동중개부동산", "text"], ["co_office", "공동중개부동산(사무소)", "text"], ["memo", "비고", "text"]], "options": {"danji": ["래미안", "써밋", "호반", "DK", "시티파크", "파크타워", "아스테리움", "에테르나인용산", "트럼프", "한강대우디오빌", "기타"], "deal": ["매매", "급매", "임대전세", "임대월세", "반전세", "단기", "예정", "지분매매", "분양가", "매매완료"], "direction": ["동", "서", "남", "북", "남동", "남서", "북동", "서북"], "status": ["공실", "입주", "전세완", "월세완", "반전세", "단기", "계약완", "매매완"], "usage": ["주거", "겸용", "일반사업자", "간이사업자", "법인사업자", "일반임대사업자", "주택임대사업자", "사업자", "사업자X/전입X", "확인필요"], "ad": ["뱅크", "네이버", "당근", "블로그", "공동", "대기", "공동부동산확인중", "광고가능- 등록하기", "공동부거절", "임대인요청으로 광고X"], "consult": ["시작 전", "진행 중", "완료"], "ad_type": ["신홍보", "전자홍보", "V2", "VR홍보"]}, "danji_naver": {"래미안": ["래미안용산더센트럴"], "써밋": ["용산푸르지오써밋"], "호반": ["용산호반써밋에이디션"], "DK": ["DK밸리뷰용산"], "시티파크": ["용산시티파크1단지", "용산시티파크2단지"], "파크타워": ["파크타워"], "아스테리움": ["아스테리움용산"], "에테르나인용산": ["에테르나인용산"]}};</script>
 <script>// 클라우드(Supabase) 버전 백엔드: 로컬 server.py 의 /api/* 를 브라우저에서 그대로 흉내낸다.
@@ -468,6 +473,7 @@ async function api(u, o = {}) {
     case '/api/rt': return (await loadRef('rt')).rows;
     case '/api/news': return (await loadRef('news')).rows;
     case '/api/official': return (await loadRef('official')).rows;
+    case '/api/bldreg': return (await loadRef('bldreg')).rows;
     case '/api/rt_apt': return (await loadRef('rt_apt')).rows;
     case '/api/my_edits': return (await all(() => sb.from('history').select('listing_id,at').neq('who', 'sync').not('who', 'like', '%@example.com').order('id'))).map(h => [h.listing_id, h.at]);
     case '/api/client_create': { const d = JSON.parse(o.body); const {data, error} = await sb.rpc('create_client_page', {p_name: d.name || null, p_phone: d.phone, p_ids: d.ids, p_pw: d.pw || null, p_move_in: d.move_in || null, p_deal: d.deal || null, p_deposit: d.deposit || null, p_rent: d.rent || null, p_note: d.note || null, p_memo: d.memo || null, p_days: d.days || 30, p_by: null}); if (error) throw new Error(error.message); return data }
@@ -553,7 +559,7 @@ async function api(u, o = {}) {
   <p class="mut">비밀 링크를 한 번 열면 그 기기는 180일 동안 기억됩니다. 링크는 텔레그램으로만 받고 다른 사람에게 보내지 마세요.</p></div>
 </section>
 </main>
-<div id="drawer"><div class="hd"><b id="d-title"></b><button class="b" id="d-promo" title="이 매물의 홍보글(네이버·블로그·카톡)을 만들어 줍니다">✨ 홍보글</button><button class="b" id="d-copy">복사해서 새로 작성</button><button class="b" id="d-cp" title="손님 페이지에 넣을 매물로 담아 둡니다">손님 페이지에 담기</button><button class="b d" id="d-del">삭제</button><button class="b p" id="d-save">저장</button><button class="b" id="d-close">닫기(자동 저장)</button></div><div class="bd" id="d-body"></div></div>
+<div id="drawer"><div class="hd"><b id="d-title"></b><button class="b" id="d-promo" title="노션 단지 소개 양식으로 홍보글(블로그·네이버·카톡) 자동 작성">✨ 홍보글</button><button class="b" id="d-bld" title="건축물대장 정보 · 확인·설명서 초안">🏛 대장·확인서</button><button class="b" id="d-copy">복사해서 새로 작성</button><button class="b" id="d-cp" title="손님 페이지에 넣을 매물로 담아 둡니다">손님 페이지에 담기</button><button class="b d" id="d-del">삭제</button><button class="b p" id="d-save">저장</button><button class="b" id="d-close">닫기(자동 저장)</button></div><div class="bd" id="d-body"></div></div>
 <div id="toast"></div>
 <div id="gate" style="position:fixed;inset:0;background:#f6f7f9;z-index:50;display:flex;align-items:center;justify-content:center">
  <div class="box" style="text-align:center"><h3>🏡 제이부동산 매물장</h3><p id="gate-msg" class="mut">접속 확인 중…</p></div></div>
@@ -721,29 +727,109 @@ $('#d-cp').onclick=()=>cpPick();
 (function(){const set=v=>{v=Math.max(.85,Math.min(1.5,v));document.documentElement.style.setProperty('--fs',v);document.querySelector('main').style.zoom=v;try{localStorage.fs=v}catch(e){}};
  let v=1;try{v=parseFloat(localStorage.fs)||1}catch(e){}set(v);
  document.getElementById('fs-').onclick=()=>{v=Math.round((v-.1)*100)/100;set(v)};document.getElementById('fs+').onclick=()=>{v=Math.round((v+.1)*100)/100;set(v)}})();
-function promoTexts(r,extra){
- const ho=String(r.ho||'').replace(/\D/g,''),fl=ho.length>=3?parseInt(ho.slice(0,ho.length-2)):null,flTxt=fl?(fl>=20?'고층':fl>=10?'중층':'저층'):'';
- const kd=kinds(r.deal),price=askPrice(r)||'가격 협의';
- const kind=kd.length?kd.join('·'):'임대';
- const pyTxt=r.pyeong?`${r.pyeong}평`:'',typ=r.typ?`${r.typ}타입`:'',dir=r.direction?`${r.direction}향`:'';
- const spec=[typ,pyTxt,dir,fl?`${fl}층${flTxt?'('+flTxt+')':''}`:''].filter(Boolean).join(' · ');
- const loc=`${r.danji||''}${r.dong?' '+r.dong:''}`.trim(),cat=r.category||'';
- const ex=extra?extra.trim():'';
- const nv=`[${loc}] ${kind} ${price} ${spec}`.replace(/\s+/g,' ');
- const naver=`${nv}\n\n▶ 위치: 용산 ${loc} ${cat}\n▶ 거래: ${kind} ${price}\n▶ 구조: ${spec}\n${r.usage?'▶ 용도: '+r.usage+'\n':''}${ex?'▶ 특징: '+ex+'\n':''}\n깔끔하게 관리된 매물입니다. 방문·현장 확인은 사전 연락 주시면 바로 안내드립니다.\n\n용산호반제이공인중개사`;
- const blog=`${loc} ${kind} 소개 | ${spec}\n\n안녕하세요, 용산호반제이공인중개사입니다.\n오늘은 ${loc}의 ${kind} 매물을 소개해 드려요.\n\n📍 ${loc} ${cat}\n💰 ${kind} ${price}\n🏠 ${spec}\n${r.usage?'🧾 용도 '+r.usage+'\n':''}${ex?'✨ '+ex+'\n':''}\n용산역·신용산 생활권에서 조건 맞는 집을 찾고 계셨다면 이 매물을 눈여겨보세요.\n자세한 사진과 현장 안내는 편하게 문의 주세요.\n\n#용산${cat||'부동산'} #${(r.danji||'').replace(/\s/g,'')} #${kind.replace(/·/g,'')} #용산호반제이공인중개사`;
- const kakao=`📢 ${loc} ${kind}\n\n· ${price}\n· ${spec}\n${r.usage?'· 용도 '+r.usage+'\n':''}${ex?'· '+ex+'\n':''}\n보시고 싶으시면 말씀 주세요 😊\n용산호반제이공인중개사`;
+// ================= 11/17 노션 '매물단지별 상세설명' 양식 → 홍보글 + 건축물대장 + 확인·설명서 초안 =================
+const JI={name:'용산 호반 제이J 부동산',tel:'02-797-3575',mob:'010-9524-6002',kakao:'jeie3575',addr:'서울시 용산구 한강대로 66 용산호반써밋에이디션 107호',firm:'용산호반제이공인중개사'};
+const JI_CLAIMS=['✅ 아파트, 오피스텔, 오피스, 상가 등 매물 접수 중','✅ 매매, 임대 매물 다량 확보','✅ 자세한 상담 문의 환영!!','✅ 신뢰를 바탕으로 신속하고 정확한 정보를 고객들과 소통하겠습니다!','✅ 고객 니즈에 맞는 물건 끝까지 찾아드리겠습니다!'];
+const JI_AREA={'교통':['1호선 용산역, 경의·중앙선 용산역, 4호선 신용산역 초역세권','KTX, ITX, GTX 신분당선 연장','공항버스, 광역버스','여의도, 광화문, 시청, 마포, 강남 접근성 용이','한강로, 한강대로, 강변북로, 올림픽대로 진입 용이'],'편의시설':['학군 : 용산초등학교, 한강초등학교','상업시설 : 아이파크몰, 이마트, 용산전자상가','문화시설 : 한강공원, 용산가족공원, 국립중앙박물관, CGV, 롯데시네마','업무시설 : 아모레퍼시픽, LS그룹, 하이브, 빅히트','병원 : 순천향병원, 중대병원'],'개발 호재':['용산 국제 업무 지구','GTX-B 신분당선 (강남, 판교 접근용이)','용산공원 개발','신용산역 북측 2구역 등 재개발']};
+const JI_INTRO={
+ '래미안':{t:'래미안용산',a:1,l:['삼성물산','2017.05 준공','주차 1세대당 2대 무료','A, B동 - 5-19층 오피스텔 782세대/20-40층 아파트 195세대','B2~3층 상가 - 은행, 병원, 약국, 음식점','커뮤니티 : 피트니스, 골프장, 사우나, 라운지, 카페테리아, 정원 등','고급스런 우드 및 대리석 바닥 마감으로 풀옵션']},
+ '센트럴':{t:'센트럴 파크 해링턴',a:1,l:['주차 : 총 2100대','거실, 주방 이태리 최고급 마감재','총 1,140세대 [주거동 5개 / 업무동 1개]','평수 : 38평, 43평, 48평, 57평, 펜트하우스','상가 : 카페, 식당, 미용실, 병원 입점(약 100여개)','커뮤니티 : 피트니스, 사우나, 게스트룸, 카페테리아(중식/석식), 골프연습장, 놀이터, 북카페, 독서실, 세대별 창고','3층 야외 정원/파크웨이']},
+ '아스테리움':{t:'아스테리움',a:1,l:['동부건설','12년 12월 준공','주차 : 1.97대','총 335세대/아파트 128세대 (47, 50, 54, 60, 65, 73평형)/오피스텔 207세대 (37A, 37B, 37C평형)','커뮤니티 : 클럽하우스, 하늘공원, 피트니스, 골프연습장, 연회장, 독서실, 세대별창고, 카페테리아','아모레퍼시픽/지하철 연결']},
+ '에테르':{t:'에테르나인',a:0,h:'☆전입신고 가능, 입주청소 지원☆ 시스템에어컨, 식기세척기, 냉장고, 인덕션, 엘리베이터 호출 기능, 피트니스센터 무료 이용, 기계식주차(발렛파킹) 등',l:['총 114호실, 20층 신축오피스텔','2026년 6월 준공','루프탑','시스템에어컨, LG빌트인 풀옵션 가전(식기세척기, 냉장고, 3구인덕션)','엘리베이터 호출 기능, 현관에어샤워','피트니스(7월중오픈)','기계식주차(최초2년 발렛파킹무료)','6호선, 경의중앙선 효창공원앞역 도보 4분']},
+ '에피소드':{t:'용산 에피소드',a:1,l:['주차 1대 유료(월11만원)','룸클리닝 서비스 (월1회무료)','커뮤니티 : [피트니스. 필라테스. 라운지. 와인스토리지. 음악감상실. 루프탑. 세탁실. 창고]','단기가능/반려동물 가능/전입 가능(사업자가능)/한강뷰/준공 후 첫 입주/테라스','렌탈프리 이벤트(렌탈프리기간 임대료 0원) [12개월 계약시 - 3개월 (총 15개월 계약)/20개월 계약시 - 5개월 (총 25개월 계약)]']},
+ '푸르지오써밋':{t:'용산 푸르지오써밋',a:1,l:['대우건설','17년08월 준공','주차 평수별상이 1세대당/1-4대(유료추가가능)','상가 : B1-3층','오피스 : 102동 4-14층','오피스텔 : 102동 9-15층 650세대','커뮤니티 : 14층 피트니스, 카페, 정원, 라운지, 골프연습장','아파트 : 101동 5-38층 151세대']},
+ '호반':{t:'용산 호반 써밋 에이디션',a:1,l:['호반건설','25년 3월 준공','주차 약 300대','상가 : B1-3층','사무실 : 4-8층','오피스텔 : 9-15층 [77세대-34A, 34B, 42A, 42B, 42C, 43, 61, 63, 65, 66, 67타입]','공원 : 16층','커뮤니티 : 17층 [골프연습장, 라커룸/샤워실, 라운지, 스튜디오, 피트니스]','아파트 : 18-39층 [110세대-84A, 84B, 105A, 105B, 122]']}};
+const jiKey=dj=>{dj=String(dj||'');return /래미안/.test(dj)?'래미안':/센트럴/.test(dj)?'센트럴':/아스테리움/.test(dj)?'아스테리움':/에테르/.test(dj)?'에테르':/에피소드/.test(dj)?'에피소드':/호반|에이디션/.test(dj)?'호반':/푸르지오|^써밋$/.test(dj)?'푸르지오써밋':null};
+// ---- ✨ 홍보글 (노션 양식) ----
+function promoTexts(r,extra,o){o=o||{};const ho=String(r.ho||'').replace(/\D/g,''),fl=ho.length>=3?parseInt(ho.slice(0,ho.length-2)):null;
+ const kd=kinds(r.deal),price=askPrice(r)||'가격 협의',kind=kd.length?kd.join('·'):'임대';
+ const pyTxt=r.pyeong?`${r.pyeong}평(전용)`:'',typ=r.typ?`${r.typ}타입`:'',dir=r.direction?`${r.direction}향`:'';
+ const loc=`${r.danji||''}${r.dong?' '+r.dong:''}`.trim(),ex=(extra||'').trim(),pm=String((r.extra||{})['가격메모']||'').trim();
+ const k=jiKey(r.danji),I=k?JI_INTRO[k]:null,flags=[/급매/.test((r.deal||'')+(r.title||''))?'급매':'',(r.extra||{})['전속']?'전속':''].filter(Boolean);
+ const spec=[typ,pyTxt,dir,fl?`${fl}층`:''].filter(Boolean).join(' · ');
+ const head=[ex,...flags.map(f=>'['+f+']')].filter(Boolean).join(' ');
+ const contact=`☎️ 전화. ${JI.tel}\n☎️ 핸드폰. ${JI.mob}\n🟨 카톡아이디. ${JI.kakao}`;
+ const unit=[`📌 ${loc} ${r.ho||''}호`.replace('호호','호'),`- 거래 : ${kind} ${price}`,spec?`- ${spec}`:'',r.usage?`- 용도 : ${r.usage}`:'',pm?`- ${pm}`:'',ex?`- ${ex}`:''].filter(Boolean).join('\n');
+ const intro=o.intro!==false&&I?`\n\n🏠 ${I.t}\n☑️ 단지 소개\n\n${I.l.map(x=>'- '+x).join('\n')}`:'';
+ const area=o.area!==false&&I&&I.a?`\n\n🌈 인근지역 기본 정보\n${Object.keys(JI_AREA).map(s=>`☑️ ${s}\n\n${JI_AREA[s].map(x=>'- '+x).join('\n')}`).join('\n\n')}`:'';
+ const naver=`${head?head+'\n':''}[${loc}] ${kind} ${price} ${spec}`.replace(/\s+/g,' ').replace(/ \n/g,'\n')+`\n\n${unit}${I&&o.intro!==false?`\n\n🏠 ${I.t}\n${I.l.slice(0,5).map(x=>'- '+x).join('\n')}`:''}${o.contact!==false?`\n\n🧡 ${JI.name} 🧡\n${contact}`:''}`;
+ const blog=`${I&&I.h?I.h+'\n\n':''}🧡 ${JI.name} 🧡\n\n${contact}${I&&I.a!==0?`\n🚩 주소. ${JI.addr}`:''}\n\n${JI_CLAIMS.join('\n')}\n\n${unit}${intro}${area}`;
+ const kakao=`📢 ${loc} ${r.ho||''}호 ${kind}\n${head?head+'\n':''}\n· ${price}\n${spec?'· '+spec+'\n':''}${pm?'· '+pm+'\n':''}${I?'· '+I.t+' ('+I.l.slice(0,2).join(' / ')+')\n':''}\n보시고 싶으시면 말씀 주세요 😊\n🧡 ${JI.name}\n☎️ ${JI.tel} / ${JI.mob}`;
  return {naver,blog,kakao}}
-function promoOpen(){if(!CUR||!CUR.id)return;const r=CUR;let tab='naver',extra='';
- document.getElementById('promo')?.remove();const el=document.createElement('div');el.id='promo';
- el.innerHTML=`<div class="box"><div class="ph"><b>✨ 홍보글 — ${esc(cpUnit(r))}</b><button class="b" id="pm-x">닫기</button></div><div class="pb"><div class="pt"><button class="b on" data-t="naver">네이버 광고</button><button class="b" data-t="blog">블로그</button><button class="b" data-t="kakao">카톡·문자</button></div><label class="mut" style="display:block;margin-bottom:6px">특징 한 줄 추가 (선택) <input id="pm-ex" style="width:70%" placeholder="예: 한강 조망, 풀옵션, 즉시 입주"></label><textarea id="pm-t"></textarea><div style="margin-top:10px;display:flex;gap:8px;align-items:center"><button class="b p" id="pm-c">복사하기</button><span class="mut" style="font-size:12px">임대인 이름·연락처·메모는 넣지 않았어요. 올리기 전에 한 번 읽어보세요.</span></div></div></div>`;
+function promoOpen(){if(!CUR||!CUR.id)return;const r=CUR;let tab='blog',extra='',o={intro:true,area:true,contact:true};
+ document.getElementById('promo')?.remove();const el=document.createElement('div');el.id='promo';const k=jiKey(r.danji);
+ el.innerHTML=`<div class="box"><div class="ph"><b>✨ 홍보글 — ${esc(cpUnit(r))}</b><button class="b" id="pm-x">닫기</button></div><div class="pb"><div class="pt"><button class="b on" data-t="blog">블로그·전체</button><button class="b" data-t="naver">네이버 광고</button><button class="b" data-t="kakao">카톡·문자</button></div>
+ <div class="mut" style="font-size:12.5px;margin-bottom:6px">${k?`노션 「매물단지별 상세설명」의 <b>${esc(JI_INTRO[k].t)}</b> 소개글 양식으로 자동 작성해요.`:'이 단지는 노션에 단지 소개글이 없어서 매물 정보와 연락처만 넣어요.'}</div>
+ <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:13.5px;margin-bottom:6px"><label><input type="checkbox" data-o="intro" checked> 단지 소개</label><label><input type="checkbox" data-o="area" checked> 인근 정보(교통·편의·호재)</label><label><input type="checkbox" data-o="contact" checked> 연락처</label></div>
+ <label class="mut" style="display:block;margin-bottom:6px">특징 한 줄 추가 (선택) <input id="pm-ex" style="width:70%" placeholder="예: 한강 조망, 풀옵션, 즉시 입주"></label><textarea id="pm-t" style="min-height:300px"></textarea><div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="b p" id="pm-c">복사하기</button><span class="mut" style="font-size:12px">임대인 이름·연락처·메모는 넣지 않았어요. 올리기 전에 한 번 읽어보세요.</span></div></div></div>`;
  document.body.appendChild(el);const ta=el.querySelector('#pm-t');
- const draw=()=>{ta.value=promoTexts(r,extra)[tab];el.querySelectorAll('.pt button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab))};
+ const draw=()=>{ta.value=promoTexts(r,extra,o)[tab];el.querySelectorAll('.pt button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab))};
  el.querySelectorAll('.pt button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;draw()});
+ el.querySelectorAll('[data-o]').forEach(c=>c.onchange=()=>{o[c.dataset.o]=c.checked;draw()});
  el.querySelector('#pm-ex').oninput=e=>{extra=e.target.value;draw()};
  el.querySelector('#pm-x').onclick=()=>el.remove();el.onclick=e=>{if(e.target===el)el.remove()};
  el.querySelector('#pm-c').onclick=async()=>{try{await navigator.clipboard.writeText(ta.value)}catch(e){ta.select();document.execCommand('copy')}toast('복사했어요')};draw()}
-$('#d-promo').onclick=promoOpen;
+// ---- 🏛 건축물대장 + 📋 확인·설명서 초안 ----
+async function bldAll(){if(window.__bld)return window.__bld;try{const d=await api('/api/bldreg');window.__bld=d.complexes||{}}catch(e){window.__bld={}}return window.__bld}
+const bldKey=(dj,dong)=>{dj=String(dj||'');return /래미안/.test(dj)?'래미안':/센트럴/.test(dj)?'센트럴파크':/아스테리움/.test(dj)?'아스테리움':/에테르/.test(dj)?'에테르나인용산':/푸르지오|^써밋$/.test(dj)?'써밋':/호반|에이디션/.test(dj)?'호반':/파크타워/.test(dj)?'파크타워':/^DK|DK밸리/.test(dj)?'DK':/시티파크/.test(dj)?(/^2|2단지/.test(String(dong||''))?'시티파크2':'시티파크1'):null};
+const uNum=u=>{const s=String(u.ho||'');const p=s.split('-');return (p.length>1?p[p.length-1]:s).replace(/\D/g,'')};
+function bldFind(c,r){const hn=String(r.ho||'').replace(/\D/g,'');if(!hn)return [];const dd=String(r.dong||'').replace(/\D/g,''),dl=(/^[A-Za-z]/.exec(String(r.dong||''))||[''])[0].toUpperCase();
+ const ex=c.units.filter(u=>String(u.ho||'').replace(/호$/,'')===String(r.ho||'').trim());if(ex.length===1)return ex;
+ let cs=c.units.filter(u=>uNum(u)===hn);if(cs.length>1&&dl){const f=cs.filter(u=>String(u.ho||'').toUpperCase().startsWith(dl));if(f.length)cs=f}
+ if(cs.length>1&&dd){const f=cs.filter(u=>String(u.dong||'').includes(dd)||String(u.ho||'').startsWith(dd));if(f.length)cs=f}
+ if(cs.length>1){const want=(r.category==='아파트')?'아파트':'오피스텔';const f=cs.filter(u=>String(u.purps||u.etc).includes(want));if(f.length)cs=f}
+ return cs}
+const PY=3.3058,fmtD=s=>{s=String(s||'');return s.length===8?`${s.slice(0,4)}.${s.slice(4,6)}.${s.slice(6)}`:s};
+async function bldOpen(draft){if(!CUR||!CUR.id)return;const r=CUR;const A=await bldAll(),key=bldKey(r.danji,r.dong),c=key?A[key]:null;
+ document.getElementById('promo')?.remove();const el=document.createElement('div');el.id='promo';el.className='bldm';
+ const B=c&&c.bld&&c.bld[0]?c.bld[0]:{},R=c&&c.recap||{},cs=c?bldFind(c,r):[],u=cs.length===1?cs[0]:null;
+ const isApt=r.category==='아파트',area=u?u.area:null,jang=r.pyeong?Math.round(r.pyeong*PY*100)/100:null,tol=area?Math.max(1.5,area*0.05):1.5,diff=!isApt&&area&&jang?Math.abs(area-jang):null;
+ const auto=(v,l)=>`<span class="ba">${esc(v||'')}</span>`,man=(ph)=>`<span class="bm" contenteditable="true" data-ph="${esc(ph||'직접 확인')}"></span>`;
+ const pl=B.newPlatPlc||B.platPlc||R.newPlatPlc||R.platPlc||'';
+ let body='';
+ if(!draft){
+  body=`${!c?'<p class="mut">이 단지는 아직 건축물대장 자료가 없어요. (현재 용산 11개 단지: 래미안·써밋·아스테리움·호반·파크타워·시티파크1·2·센트럴파크·DK·에테르나인)</p>':`
+  <h4>🏛 ${esc(B.bldNm||R.bldNm||r.danji)}</h4><div class="bl">${[['소재지',pl],['사용승인일',fmtD(B.useAprDay||R.useAprDay)],['구조',B.strctCdNm],['주용도',B.mainPurpsCdNm+(B.etcPurps?' ('+B.etcPurps+')':'')],['층수',B.grndFlrCnt!=null?`지상 ${B.grndFlrCnt}층 / 지하 ${B.ugrndFlrCnt||0}층`:''],['승강기',B.rideUseElvtCnt!=null?`승용 ${B.rideUseElvtCnt}대 · 비상용 ${B.emgenUseElvtCnt||0}대`:''],['세대·호수',(B.hhldCnt||R.hhldCnt)?`${B.hhldCnt||R.hhldCnt}세대 / ${B.hoCnt||R.hoCnt||''}호`:''],['연면적',(B.totArea||R.totArea)?Math.round(B.totArea||R.totArea).toLocaleString()+'㎡':''],['용적률·건폐율',(B.vlRat||R.vlRat)?`${B.vlRat||R.vlRat}% · ${B.bcRat||R.bcRat}%`:'']].filter(x=>x[1]).map(x=>`<div><b>${x[0]}</b> ${esc(x[1])}</div>`).join('')}</div>
+  <h4 style="margin-top:14px">📍 이 호실 (${esc(cpUnit(r))})</h4>${u?`<div class="bl"><div><b>대장 표기</b> ${esc((u.dong?u.dong+' ':'')+u.ho)}</div><div><b>층</b> ${esc(u.flrGb||'')} ${esc(u.flr)}층</div><div><b>용도</b> ${esc(u.etc||u.purps)}</div><div><b>전용면적</b> ${u.area}㎡ (${(u.area/PY).toFixed(2)}평)</div><div><b>장부 ${isApt?'공급평':'전용평'}</b> ${r.pyeong?r.pyeong+'평'+(isApt?'':' ('+jang+'㎡)'):'<span class="mut">비어 있음</span>'}</div></div>${isApt?'<div class="mut" style="margin-top:6px">아파트는 장부가 공급평 기준이라 대장 전용면적과 비교하지 않아요.</div>':diff!=null&&diff>tol?`<div class="bw">⚠ 장부 면적과 대장이 ${diff.toFixed(1)}㎡ 달라요. 확인해 보세요.</div>`:diff!=null?'<div class="bo">✓ 장부와 대장 면적이 맞아요</div>':''}${(!isApt&&(!r.pyeong||diff>tol))?`<button class="b p" id="bl-fill" style="margin-top:8px">장부 전용평을 ${(u.area/PY).toFixed(2)}평으로 반영</button>`:''}`:cs.length?`<p class="mut">대장에서 후보가 ${cs.length}건이에요 — 동·호를 확인하세요:</p><div class="bl">${cs.slice(0,8).map(x=>`<div>${esc((x.dong?x.dong+' ':'')+x.ho)} · ${x.area}㎡ · ${esc(x.etc||x.purps)}</div>`).join('')}</div>`:'<p class="mut">대장에서 이 호실을 찾지 못했어요 (호수·동 표기를 확인하세요).</p>'}`}
+  <p class="mut" style="font-size:12px;margin-top:12px">출처: 국토교통부 건축HUB 건축물대장(공공데이터포털). 소유자 정보는 제공되지 않아요. 토지(지목·공시지가·용도지역)는 아직 연동 전이라 확인설명서 초안에서 직접 확인 칸으로 남겨요.</p>`;
+ }else{
+  const kd=kinds(r.deal),amtTxt=askPrice(r)||'',rent=/월세/.test(r.deal||'')||kd.includes('월세');
+  const fee=feeCalc(r,u);
+  body=`<div class="bdoc"><h3 style="text-align:center;margin:0 0 4px">중개대상물 확인·설명서 (초안)</h3><div class="mut" style="text-align:center;font-size:12px;margin-bottom:10px">작성 보조용 초안이에요 · <span class="ba">파랑</span>=자동 채움 · <span class="bm" data-ph="직접 확인"></span>=직접 확인/입력 · 법정 서식이 아니므로 공식 양식에 옮겨 쓰세요</div>
+  <table class="bt"><tr><th colspan="4">① 중개업자 정보</th></tr><tr><th>상호</th><td>${auto(JI.firm)}</td><th>전화</th><td>${auto(JI.tel)}</td></tr><tr><th>소재지</th><td colspan="3">${auto(JI.addr)}</td></tr><tr><th>대표 공인중개사</th><td>${man('성명')}</td><th>등록번호</th><td>${man('등록번호')}</td></tr>
+  <tr><th colspan="4">② 대상물건의 표시</th></tr><tr><th>종류</th><td>${auto(u?(u.etc||u.purps):(r.category||'오피스텔'))}</td><th>건물명</th><td>${auto(B.bldNm||R.bldNm||r.danji)}</td></tr><tr><th>소재지</th><td colspan="3">${auto(pl)} ${auto([r.dong,r.ho&&r.ho+'호'].filter(Boolean).join(' '))}</td></tr>
+  <tr><th>전용면적</th><td>${u?auto(u.area+'㎡ ('+(u.area/PY).toFixed(2)+'평)'):auto(r.pyeong?r.pyeong+'평(장부)':'')+man('대장 확인')}</td><th>대지지분</th><td>${man('대장·등기 확인')}</td></tr>
+  <tr><th>해당층 / 총층</th><td>${auto(u?(u.flr+'층'):'')}${u&&B.grndFlrCnt!=null?' / ':''}${auto(B.grndFlrCnt!=null?'지상 '+B.grndFlrCnt+'층':'')}${u?'':man('해당층 확인')}</td><th>방향</th><td>${auto(r.direction||'')}${r.direction?'':man('확인')}</td></tr>
+  <tr><th>건축물 용도</th><td>${auto(u?u.etc||u.purps:B.mainPurpsCdNm||'')}</td><th>구조</th><td>${auto(B.strctCdNm||'')}</td></tr>
+  <tr><th>사용승인일</th><td>${auto(fmtD(B.useAprDay||R.useAprDay))}</td><th>승강기</th><td>${auto(B.rideUseElvtCnt!=null?'있음 (승용 '+B.rideUseElvtCnt+'대)':'')}</td></tr>
+  <tr><th>내진설계 / 내진능력</th><td>${man('확인')}</td><th>주차</th><td>${man('확인')}</td></tr>
+  <tr><th>지목·개별공시지가</th><td>${man('토지대장 확인')}</td><th>용도지역·지구</th><td>${man('토지이용계획 확인')}</td></tr>
+  <tr><th colspan="4">③ 권리관계 (등기부 기재사항)</th></tr><tr><th>소유권 / 소유자</th><td colspan="3">${man('등기사항전부증명서 확인')}</td></tr><tr><th>소유권 외 권리 (근저당·가압류 등)</th><td colspan="3">${man('등기부 확인')}</td></tr>
+  <tr><th colspan="4">④ 거래예정금액 등</th></tr><tr><th>거래 종류</th><td>${auto(kd.join('·')||(r.deal||''))}</td><th>거래예정금액</th><td>${auto(amtTxt)}</td></tr>
+  <tr><th colspan="4">⑤ 임대차 현황 (현재)</th></tr><tr><th>현 보증금 / 월세</th><td>${auto([r.cur_deposit!=null&&r.cur_deposit!==''?won(r.cur_deposit):'',r.cur_rent!=null&&r.cur_rent!==''?r.cur_rent:''].filter(x=>x!=='').join(' / '))}${r.cur_deposit?'':man('확인')}</td><th>계약만기</th><td>${auto(r.manki||'')}${r.manki?'':man('확인')}</td></tr>
+  <tr><th>실제 권리관계·입주 가능일</th><td colspan="3">${man('임차인 유무, 입주 가능일, 전입신고 가능 여부')}</td></tr>
+  <tr><th colspan="4">⑥ 관리비 · 입지/환경 · 시설 상태</th></tr><tr><th>관리비</th><td colspan="3">${man('금액·포함 항목')}</td></tr><tr><th>교통·편의</th><td colspan="3">${auto((JI_AREA['교통']||[]).slice(0,2).join(' / '))}</td></tr><tr><th>수도·전기·가스·난방·벽면·도배</th><td colspan="3">${man('현장 확인')}</td></tr>
+  <tr><th colspan="4">⑦ 중개보수 (참고 계산 · 조례·협의 확인)</th></tr><tr><td colspan="4" style="font-size:13px">${fee}</td></tr>
+  <tr><th colspan="4">⑧ 취득 시 조세 · 기타</th></tr><tr><td colspan="4">${man('취득세 등 안내 / 특약사항')}</td></tr></table>
+  <div class="mut" style="font-size:12px;margin-top:8px">건축물대장 정보는 ${u?'호실 단위로':'단지 기준으로'} 자동 채웠어요. 최종 서식은 등기부·건축물대장·토지대장을 직접 확인해 작성하세요.</div></div>`;
+ }
+ el.innerHTML=`<div class="box"><div class="ph"><b>${draft?'📋 확인·설명서 초안':'🏛 건축물대장'} — ${esc(cpUnit(r))}</b>${draft?'<button class="b p" id="bl-print">🖨 인쇄·PDF</button>':'<button class="b" id="bl-draft">📋 확인·설명서 초안</button>'}<button class="b" id="pm-x">닫기</button></div><div class="pb">${body}</div></div>`;
+ document.body.appendChild(el);el.querySelector('#pm-x').onclick=()=>el.remove();el.onclick=e=>{if(e.target===el)el.remove()};
+ el.querySelector('#bl-draft')?.addEventListener('click',()=>bldOpen(true));el.querySelector('#bl-print')?.addEventListener('click',()=>window.print());
+ el.querySelector('#bl-fill')?.addEventListener('click',async()=>{try{const v=Math.round(u.area/PY*100)/100;await api('/api/listings',{method:'POST',body:JSON.stringify({id:r.id,category:r.category,pyeong:String(v)})});r.pyeong=v;const l=ROWS.find(x=>x.id===r.id);if(l)l.pyeong=v;toast('장부 전용평을 반영했어요 — 상세를 다시 열면 보여요');bldOpen(false)}catch(e){alert('저장 실패: '+e.message)}})}
+function feeCalc(r,u){const kd=kinds(r.deal);let src=kd.includes('매매')?'매매':'임대',amt=0,txt='';
+ if(src==='매매')amt=+r.sale||0;else{const dep=+(r.deposit||r.jeonse)||0,rent=+r.rent||0;amt=kd.includes('월세')||(rent&&!kd.includes('전세'))?(()=>{let a=dep+rent*100;if(a<5000)a=dep+rent*70;return a})():(+r.jeonse||dep)}
+ if(!amt)return '거래금액이 비어 있어 계산하지 못했어요.';
+ const own=(r.category==='아파트')?'주택':((u&&/오피스텔/.test(u.etc||u.purps||''))||(r.category==='오피스텔'))?'오피스텔':'기타';
+ const T={'매매':[[5000,.6,25],[20000,.5,80],[90000,.4,0],[120000,.5,0],[150000,.6,0],[1e12,.7,0]],'임대':[[5000,.5,20],[10000,.4,30],[60000,.3,0],[120000,.4,0],[150000,.5,0],[1e12,.6,0]]};
+ let rate,cap=0,note='';
+ if(own==='주택'){const row=T[src].find(x=>amt<x[0]);rate=row[1];cap=row[2]}
+ else if(own==='오피스텔'){const ar=u?u.area:(r.pyeong?r.pyeong*PY:99);if(ar<=85){rate=src==='매매'?.5:.4;note=' (전용 85㎡ 이하 + 전용 부엌·화장실 갖춘 오피스텔 기준)'}else{rate=.9;note=' (상한 0.9% 이내 협의)'}}
+ else{rate=.9;note=' (상한 0.9% 이내 협의)'}
+ let fee=Math.round(amt*rate/100);if(cap&&fee>cap)fee=cap;
+ return `거래금액 기준 ${amt.toLocaleString()}만원${src==='임대'&&(kd.includes('월세'))?' (보증금+월세×100 환산)':''} · 상한요율 ${rate}%${cap?' (한도 '+cap+'만원)':''}${note} → <b>중개보수 약 ${fee.toLocaleString()}만원 이내</b> (부가세 별도, 쌍방 각각 · 협의로 낮출 수 있어요)`}
+
+$('#d-promo').onclick=promoOpen;$('#d-bld').onclick=()=>bldOpen(false);
 // ================= 11/17 리얼맵 설명서 반영 =================
 const moneyP=s=>{s=String(s||'').replace(/[,\s]/g,'');let m=/(\d+(?:\.\d+)?)억(\d+)?/.exec(s);if(m)return Math.round(+m[1]*10000+(+m[2]||0));m=/(\d+(?:\.\d+)?)/.exec(s);return m?Math.round(+m[1]):null};
 const pyRange=t=>{const m=/(\d+(?:\.\d+)?)\s*평\s*(이상|이하|대)?/.exec(String(t||''));if(!m)return null;const v=+m[1];return m[2]==='이상'?[v,1e9]:m[2]==='이하'?[0,v]:m[2]==='대'?[Math.floor(v/10)*10,Math.floor(v/10)*10+9.99]:[v-3,v+5]};
@@ -1359,7 +1445,7 @@ $('#dir-open').onclick=()=>{const P=$('#dirpanel');P.hidden=!P.hidden;if(!P.hidd
 // ---------- 상세/편집 ----------
 const WIDE={owner_tel:'w3',tenant_tel:'w3',ad_type:'w2',memo:'w4',owner_units:'w2',deal:'w2',ad:'w4',usage:'w2',status:'w2',direction:'w2',title:'w2',coagent:'w2'};
 async function openDrawer(id,tpl){if(FORM0!==null&&$('#drawer').classList.contains('on')&&JSON.stringify(collectForm())!==FORM0){try{await saveForm(false)}catch(e){}}CUR=id?{...ROWS.find(r=>r.id===id)}:(tpl?{...tpl}:{danji:'',deal:'',category:CAT});
- $('#d-title').textContent=id?`${CUR.danji||''} ${CUR.dong||''} ${CUR.ho||''}`:(tpl?'새 매물 (복사본 — 호수 등을 고치고 저장하세요)':'새 매물');$('#d-del').hidden=!id;$('#d-copy').hidden=!id;$('#d-cp').hidden=!id;$('#d-promo').hidden=!id;cpBtn();
+ $('#d-title').textContent=id?`${CUR.danji||''} ${CUR.dong||''} ${CUR.ho||''}`:(tpl?'새 매물 (복사본 — 호수 등을 고치고 저장하세요)':'새 매물');$('#d-del').hidden=!id;$('#d-copy').hidden=!id;$('#d-cp').hidden=!id;$('#d-promo').hidden=!id;$('#d-bld').hidden=!id;cpBtn();
  const fm=Object.fromEntries(META.fields.map(f=>[f[0],f]));const cat=CUR.category||CAT;
  derive(CUR);const avNow=CUR._avail&&CUR._avail!=='표시없음'?CUR._avail:'';const E=CUR.extra||{};
  const hide=k=>k==='usage'&&['아파트','상가','오피스'].includes(cat);  // 용도는 아파트·상가·오피스에선 안 씀(값은 보존)
