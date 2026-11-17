@@ -88,7 +88,7 @@ tbody tr:hover{background:#fff8dc}
 #qa .pb{padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:12px}#qa label{display:flex;flex-direction:column;font-size:13px;font-weight:700;color:#3a4658;gap:4px}#qa label.w2{grid-column:span 2}
 #qa input,#qa select{font-size:16px;font-weight:600;padding:9px 10px;border:1.5px solid #b4bfd0;border-radius:8px}#qa input:focus,#qa select:focus{outline:0;border-color:var(--gold2);box-shadow:0 0 0 3px #f2b70533}
 #qa .dptabs{grid-column:span 2;margin:0}#qa .pf{grid-column:span 2;display:flex;gap:8px;align-items:center;flex-wrap:wrap}#qa .qsum{font-weight:800;color:var(--navy)}
-#qa-open{font:inherit;font-weight:800;font-size:14px;padding:6px 14px;border:0;border-radius:8px;background:var(--gold);color:var(--navy);cursor:pointer}#qa-open:hover{background:var(--gold2)}
+#qa-open{font:inherit;font-weight:800;font-size:14px;padding:6px 16px;margin-left:6px;border-radius:999px!important;border:0;border-radius:8px;background:var(--gold);color:var(--navy);cursor:pointer}#qa-open:hover{background:var(--gold2)}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.SB_URL="https://ctgaawyuwqihybxrdcgt.supabase.co";window.SB_ANON="sb_publishable_g-3Lbb_ygZL5gTvDvU06OA_HoWDzGaE";window.META={"fields": [["title", "가능여부", "text"], ["danji", "단지", "select"], ["dong", "동", "text"], ["ho", "호", "text"], ["typ", "타입", "text"], ["pyeong", "평형(전용)", "num"], ["direction", "방향", "multi"], ["deal", "거래유형", "multi"], ["sale", "매매가", "num"], ["jeonse", "전세가", "num"], ["deposit", "보증금", "num"], ["rent", "월세", "num"], ["cur_deposit", "보증(현)", "num"], ["cur_rent", "차임(현)", "num"], ["manki", "만기(년)", "date"], ["status", "현상태", "multi"], ["usage", "용도", "multi"], ["ad", "광고", "multi"], ["ad_type", "광고타입", "multi"], ["consult", "상담", "select"], ["owner", "임대인", "text"], ["owner_tel", "임대인연락처", "text"], ["tenant", "임차인", "text"], ["tenant_tel", "임차인연락처", "text"], ["owner_units", "임대인소유물건", "text"], ["coagent", "공동중개부동산", "text"], ["co_office", "공동중개부동산(사무소)", "text"], ["memo", "비고", "text"]], "options": {"danji": ["래미안", "써밋", "호반", "DK", "시티파크", "파크타워", "아스테리움", "에테르나인용산", "트럼프", "한강대우디오빌", "기타"], "deal": ["매매", "급매", "임대전세", "임대월세", "반전세", "단기", "예정", "지분매매", "분양가", "매매완료"], "direction": ["동", "서", "남", "북", "남동", "남서", "북동", "서북"], "status": ["공실", "입주", "전세완", "월세완", "반전세", "단기", "계약완", "매매완"], "usage": ["주거", "겸용", "일반사업자", "간이사업자", "법인사업자", "일반임대사업자", "주택임대사업자", "사업자", "사업자X/전입X", "확인필요"], "ad": ["뱅크", "네이버", "당근", "블로그", "공동", "대기", "공동부동산확인중", "광고가능- 등록하기", "공동부거절", "임대인요청으로 광고X"], "consult": ["시작 전", "진행 중", "완료"], "ad_type": ["신홍보", "전자홍보", "V2", "VR홍보"]}, "danji_naver": {"래미안": ["래미안용산더센트럴"], "써밋": ["용산푸르지오써밋"], "호반": ["용산호반써밋에이디션"], "DK": ["DK밸리뷰용산"], "시티파크": ["용산시티파크1단지", "용산시티파크2단지"], "파크타워": ["파크타워"], "아스테리움": ["아스테리움용산"], "에테르나인용산": ["에테르나인용산"]}};</script>
 <script>// 클라우드(Supabase) 버전 백엔드: 로컬 server.py 의 /api/* 를 브라우저에서 그대로 흉내낸다.
@@ -394,7 +394,7 @@ async function api(u, o = {}) {
 <style>#tabs button[data-t=io],#tg{display:none}</style></head><body>
 <header><b>🏡 제이부동산 매물장</b><nav id="tabs">
 <button data-t="sise">💹 시세</button><button data-t="list" class="on">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 상담일지</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
-<button id="qa-open" title="건물명·동·호·가격만 넣고 바로 등록">+ 매물등록</button><span class="sp"></span><small id="info"></small><button class="fsb" id="fs-" title="글씨 작게">가−</button><button class="fsb" id="fs+" title="글씨 크게">가+</button><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
+<span class="sp"></span><small id="info"></small><button class="fsb" id="fs-" title="글씨 작게">가−</button><button class="fsb" id="fs+" title="글씨 크게">가+</button><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
 <main>
 <section id="t-list">
  <div class="bar" id="catbar"></div>
@@ -546,7 +546,7 @@ const INLINE=['danji','dong','ho','typ','pyeong','direction','usage','deal','cur
 const COLS=[['_reg','수정일'],['_avail','가능여부'],['_chk','확인일'],['co_office','공동중개부동산'],['danji','단지'],['_addr','주소'],['dong','동'],['ho','호'],['typ','타입'],['pyeong','전용평','n'],['_jibun','지분/평단가'],['_yeon','연면적평'],['_daeji','대지지분(평)'],['direction','방향'],['usage','용도'],['deal','거래유형'],['_ask','희망가'],
  ['cur_deposit','현 보증','n'],['cur_rent','현 차임','n'],['manki','만기'],['_early','중도퇴실'],['status','현상태'],['owner','임대인'],['owner_tel','임대인연락처'],['_log','상담일지'],['_rtx','추정호실 실거래'],['_rta','같은평형 시세(1년)'],['memo','비고'],['_extra','추가정보'],['_lease','임대차 신고(현 임차·만기)'],['ad','광고'],['ad_type','광고타입']];
 function renderCats(){const n={};ROWS.forEach(r=>{const c=r.category||'오피스텔';n[c]=(n[c]||0)+1});
- $('#catbar').innerHTML=CATS.map(c=>`<button class="cat ${c===CAT?'on':''}" data-c="${c}" ${n[c]?'':'disabled title="아직 옮기지 않음"'}>${c} ${n[c]?n[c].toLocaleString():'—'}</button>`).join('');
+ $('#catbar').innerHTML=CATS.map(c=>`<button class="cat ${c===CAT?'on':''}" data-c="${c}" ${n[c]?'':'disabled title="아직 옮기지 않음"'}>${c} ${n[c]?n[c].toLocaleString():'—'}</button>`).join('')+`<button id="qa-open" type="button" title="건물명·동·호·가격만 넣고 바로 등록">+ 매물등록</button>`;document.getElementById('qa-open').onclick=qaOpen;
  $('#catbar').querySelectorAll('.cat').forEach(b=>b.onclick=()=>{if(b.dataset.c!==CAT){for(const k in F)F[k].clear();for(const k in FX){FX[k]='';const e=$('#'+k);if(e)e.value=''}$('#dirpanel').hidden=true}CAT=localStorage.cat=b.dataset.c;fltLoad();renderList()})}
 function clearFilters(){NEW30=false;const nb=$('#f-new');if(nb){nb.classList.remove('on');nb.style.background=nb.style.color='';$('#nw-box').hidden=true}for(const k in F)F[k].clear();for(const k in FX){FX[k]='';const e=$('#'+k);if(e)e.value=''}$('#q').value='';$('#qf').value='';if($('#f-our'))$('#f-our').checked=false;renderList()}
 function renderList(){if(!META)return;ROWS.forEach(derive);renderCats();const base=ROWS.filter(r=>(r.category||'오피스텔')===CAT&&(!$('#f-active').checked||active(r)));const cnt={};base.forEach(r=>cnt[r.danji]=(cnt[r.danji]||0)+1);
@@ -653,7 +653,6 @@ function qaOpen(){document.getElementById('qa')?.remove();const el=document.crea
   g('qa-save').disabled=true;try{const r=await api('/api/listings',{method:'POST',body:JSON.stringify(d)});ROWS=await api('/api/listings');renderList();toast('등록했어요: '+cpUnit(d));close();if(open)openDrawer(r.id)}catch(err){g('qa-save').disabled=false;alert('저장 실패: '+err.message)}};
  g('qa-save').onclick=()=>save(false);g('qa-more').onclick=()=>save(true);
  el.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();save(false)}if(e.key==='Escape')close()});g('qa-dj').focus()}
-document.getElementById('qa-open').onclick=qaOpen;
 
 
 function cpToggleNew(){let a=cpGet();a=a.includes(CUR.id)?a.filter(x=>x!==CUR.id):[...a,CUR.id];cpSet(a);cpBtn();toast(a.includes(CUR.id)?'손님 페이지에 담았어요':'뺐어요');if(CSB&&window.__csDrawB){const on=a.includes(CUR.id);CSB=on?(CSB.includes(CUR.id)?CSB:[...CSB,CUR.id]):CSB.filter(x=>x!==CUR.id);window.__csDrawB()}}
@@ -904,8 +903,7 @@ async function openDrawer(id,tpl){if(FORM0!==null&&$('#drawer').classList.contai
  <div class="dsec dprice"><h4>💰 거래·가격 <span class="mut" style="font-weight:400">(단위: 만원)</span></h4><div id="dp-tabs"></div><div class="form">${fld('deal')}${['sale','jeonse','deposit','rent'].map(fld).join('')}</div></div>
  ${sec('🏠 현재 임차 · 만기',['cur_deposit','cur_rent','status','manki'].map(fld).join(''))}
  ${row(fld('ad')+fld('ad_type')+`<label class="w2 ${adMemo.length?'':'emp'}">메모<input id="ad-memo" value="${esc(adMemo.join(', '))}" placeholder="예: 대기, 공동부동산확인중"></label>`)}
- ${row(['owner','owner_tel'].map(fld).join(''))}
- ${row((own?fld('owner_units').replace(/ emp"/,'"'):fld('owner_units')).replace(/(<\/label>)$/,own+'$1')+`<label class="w2 ${String(E['임대인메모']??'').trim()===''?'emp':''}">메모<input class="exk-in" data-key="임대인메모" value="${esc(E['임대인메모']??'')}"></label>`)}
+ ${sec('👤 임대인 · 연락처 · 소유물건 · 메모',['owner','owner_tel'].map(fld).join('')+(own?fld('owner_units').replace(/ emp"/,'"'):fld('owner_units')).replace(/(<\/label>)$/,own+'$1')+`<label class="w2 ${String(E['임대인메모']??'').trim()===''?'emp':''}">메모<input class="exk-in" data-key="임대인메모" value="${esc(E['임대인메모']??'')}"></label>`)}
  ${row(['tenant','tenant_tel'].map(fld).join(''))}
  ${row(['co_office','coagent'].map(fld).join(''))}
  ${row(fld('memo'))}
