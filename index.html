@@ -72,6 +72,22 @@ tbody tr:hover{background:#fff8dc}
 #promo .pt{display:flex;gap:6px;margin-bottom:8px}#promo .pt button{flex:1}#promo .pt .on{background:var(--navy);color:#fff;border-color:var(--navy)}
 #drawer .bd{overflow-x:auto}#drawer .sub table,#drawer .nt{width:100%}#drawer .sub td,#drawer .nt td{white-space:normal}
 
+
+/* 11/17 상담일지 가시성 (매물 상세와 같은 스타일) */
+#cs-detail{background:#eef1f6;border-radius:12px;padding:10px}
+#cs-detail .cshd{position:sticky;top:0;z-index:3;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--navy);color:#fff;border-radius:10px;padding:10px 14px;margin:0 0 12px}
+#cs-detail .cshd h4{font-size:19px;font-weight:800;color:#fff}#cs-detail .cshd a{color:#ffd76a;font-weight:700}
+#cs-detail .csec{background:#fff;border:1px solid #c9d1de;border-radius:10px;padding:10px 14px 12px;margin:0 0 12px;box-shadow:0 1px 3px #14213d14}
+#cs-detail .csec>h4{font-size:14px;font-weight:800;color:var(--navy);background:#fff6d6;border-left:5px solid var(--gold);border-radius:4px;padding:5px 10px;margin:0 0 10px}
+#cs-detail .csec div[style*="border:1px solid var(--line)"]{border:0!important;border-top:1px dashed #d5dbe6!important;border-radius:0!important;padding:8px 0 0!important;margin:8px 0 0!important}
+#cs-detail .csec>h4+div[style*="border:1px solid var(--line)"]{border-top:0!important;margin-top:0!important}
+#cs-detail label{font-size:12.5px;font-weight:700;color:#3a4658}
+#cs-detail input,#cs-detail select,#cs-detail textarea{font-size:15px;font-weight:600;padding:7px 9px;border:1.5px solid #b4bfd0;border-radius:7px;background:#fbfcfe}
+#cs-detail input:focus,#cs-detail select:focus,#cs-detail textarea:focus{outline:0;border-color:var(--gold2);box-shadow:0 0 0 3px #f2b70533;background:#fff}
+#cs-detail .cslog{background:#f7f9fc;border-radius:0 8px 8px 0;padding:6px 12px;margin:8px 0;font-size:15px;line-height:1.5}
+#cs-detail .cslog .mut{font-size:12.5px}
+#cs-detail .b.p{font-weight:800}
+
 /* 11/17 상세페이지 가시성 */
 #drawer .bd{background:#eef1f6}
 #drawer .dsec{background:#fff;border:1px solid #c9d1de;border-radius:10px;padding:10px 14px 12px;margin:0 0 12px;box-shadow:0 1px 3px #14213d14}
@@ -1297,15 +1313,15 @@ async function drawCSDetail(phone){CSP=phone;const el=$('#cs-detail');let L=[],P
  const live=P.find(p=>new Date(p.expires)>new Date()&&!p.locked)||P.find(p=>new Date(p.expires)>new Date())||null;
  CSB=[...new Set([...(live?live.listing_ids||[]:[]),...cpGet()])];
  const unit=i=>{const r=ROWS.find(x=>x.id===i);return r?`<a href="#" data-csopen="${i}">${esc(cpUnit(r))}</a>`:'(지운 매물)'};
- el.innerHTML=`<div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap"><h4 style="margin:0">${phone?esc(name||'이름 없음')+' · '+esc(fmtPh(phone)):'새 상담'}</h4>${phone?`<a href="tel:${esc(phone)}" class="mut">전화 걸기</a>`:''}<span style="margin-left:auto;display:flex;gap:6px">${phone?`<button class="b d" id="cs-delall">🗑 전체 삭제</button>`:''}<button class="b p" id="cs-add">저장</button></span></div>
- ${phone?csStaffHtml(L):''}${phone?csStageHtml(phone,L):''}${phone?csCheckHtml(phone,L):''}${csPagesHtml(P)}
- <div style="display:flex;gap:6px;margin:8px 0;align-items:stretch"><textarea id="cs-text" rows="2" style="flex:1;min-width:0" placeholder="상담 메모 입력 (⌘+Enter 저장 · 상담일지에만 남음 · 작성자는 로그인한 계정으로 자동)"></textarea><button class="b p" id="cs-text-save">저장</button></div><div id="cs-result"></div>
- <div style="max-height:min(60vh,520px);overflow:auto;margin:8px 0">${L.map(x=>`<div style="border-left:3px solid ${x.kind==='view'?'#7aa7ff':x.kind==='page'?'var(--acc,#f26b1d)':'#ccc'};padding:3px 10px;margin:6px 0">
+ el.innerHTML=`<div class="cshd"><h4 style="margin:0">${phone?esc(name||'이름 없음')+' · '+esc(fmtPh(phone)):'새 상담'}</h4>${phone?`<a href="tel:${esc(phone)}" class="mut">전화 걸기</a>`:''}<span style="margin-left:auto;display:flex;gap:6px">${phone?`<button class="b d" id="cs-delall">🗑 전체 삭제</button>`:''}<button class="b p" id="cs-add">저장</button></span></div>
+ ${phone?`<div class="csec"><h4>📌 진행 상황</h4>${csStaffHtml(L)}${csStageHtml(phone,L)}${csCheckHtml(phone,L)}${csPagesHtml(P)}</div>`:''}
+ <div class="csec"><h4>📝 상담 기록</h4><div style="display:flex;gap:6px;margin:0 0 8px;align-items:stretch"><textarea id="cs-text" rows="2" style="flex:1;min-width:0" placeholder="상담 메모 입력 (⌘+Enter 저장 · 상담일지에만 남음 · 작성자는 로그인한 계정으로 자동)"></textarea><button class="b p" id="cs-text-save">저장</button></div><div id="cs-result"></div>
+ <div style="max-height:min(60vh,520px);overflow:auto;margin:8px 0 0">${L.map(x=>`<div class="cslog" style="border-left:5px solid ${x.kind==='view'?'#7aa7ff':x.kind==='page'?'var(--acc,#f26b1d)':'#b4bfd0'}">
   <div class="mut" style="font-size:12px">${esc(String(x.at).slice(0,16).replace('T',' '))} · ${CS_KIND[x.kind]||esc(x.kind)}${x.by&&x.by!=='client'?' · <b>'+esc(csBy(x.by))+'</b>':''} · ${CS_NOEDIT.includes(x.kind)?'':`<a href="#" data-csedit="${x.id}">수정</a> · `}<a href="#" data-csdel="${x.id}" style="color:#c33">삭제</a></div>
   ${x.kind==='check'?`<div class="mut">체크 ${csChkSum(x.text)} 완료</div>`:x.kind==='deal'?`<div>${esc(csDealTxt(x.text))}</div>`:`<div data-cstx="${x.id}" style="white-space:pre-wrap">${x.text?esc(x.text):''}</div>`}${cpCond(x)?`<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:13px">${[['입주일','move_in'],['희망거래유형','want_deal'],['희망보증금','want_deposit'],['희망월세','want_rent']].filter(([,k])=>x[k]).map(([l,k])=>`<span><span class="mut">${l}</span> ${esc(x[k])}</span>`).join('')}</div>`:''}${x.cond?`<div><span class="mut">원하는 조건</span> ${esc(x.cond)}</div>`:''}
-  ${(x.listing_ids||[]).length&&x.kind==='page'?`<div class="mut" style="font-size:13px">보여 준 매물: ${(x.listing_ids||[]).map(unit).join(', ')}</div>`:''}</div>`).join('')||(phone?'<p class="mut">아직 기록이 없어요.</p>':'')}</div>
+  ${(x.listing_ids||[]).length&&x.kind==='page'?`<div class="mut" style="font-size:13px">보여 준 매물: ${(x.listing_ids||[]).map(unit).join(', ')}</div>`:''}</div>`).join('')||(phone?'<p class="mut">아직 기록이 없어요.</p>':'')}</div></div>
  ${phone?'':`<div style="margin:4px 0 8px;padding:10px 12px;border:2px solid var(--gold);border-radius:12px;background:#fffbea"><b>✏️ 한 줄로 입력</b> <span class="mut" style="font-size:12px">쓰는 대로 아래 칸이 채워져요</span><input id="cs-one" autocomplete="off" placeholder="김사장 010-0000-1111 아현동 전세 7억 25평 3월 입주" style="width:100%;margin-top:6px;font-size:15px;padding:9px 11px;border:1.5px solid #b4bfd0;border-radius:8px"><div id="cs-one-pv" class="mut"></div></div>`}<div id="cs-match"></div>
-<div style="display:grid;gap:6px;border-top:1px solid var(--line);padding-top:8px">
+<div class="csec"><h4>👤 손님 정보·조건</h4><div style="display:grid;gap:8px">
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;align-items:end">
   <label>손님 이름 <span class="mut">(손님 페이지엔 '김○○ 님')</span><input id="cs-name" value="${esc(name)}" style="width:100%"></label>
   ${phone?'':`<label>전화번호 <b style="color:var(--acc,#c00)">필수</b><input id="cs-ph" inputmode="tel" placeholder="010-1234-5678" style="width:100%"></label>`}
@@ -1317,11 +1333,11 @@ async function drawCSDetail(phone){CSP=phone;const el=$('#cs-detail');let L=[],P
   <label>처음 문의한 매물 <span class="mut">(손님이 처음 연락한 매물 · 단지 동 호로 찾거나 그대로 적기)</span><input id="cs-first" list="cs-first-dl" value="${esc(csLast(L,'first'))}" placeholder="예: 써밋 102 3815 / 네이버 광고 보고 문의" style="width:100%"><datalist id="cs-first-dl"></datalist></label>
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px"><label>입주일<input id="cs-move" value="${esc(live?.move_in||last('move_in'))}" placeholder="예: 12월 중" style="width:100%"></label>
   <label>희망보증금<input id="cs-dep" value="${esc(live?.want_deposit||last('want_deposit'))}" placeholder="예: 5억 이하" style="width:100%"></label><label>희망월세<input id="cs-rent" value="${esc(live?.want_rent||last('want_rent'))}" placeholder="예: 250 이하" style="width:100%"></label></div>
-  <div style="padding:8px 10px;border:1px dashed var(--line);border-radius:6px"><b>보여줄 매물 <span id="cs-bn"></span></b> <span class="mut">(매물 상세의 [손님 페이지에 담기]로 담은 매물도 여기 나와요)</span>
+  </div></div><div class="csec"><h4>🏠 보여줄 매물·손님 페이지</h4><div style="display:grid;gap:8px"><div><b>보여줄 매물 <span id="cs-bn"></span></b> <span class="mut">(매물 상세의 [손님 페이지에 담기]로 담은 매물도 여기 나와요)</span>
    <div id="cs-basket"></div><input id="cs-add-q" list="cs-add-dl" placeholder="단지 동 호로 찾아서 담기 (예: 써밋 102 3815)" style="width:100%;margin-top:4px"><datalist id="cs-add-dl"></datalist>
    <label>손님에게 보일 한 줄 메모 <span class="mut">(손님 페이지에 보임 — 연락처·호수 쓰지 않기)</span><textarea id="cs-note" rows="2" style="width:100%">${esc(live?.note||'')}</textarea></label>
    ${live?`<div class="mut" style="font-size:13px">지금 손님 페이지(${esc(String(live.expires).slice(0,10))}까지)를 이 매물·조건으로 갱신해요. 비밀번호는 그대로예요${live.pw_plain?` (<b>${esc(live.pw_plain)}</b>)`:''}.</div>`:`<label>비밀번호 4자리 <span class="mut">(비우면 자동)</span><input id="cs-pw" inputmode="numeric" maxlength="4" placeholder="예: 1234" style="width:100px"></label>`}</div>
-  </div>`;
+  </div></div>`;
  const drawB=()=>{$('#cs-bn').textContent=CSB.length?`${CSB.length}개`:'';$('#cs-basket').innerHTML=CSB.map((i,n)=>`<div style="display:flex;gap:6px;align-items:center;margin:3px 0"><span style="flex:1">${n+1}. ${unit(i)} <span class="mut">${esc(ROWS.find(r=>r.id===i)?.deal||'')} ${esc(ROWS.find(r=>r.id===i)?._avail||'')}</span></span><button class="b" data-csrm="${i}">빼기</button></div>`).join('')||'<p class="mut" style="margin:4px 0">아직 없어요. 매물을 담으면 저장할 때 손님 페이지가 같이 만들어져요.</p>';
   $('#cs-basket').querySelectorAll('[data-csrm]').forEach(b=>b.onclick=()=>{const id=+b.dataset.csrm;CSB=CSB.filter(x=>x!==id);cpSet(cpGet().filter(x=>x!==id));cpBtn();drawB()});
   $('#cs-basket').querySelectorAll('[data-csopen]').forEach(a=>a.onclick=e=>{e.preventDefault();openDrawer(+a.dataset.csopen)});
