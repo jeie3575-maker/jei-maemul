@@ -112,6 +112,15 @@ input[type=date]::-webkit-calendar-picker-indicator{display:none}
  #qa .pb{grid-template-columns:1fr}#qa label.w2,#qa .dptabs,#qa .pf{grid-column:auto}
  .cat{font-size:13px;padding:6px 11px}
 }
+
+/* 11/17 상단 메뉴 묶음 */
+#tabs button[data-g]{display:none}
+.tgrp{position:relative;display:inline-flex}.tgrp>button{display:inline-flex!important}
+.tmenu{position:absolute;top:calc(100% + 6px);left:0;min-width:190px;background:#fff;border:1px solid #c9d1de;border-radius:12px;box-shadow:0 10px 30px #0004;padding:6px;z-index:40}
+.tmenu button{display:flex!important;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:10px 12px;font:inherit;font-size:15px;font-weight:600;color:var(--navy);cursor:pointer}
+.tmenu button:hover{background:#fff1bf}.tmenu button.on{background:var(--navy);color:#fff}
+.tbadge{display:inline-block;min-width:18px;padding:0 6px;margin-left:5px;border-radius:999px;background:#d1242f;color:#fff;font-size:12px;font-weight:800;line-height:18px;text-align:center}
+@media(max-width:760px){.tmenu{position:fixed;left:10px;right:10px;top:auto;min-width:0}}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.SB_URL="https://ctgaawyuwqihybxrdcgt.supabase.co";window.SB_ANON="sb_publishable_g-3Lbb_ygZL5gTvDvU06OA_HoWDzGaE";window.META={"fields": [["title", "가능여부", "text"], ["danji", "단지", "select"], ["dong", "동", "text"], ["ho", "호", "text"], ["typ", "타입", "text"], ["pyeong", "평형(전용)", "num"], ["direction", "방향", "multi"], ["deal", "거래유형", "multi"], ["sale", "매매가", "num"], ["jeonse", "전세가", "num"], ["deposit", "보증금", "num"], ["rent", "월세", "num"], ["cur_deposit", "보증(현)", "num"], ["cur_rent", "차임(현)", "num"], ["manki", "만기(년)", "date"], ["status", "현상태", "multi"], ["usage", "용도", "multi"], ["ad", "광고", "multi"], ["ad_type", "광고타입", "multi"], ["consult", "상담", "select"], ["owner", "임대인", "text"], ["owner_tel", "임대인연락처", "text"], ["tenant", "임차인", "text"], ["tenant_tel", "임차인연락처", "text"], ["owner_units", "임대인소유물건", "text"], ["coagent", "공동중개부동산", "text"], ["co_office", "공동중개부동산(사무소)", "text"], ["memo", "비고", "text"]], "options": {"danji": ["래미안", "써밋", "호반", "DK", "시티파크", "파크타워", "아스테리움", "에테르나인용산", "트럼프", "한강대우디오빌", "기타"], "deal": ["매매", "급매", "임대전세", "임대월세", "반전세", "단기", "예정", "지분매매", "분양가", "매매완료"], "direction": ["동", "서", "남", "북", "남동", "남서", "북동", "서북"], "status": ["공실", "입주", "전세완", "월세완", "반전세", "단기", "계약완", "매매완"], "usage": ["주거", "겸용", "일반사업자", "간이사업자", "법인사업자", "일반임대사업자", "주택임대사업자", "사업자", "사업자X/전입X", "확인필요"], "ad": ["뱅크", "네이버", "당근", "블로그", "공동", "대기", "공동부동산확인중", "광고가능- 등록하기", "공동부거절", "임대인요청으로 광고X"], "consult": ["시작 전", "진행 중", "완료"], "ad_type": ["신홍보", "전자홍보", "V2", "VR홍보"]}, "danji_naver": {"래미안": ["래미안용산더센트럴"], "써밋": ["용산푸르지오써밋"], "호반": ["용산호반써밋에이디션"], "DK": ["DK밸리뷰용산"], "시티파크": ["용산시티파크1단지", "용산시티파크2단지"], "파크타워": ["파크타워"], "아스테리움": ["아스테리움용산"], "에테르나인용산": ["에테르나인용산"]}};</script>
 <script>// 클라우드(Supabase) 버전 백엔드: 로컬 server.py 의 /api/* 를 브라우저에서 그대로 흉내낸다.
@@ -646,6 +655,29 @@ function promoOpen(){if(!CUR||!CUR.id)return;const r=CUR;let tab='naver',extra='
  el.querySelector('#pm-x').onclick=()=>el.remove();el.onclick=e=>{if(e.target===el)el.remove()};
  el.querySelector('#pm-c').onclick=async()=>{try{await navigator.clipboard.writeText(ta.value)}catch(e){ta.select();document.execCommand('copy')}toast('복사했어요')};draw()}
 $('#d-promo').onclick=promoOpen;
+// ---- 11/17 상단 메뉴 묶음: 매물장 · 상담일지 · 매물관리▾ · 정보실▾ ----
+(function(){const nav=document.getElementById('tabs');if(!nav)return;
+ const B=t=>nav.querySelector(`button[data-t="${t}"]`),cloud=!!window.SB_URL;
+ const G=[{n:'매물관리',items:[['call','📞 전화 목록'],['recon','네이버 광고 대조'],['manki','만기 알림']]},{n:'정보실',items:[['@dir','🧭 라인별 방향표'],['sise','💹 시세'],['io','백업']]}];
+ const grp=new Set();G.forEach(g=>g.items.forEach(([t])=>{if(!t.startsWith('@')){grp.add(t);const b=B(t);if(b)b.dataset.g='1'}}));
+ [B('list'),B('cs')].forEach(b=>b&&nav.appendChild(b));
+ const dirb=document.getElementById('dir-open');if(dirb)dirb.style.display='none';
+ let menu=null;const closeMenu=()=>{menu&&menu.remove();menu=null};
+ const go=t=>{closeMenu();if(t==='@dir'){B('list').click();setTimeout(()=>{const P=document.getElementById('dirpanel');if(P&&P.hidden)document.getElementById('dir-open').click()},30);return}B(t)?.click()};
+ const mk=g=>{const w=document.createElement('span');w.className='tgrp';const b=document.createElement('button');b.type='button';b.dataset.grp=g.n;b.innerHTML=`${g.n} ▾<span class="tbadge" hidden></span>`;w.appendChild(b);nav.appendChild(w);
+  b.onclick=e=>{e.stopPropagation();if(menu&&menu.dataset.g===g.n){closeMenu();return}closeMenu();const cur=nav.querySelector('button[data-t].on')?.dataset.t;
+   menu=document.createElement('div');menu.className='tmenu';menu.dataset.g=g.n;
+   menu.innerHTML=g.items.filter(([t])=>!(cloud&&t==='io')&&(t.startsWith('@')||B(t))).map(([t,l])=>`<button type="button" data-go="${t}" class="${t===cur?'on':''}">${l}${t==='manki'&&window.__mk?`<span class="tbadge">${window.__mk}</span>`:''}</button>`).join('');
+   menu.onclick=ev=>{const x=ev.target.closest('[data-go]');if(x)go(x.dataset.go)};w.appendChild(menu)};
+  return b};
+ const gb=G.map(mk);
+ const sync=()=>{const cur=nav.querySelector('button[data-t].on')?.dataset.t;G.forEach((g,i)=>gb[i].classList.toggle('on',g.items.some(([t])=>t===cur)))};
+ nav.querySelectorAll('button[data-t]').forEach(b=>b.addEventListener('click',()=>setTimeout(sync,0)));
+ document.addEventListener('click',closeMenu);
+ // 만기 임박(1개월 내·지남) 건수 배지
+ const badge=()=>{try{if(typeof ROWS==='undefined'||!ROWS.length)return;let n=0;ROWS.forEach(r=>{const d=dday(r.manki);if(d!=null&&d<=31&&d>=-31)n++});window.__mk=n;const t=gb[0].querySelector('.tbadge');t.textContent=n;t.hidden=!n}catch(e){}};
+ setInterval(badge,5000);setTimeout(badge,1500);sync()})();
+
 // ---- 11/17 날짜 선택 달력: 마우스 휠로 월 이동, 년·월 선택 ----
 (function(){let pop=null,inp=null,vy,vm;const p2=n=>String(n).padStart(2,'0');
  const close=()=>{pop&&pop.remove();pop=null;inp=null};
