@@ -92,6 +92,7 @@ tbody tr:hover{background:#fff8dc}
 
 .dprow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 10px}.dprow .dptabs{margin:0}
 .dpmemo{flex:1;min-width:220px;font-size:15px;font-weight:600;padding:8px 10px;border:1.5px solid #b4bfd0;border-radius:7px;background:#fbfcfe}.dpmemo:focus{outline:0;border-color:var(--gold2);box-shadow:0 0 0 3px #f2b70533;background:#fff}
+input[type=date]::-webkit-calendar-picker-indicator{display:none}
 #dpick{position:fixed;z-index:60;background:#fff;border:1px solid #b4bfd0;border-radius:12px;box-shadow:0 10px 30px #0004;padding:10px;width:296px;user-select:none}
 #dpick .dh{display:flex;align-items:center;gap:6px;margin-bottom:8px}#dpick .dh button{font:inherit;font-weight:800;border:0;background:#eef1f6;border-radius:8px;width:32px;height:32px;cursor:pointer}
 #dpick .dh select{font:inherit;font-weight:800;font-size:15px;padding:4px 6px;border:1.5px solid #b4bfd0;border-radius:8px;background:#fff}#dpick .dh .sp{flex:1}
@@ -650,8 +651,10 @@ $('#d-promo').onclick=promoOpen;
    const set=v=>{t.value=v;t.dispatchEvent(new Event('input',{bubbles:true}));t.dispatchEvent(new Event('change',{bubbles:true}));close()};
    if(b.dataset.d)set(b.dataset.d);else if(b.dataset.a==='clear')set('');else if(b.dataset.a==='today'){const n=new Date();set(`${n.getFullYear()}-${p2(n.getMonth()+1)}-${p2(n.getDate())}`)}};
   pop.onchange=e=>{if(e.target.id==='dp-y')vy=+e.target.value;if(e.target.id==='dp-m')vm=+e.target.value;draw()}};
- document.addEventListener('mousedown',e=>{const t=e.target;if(t.matches&&t.matches('input[type=date]')&&!t.disabled&&!t.readOnly){e.preventDefault();open(t);return}if(pop&&!pop.contains(t))close()},true);
- document.addEventListener('keydown',e=>{if(e.key==='Escape'&&pop){close();e.stopPropagation()}},true)})();
+ document.addEventListener('mousedown',e=>{const t=e.target;if(t.matches&&t.matches('input[type=date]')&&!t.disabled&&!t.readOnly){if(inp!==t)open(t);return}if(pop&&!pop.contains(t))close()},true);
+ document.addEventListener('input',e=>{const t=e.target;if(pop&&t===inp){const m=/^(\d{4})-(\d{2})/.exec(t.value);if(m&&+m[1]>1900){vy=+m[1];vm=+m[2]-1;draw()}}},true);
+ document.addEventListener('focusin',e=>{const t=e.target;if(t.matches&&t.matches('input[type=date]')&&!t.disabled&&!t.readOnly&&inp!==t)open(t)});
+ document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key==='Tab')&&pop)close();if(e.key==='Escape'&&pop){close();e.stopPropagation()}},true)})();
 
 // ---- 11/17 상단 간편 매물등록 ----
 function qaOpen(){document.getElementById('qa')?.remove();const el=document.createElement('div');el.id='qa';
@@ -961,7 +964,11 @@ async function openDrawer(id,tpl){if(FORM0!==null&&$('#drawer').classList.contai
    // 값만 있고 칩이 없는 경우: 탭을 끄려면 값은 그대로 두고 표시만 유지
    draw()};
   dm.addEventListener('click',()=>setTimeout(draw,0));$('#d-body').addEventListener('input',e=>{if(e.target.matches('[data-k=sale],[data-k=jeonse],[data-k=deposit],[data-k=rent]'))$('#dp-sum')&&draw()});
-  draw()})();
+  draw();
+  const memo=$('#d-body').querySelector('.dpmemo');
+  const tok=(t,on)=>{if(!memo)return;let v=memo.value;const re=new RegExp('(^|\\s*·\\s*)'+t+'(?=\\s*·|\\s*$|\\s)','g');const has=new RegExp('(^|[\\s·])'+t+'($|[\\s·])').test(v);
+   if(on&&!has)v=v?t+' · '+v:t;else if(!on&&has)v=v.replace(re,'').replace(/^\s*·\s*/,'').trim();memo.value=v};
+  const ug=$('#av-urgent'),js=$('#js-chk');if(ug)ug.addEventListener('change',e=>tok('급매',e.target.checked));if(js)js.addEventListener('change',e=>tok('전속',e.target.checked))})();
  const dms=$('#d-body').querySelector('.ms[data-k="deal"]');const urgChip=()=>dms&&[...dms.querySelectorAll('.chip')].find(c=>c.textContent==='급매');
  $('#av-urgent').onchange=e=>{const c=urgChip();if(c)c.classList.toggle('on',e.target.checked)};if(dms)dms.addEventListener('click',()=>setTimeout(()=>{const c=urgChip();$('#av-urgent').checked=!!(c&&c.classList.contains('on'))},0));
  $('#d-body').querySelectorAll('[data-open]').forEach(a=>a.onclick=e=>{e.preventDefault();openDrawer(+a.dataset.open)});
