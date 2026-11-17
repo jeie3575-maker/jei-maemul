@@ -130,6 +130,7 @@ input[type=date]::-webkit-calendar-picker-indicator{display:none}
 #qa .box,#promo .box{padding:0;border:0;margin:0;max-width:none}
 @media(max-width:760px){#drawer .sub,#drawer #d-sub{overflow-x:auto;-webkit-overflow-scrolling:touch}#drawer .sub table{width:auto;min-width:100%}#promo .box{width:calc(100vw - 24px)}#promo textarea{min-height:180px}}
 #drawer .sub td,#drawer .sub th{white-space:nowrap}#promo #pm-c,#qa .b{white-space:nowrap}
+@media(max-width:760px){main>section{max-width:100vw;overflow-x:auto}#t-list{overflow-x:visible}html,body{overflow-x:hidden}}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.SB_URL="https://ctgaawyuwqihybxrdcgt.supabase.co";window.SB_ANON="sb_publishable_g-3Lbb_ygZL5gTvDvU06OA_HoWDzGaE";window.META={"fields": [["title", "가능여부", "text"], ["danji", "단지", "select"], ["dong", "동", "text"], ["ho", "호", "text"], ["typ", "타입", "text"], ["pyeong", "평형(전용)", "num"], ["direction", "방향", "multi"], ["deal", "거래유형", "multi"], ["sale", "매매가", "num"], ["jeonse", "전세가", "num"], ["deposit", "보증금", "num"], ["rent", "월세", "num"], ["cur_deposit", "보증(현)", "num"], ["cur_rent", "차임(현)", "num"], ["manki", "만기(년)", "date"], ["status", "현상태", "multi"], ["usage", "용도", "multi"], ["ad", "광고", "multi"], ["ad_type", "광고타입", "multi"], ["consult", "상담", "select"], ["owner", "임대인", "text"], ["owner_tel", "임대인연락처", "text"], ["tenant", "임차인", "text"], ["tenant_tel", "임차인연락처", "text"], ["owner_units", "임대인소유물건", "text"], ["coagent", "공동중개부동산", "text"], ["co_office", "공동중개부동산(사무소)", "text"], ["memo", "비고", "text"]], "options": {"danji": ["래미안", "써밋", "호반", "DK", "시티파크", "파크타워", "아스테리움", "에테르나인용산", "트럼프", "한강대우디오빌", "기타"], "deal": ["매매", "급매", "임대전세", "임대월세", "반전세", "단기", "예정", "지분매매", "분양가", "매매완료"], "direction": ["동", "서", "남", "북", "남동", "남서", "북동", "서북"], "status": ["공실", "입주", "전세완", "월세완", "반전세", "단기", "계약완", "매매완"], "usage": ["주거", "겸용", "일반사업자", "간이사업자", "법인사업자", "일반임대사업자", "주택임대사업자", "사업자", "사업자X/전입X", "확인필요"], "ad": ["뱅크", "네이버", "당근", "블로그", "공동", "대기", "공동부동산확인중", "광고가능- 등록하기", "공동부거절", "임대인요청으로 광고X"], "consult": ["시작 전", "진행 중", "완료"], "ad_type": ["신홍보", "전자홍보", "V2", "VR홍보"]}, "danji_naver": {"래미안": ["래미안용산더센트럴"], "써밋": ["용산푸르지오써밋"], "호반": ["용산호반써밋에이디션"], "DK": ["DK밸리뷰용산"], "시티파크": ["용산시티파크1단지", "용산시티파크2단지"], "파크타워": ["파크타워"], "아스테리움": ["아스테리움용산"], "에테르나인용산": ["에테르나인용산"]}};</script>
 <script>// 클라우드(Supabase) 버전 백엔드: 로컬 server.py 의 /api/* 를 브라우저에서 그대로 흉내낸다.
@@ -615,17 +616,17 @@ function drawTable(el,rs,cat,srt,rerender,setSort){const hasEx=rs.some(r=>exShow
   i.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();fin(true)}if(e.key==='Escape'){e.stopPropagation();fin(false)}};i.onblur=()=>fin(true)})}
 
 const MOB=window.matchMedia('(max-width:600px)');MOB.addEventListener?.('change',()=>{if(!$('#t-list').hidden)renderList()});
-function renderCards(rs){const tel=r=>{const m=String(r.owner_tel||'').match(/01[016789][\d\- ]{7,10}|0\d{1,2}[\- ]?\d{3,4}[\- ]?\d{4}/);return m?m[0].replace(/\D/g,''):''};
+function renderCards(rs,EL){EL=EL||$('#list');const tel=r=>{const m=String(r.owner_tel||'').match(/01[016789][\d\- ]{7,10}|0\d{1,2}[\- ]?\d{3,4}[\- ]?\d{4}/);return m?m[0].replace(/\D/g,''):''};
  const lastLog=r=>{const t=String(r.log_txt||'').split(' / ').filter(Boolean);return t.length?t[t.length-1]:''};
  const big=r=>{const k=kinds(r.deal),o=[];if(k.includes('매매')&&r.sale)o.push(won(r.sale));if(k.includes('전세'))o.push(won(r.jeonse||r.deposit));if(k.includes('월세'))o.push(won(r.deposit)+'/'+(r.rent??''));return o.join(' · ')};
- $('#list').innerHTML=rs.slice(0,1500).map(r=>{const e=r.extra||{},tn=tel(r),fl=flOf(r),ls=CAT==='아파트'&&typeof leaseFor==='function'?leaseFor(r):null;
+ EL.innerHTML=rs.slice(0,1500).map(r=>{const e=r.extra||{},tn=tel(r),fl=flOf(r),ls=CAT==='아파트'&&typeof leaseFor==='function'?leaseFor(r):null;
   return `<div class="mc g-${esc((r._avs||[r._avail])[0])}" data-id="${r.id}"><div class="l1">${esc([r.danji,r.dong,r.ho].filter(Boolean).join(' '))}${r.typ?` <span class="mut" style="font-weight:500">· ${esc(r.typ)}</span>`:''} ${avHtml(r._avail)}${/급매/.test((r.deal||'')+(r._avail||''))?'<span class="gm">급매</span>':''}${(r.extra||{})['전속']?'<span class="jsk">전속</span>':''}${ourHtml(r)}</div>
   <div class="l2"><span class="dl">${esc(r.deal||'')}</span>${esc(big(r))}</div>
   <div class="l3">${[r.pyeong!=null&&r.pyeong!==''?`${r.pyeong}평`:'',fl?`${fl}층`:'',r.direction?`${r.direction}향`:'',r.manki?`만기 ${r.manki}`:'',e['중도퇴실']?`<b style="color:#c0392b">${esc(e['중도퇴실'])}${e['퇴실일']?' '+esc(e['퇴실일']):''}</b>`:'',ls?'신고 '+ls.html:''].filter(Boolean).join(' · ')}</div>
   <div class="l4"><span>${esc(r.owner||'')}</span>${tn?`<a href="tel:${tn}" class="mtel">📞 전화</a>`:''}</div>
   ${lastLog(r)?`<div class="l5">💬 ${esc(lastLog(r))}</div>`:''}</div>`}).join('')+(rs.length>1500?'<p class="mut">1,500건까지만 표시합니다. 검색으로 좁혀 주세요.</p>':'');
- $('#list').querySelectorAll('.mc').forEach(c=>c.onclick=e=>{if(e.target.closest('.mtel'))return;openDrawer(+c.dataset.id)});
- $('#list').querySelectorAll('.mtel').forEach(a=>a.onclick=e=>e.stopPropagation())}
+ EL.querySelectorAll('.mc').forEach(c=>c.onclick=e=>{if(e.target.closest('.mtel'))return;openDrawer(+c.dataset.id)});
+ EL.querySelectorAll('.mtel').forEach(a=>a.onclick=e=>e.stopPropagation())}
 function inlineEdit(td){const id=+td.parentElement.dataset.id,k=td.dataset.ek,r=ROWS.find(x=>x.id===id);const t=(META.fields.find(f=>f[0]===k)||[])[2];
  const v=r[k]??'';td.innerHTML=k==='memo'?`<textarea class="ie" rows="2" style="width:260px">${esc(v)}</textarea>`:`<input class="ie" type="${t==='date'?'date':'text'}" value="${esc(t==='num'&&v!==''?+v:v)}" style="width:${t==='num'?90:140}px">`;
  const i=td.querySelector('.ie');i.focus();i.select&&i.select();let done=false;
@@ -898,7 +899,7 @@ async function drawCSDetail(phone){CSP=phone;const el=$('#cs-detail');let L=[],P
    const fs=$('#cs-first').value.trim();if(fs&&fs!==csLast(L,'first'))await api('/api/consult_first_set',{method:'POST',body:JSON.stringify({phone:ph,text:fs})});
    if(kCh)await api('/api/consult_check_set',{method:'POST',body:JSON.stringify({phone:ph,items:K1})});
    if(dCh)await api('/api/consult_deal_set',{method:'POST',body:JSON.stringify({phone:ph,...D1})});
-   if(sgV!=='상담중'){await api('/api/consult_stage_set',{method:'POST',body:JSON.stringify({phone:ph,stage:sgV,listing_id:sgL})});CST={};for(const x of await api('/api/consult_stage'))CST[x.phone]=x}
+   if(sgV!=='상담중'){await api('/api/consult_stage_set',{method:'POST',body:JSON.stringify({phone:ph,stage:sgV,listing_id:sgL})});CST={};for(const x of await api('/api/consult_stage'))CST[x.phone]=x;await csOurSync(ph,sgV,sgL||(CST[ph]||{}).listing_id)}
    const sf=$('#cs-staff')?.value;if(sf)await api('/api/consult_staff_set',{method:'POST',body:JSON.stringify({phone:ph,staff:sf})});
    CSL=await api('/api/consult_list');drawCSList();await drawCSDetail(ph);toast('저장했어요');
    if(txt){$('#cs-result').innerHTML=`<div class="note" style="margin-top:8px;white-space:pre-wrap;background:#fff7e6;padding:8px;border-radius:6px">${esc(txt)}</div><button class="b p" id="cs-copy">손님에게 보낼 문구 복사</button>`;$('#cs-copy').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('복사했어요'));navigator.clipboard.writeText(txt).catch(()=>{})}}
@@ -936,7 +937,22 @@ function csStageHtml(phone,L){const c=CST[phone]||{},st=c.stage||'상담중',ids
    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="mut">📅 호반제이 캘린더에 넣기 <span style="font-size:12px">(다시 누르면 고친 날짜로 바뀜)</span></span><button class="b" data-cal="cd">계약서 작성일</button><button class="b" data-cal="bal">잔금일</button><button class="b" data-cal="mf">관리비 정산 요청 (잔금 7일 전)</button></div></div>`})():''}
   <div id="cs-pick" hidden style="margin-top:6px">어느 매물인가요? <select id="cs-pick-sel"><option value="">보여 준 매물에서 고르기</option>${ids.map(i=>`<option value="${i}">${esc(cpUnit(ROWS.find(r=>r.id===i)))}</option>`).join('')}</select>
    <input id="cs-pick-q" list="cs-pick-dl" placeholder="또는 단지 동 호 입력" style="width:200px"><datalist id="cs-pick-dl"></datalist> <button class="b p" id="cs-pick-ok">계약진행으로</button> <button class="b" id="cs-pick-x">취소</button></div>${auto}</div>`}
-function csStageBind(phone){const save=async(stage,lid)=>{try{await api('/api/consult_stage_set',{method:'POST',body:JSON.stringify({phone,stage,listing_id:lid||null})});toast('단계를 '+stage+'(으)로 바꿨어요');CST={};for(const x of await api('/api/consult_stage'))CST[x.phone]=x;CSL=await api('/api/consult_list');drawCSDetail(phone)}catch(e){alert('저장 실패: '+e.message)}};
+// ---- 11/17 상담일지 최종 선택 매물 → 매물장 '우리 계약' 자동 반영 ----
+async function csOurSync(phone,stage,lid){if(!lid||!['계약진행','계약완료'].includes(stage))return;
+ const g=i=>{const e=document.getElementById(i);return e?e.value:''},t=new Date(),td=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
+ try{
+  // 이전에 같은 손님으로 넣었던 다른 매물의 기록은 빼기
+  for(const r of ROWS){const a=(r.extra||{})['우리계약'];if(r.id===lid||!Array.isArray(a)||!a.some(c=>c.cs===phone))continue;
+   const ex={...r.extra},rest=a.filter(c=>c.cs!==phone);if(rest.length)ex['우리계약']=rest;else delete ex['우리계약'];const ext=Object.keys(ex).length?ex:null;
+   await api('/api/listings',{method:'POST',body:JSON.stringify({id:r.id,category:r.category,extra:ext})});r.extra=ext}
+  const r=ROWS.find(x=>x.id===lid);if(!r)return;const ex={...(r.extra||{})},a=Array.isArray(ex['우리계약'])?[...ex['우리계약']]:[];
+  const i=a.findIndex(c=>c.cs===phone),old=i>=0?a[i]:{};
+  const nw={...old,cd:g('cs-d-cd')||old.cd||td,tp:g('cs-d-tp')||old.tp||'',amt:g('cs-d-amt')||old.amt||'',mk:old.mk||'',cs:phone};
+  if(i>=0&&JSON.stringify(old)===JSON.stringify(nw))return;
+  if(i>=0)a[i]=nw;else a.unshift(nw);ex['우리계약']=a;
+  await api('/api/listings',{method:'POST',body:JSON.stringify({id:lid,category:r.category,extra:ex})});r.extra=ex;renderList();toast('매물장에도 우리 계약으로 넣었어요: '+cpUnit(r))
+ }catch(e){toast('우리 계약 반영 실패: '+e.message)}}
+function csStageBind(phone){const save=async(stage,lid)=>{try{await api('/api/consult_stage_set',{method:'POST',body:JSON.stringify({phone,stage,listing_id:lid||null})});toast('단계를 '+stage+'(으)로 바꿨어요');CST={};for(const x of await api('/api/consult_stage'))CST[x.phone]=x;await csOurSync(phone,stage,lid||(CST[phone]||{}).listing_id);CSL=await api('/api/consult_list');drawCSDetail(phone)}catch(e){alert('저장 실패: '+e.message)}};
  document.querySelectorAll('[data-cst]').forEach(b=>b.onclick=()=>{const t=b.dataset.cst;if(t==='계약진행'){$('#cs-pick').hidden=false;return}save(t,t==='계약완료'?(CST[phone]||{}).listing_id:null)});
  const q=$('#cs-pick-q');if(q)q.oninput=()=>{const w=q.value.trim();if(w.length<2)return;$('#cs-pick-dl').innerHTML=ROWS.filter(r=>cpUnit(r).includes(w)).slice(0,30).map(r=>`<option value="${esc(cpUnit(r))}">`).join('')};
  const ok=$('#cs-pick-ok');if(ok)ok.onclick=()=>{let lid=+$('#cs-pick-sel').value||null;const w=$('#cs-pick-q').value.trim();if(!lid&&w){const r=ROWS.find(r=>cpUnit(r)===w);if(!r)return alert('매물을 목록에서 골라 주세요');lid=r.id}if(!lid)return alert('어느 매물인지 골라 주세요');const cs=(CST[phone]||{}).stage;save(cs==='계약완료'?'계약완료':'계약진행',lid)};
@@ -1273,7 +1289,7 @@ function renderManki(){ROWS.forEach(derive);const b=r=>{const d=dday(r.manki);if
  const k=MKSORT.k,cmp=(x,y)=>{x=x??'';y=y??'';if(x===''&&y!=='')return 1;if(y===''&&x!=='')return -1;return typeof x==='number'&&typeof y==='number'?x-y:String(x).localeCompare(String(y),'ko',{numeric:true})};
  const rs=(g[MB]||[]).slice().sort((a,b)=>cmp(a[k==='_ask'?'sale':k],b[k==='_ask'?'sale':k])*MKSORT.d||cmp(a.manki,b.manki));
  if(!rs.length){$('#manki').innerHTML='<div class="empty">없음</div>';return}
- const cat=MKCAT.size===1?[...MKCAT][0]:'';drawTable($('#manki'),rs,cat,MKSORT,renderManki,v=>{MKSORT=v})}
+ if(MOB.matches){renderCards(rs,$('#manki'));return}const cat=MKCAT.size===1?[...MKCAT][0]:'';drawTable($('#manki'),rs,cat,MKSORT,renderManki,v=>{MKSORT=v})}
 $('#tg').onclick=async()=>{const t=(await api('/api/manki_text?months=3')).text;if(!confirm('텔레그램으로 보낼 내용:\n\n'+t.slice(0,1200)))return;await api('/api/manki_tg?months=3',{method:'POST'});toast('텔레그램 전송 완료')};
 
 // ---------- 가져오기 ----------
