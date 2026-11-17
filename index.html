@@ -89,6 +89,15 @@ tbody tr:hover{background:#fff8dc}
 #qa input,#qa select{font-size:16px;font-weight:600;padding:9px 10px;border:1.5px solid #b4bfd0;border-radius:8px}#qa input:focus,#qa select:focus{outline:0;border-color:var(--gold2);box-shadow:0 0 0 3px #f2b70533}
 #qa .dptabs{grid-column:span 2;margin:0}#qa .pf{grid-column:span 2;display:flex;gap:8px;align-items:center;flex-wrap:wrap}#qa .qsum{font-weight:800;color:var(--navy)}
 #qa-open{font:inherit;font-weight:800;font-size:14px;padding:6px 16px;margin-left:6px;border-radius:999px!important;border:0;border-radius:8px;background:var(--gold);color:var(--navy);cursor:pointer}#qa-open:hover{background:var(--gold2)}
+
+.dprow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 10px}.dprow .dptabs{margin:0}
+.dpmemo{flex:1;min-width:220px;font-size:15px;font-weight:600;padding:8px 10px;border:1.5px solid #b4bfd0;border-radius:7px;background:#fbfcfe}.dpmemo:focus{outline:0;border-color:var(--gold2);box-shadow:0 0 0 3px #f2b70533;background:#fff}
+#dpick{position:fixed;z-index:60;background:#fff;border:1px solid #b4bfd0;border-radius:12px;box-shadow:0 10px 30px #0004;padding:10px;width:296px;user-select:none}
+#dpick .dh{display:flex;align-items:center;gap:6px;margin-bottom:8px}#dpick .dh button{font:inherit;font-weight:800;border:0;background:#eef1f6;border-radius:8px;width:32px;height:32px;cursor:pointer}
+#dpick .dh select{font:inherit;font-weight:800;font-size:15px;padding:4px 6px;border:1.5px solid #b4bfd0;border-radius:8px;background:#fff}#dpick .dh .sp{flex:1}
+#dpick .dg{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}#dpick .dw{font-size:12px;color:#6b7480;padding:3px 0}#dpick .dw:first-child,#dpick .dd0:nth-child(7n+8){color:#d1242f}
+#dpick .dd0{font:inherit;font-size:14px;border:0;background:none;padding:7px 0;border-radius:8px;cursor:pointer}#dpick .dd0:hover{background:#fff1bf}#dpick .dd0.o{color:#b4bcc8}#dpick .dd0.t{box-shadow:inset 0 0 0 2px var(--gold)}#dpick .dd0.s{background:var(--navy);color:#fff;font-weight:800}
+#dpick .df{display:flex;justify-content:space-between;margin-top:8px}#dpick .df button{font:inherit;font-size:13px;border:1px solid #b4bfd0;background:#fff;border-radius:8px;padding:4px 12px;cursor:pointer}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.SB_URL="https://ctgaawyuwqihybxrdcgt.supabase.co";window.SB_ANON="sb_publishable_g-3Lbb_ygZL5gTvDvU06OA_HoWDzGaE";window.META={"fields": [["title", "가능여부", "text"], ["danji", "단지", "select"], ["dong", "동", "text"], ["ho", "호", "text"], ["typ", "타입", "text"], ["pyeong", "평형(전용)", "num"], ["direction", "방향", "multi"], ["deal", "거래유형", "multi"], ["sale", "매매가", "num"], ["jeonse", "전세가", "num"], ["deposit", "보증금", "num"], ["rent", "월세", "num"], ["cur_deposit", "보증(현)", "num"], ["cur_rent", "차임(현)", "num"], ["manki", "만기(년)", "date"], ["status", "현상태", "multi"], ["usage", "용도", "multi"], ["ad", "광고", "multi"], ["ad_type", "광고타입", "multi"], ["consult", "상담", "select"], ["owner", "임대인", "text"], ["owner_tel", "임대인연락처", "text"], ["tenant", "임차인", "text"], ["tenant_tel", "임차인연락처", "text"], ["owner_units", "임대인소유물건", "text"], ["coagent", "공동중개부동산", "text"], ["co_office", "공동중개부동산(사무소)", "text"], ["memo", "비고", "text"]], "options": {"danji": ["래미안", "써밋", "호반", "DK", "시티파크", "파크타워", "아스테리움", "에테르나인용산", "트럼프", "한강대우디오빌", "기타"], "deal": ["매매", "급매", "임대전세", "임대월세", "반전세", "단기", "예정", "지분매매", "분양가", "매매완료"], "direction": ["동", "서", "남", "북", "남동", "남서", "북동", "서북"], "status": ["공실", "입주", "전세완", "월세완", "반전세", "단기", "계약완", "매매완"], "usage": ["주거", "겸용", "일반사업자", "간이사업자", "법인사업자", "일반임대사업자", "주택임대사업자", "사업자", "사업자X/전입X", "확인필요"], "ad": ["뱅크", "네이버", "당근", "블로그", "공동", "대기", "공동부동산확인중", "광고가능- 등록하기", "공동부거절", "임대인요청으로 광고X"], "consult": ["시작 전", "진행 중", "완료"], "ad_type": ["신홍보", "전자홍보", "V2", "VR홍보"]}, "danji_naver": {"래미안": ["래미안용산더센트럴"], "써밋": ["용산푸르지오써밋"], "호반": ["용산호반써밋에이디션"], "DK": ["DK밸리뷰용산"], "시티파크": ["용산시티파크1단지", "용산시티파크2단지"], "파크타워": ["파크타워"], "아스테리움": ["아스테리움용산"], "에테르나인용산": ["에테르나인용산"]}};</script>
 <script>// 클라우드(Supabase) 버전 백엔드: 로컬 server.py 의 /api/* 를 브라우저에서 그대로 흉내낸다.
@@ -623,6 +632,27 @@ function promoOpen(){if(!CUR||!CUR.id)return;const r=CUR;let tab='naver',extra='
  el.querySelector('#pm-x').onclick=()=>el.remove();el.onclick=e=>{if(e.target===el)el.remove()};
  el.querySelector('#pm-c').onclick=async()=>{try{await navigator.clipboard.writeText(ta.value)}catch(e){ta.select();document.execCommand('copy')}toast('복사했어요')};draw()}
 $('#d-promo').onclick=promoOpen;
+// ---- 11/17 날짜 선택 달력: 마우스 휠로 월 이동, 년·월 선택 ----
+(function(){let pop=null,inp=null,vy,vm;const p2=n=>String(n).padStart(2,'0');
+ const close=()=>{pop&&pop.remove();pop=null;inp=null};
+ const draw=()=>{const sel=inp.value,now=new Date(),td=`${now.getFullYear()}-${p2(now.getMonth()+1)}-${p2(now.getDate())}`;
+  const first=new Date(vy,vm,1).getDay(),dim=new Date(vy,vm+1,0).getDate(),prev=new Date(vy,vm,0).getDate();let cells='';
+  for(let i=0;i<42;i++){let d=i-first+1,y=vy,m=vm,o='';if(d<1){d+=prev;m--;o=' o'}else if(d>dim){d-=dim;m++;o=' o'}const dt=new Date(y,m,d),s=`${dt.getFullYear()}-${p2(dt.getMonth()+1)}-${p2(dt.getDate())}`;
+   cells+=`<button type="button" class="dd0${o}${s===td?' t':''}${s===sel?' s':''}" data-d="${s}">${dt.getDate()}</button>`}
+  const yo=[];for(let y=now.getFullYear()-6;y<=now.getFullYear()+6;y++)yo.push(y);if(!yo.includes(vy))yo.push(vy);yo.sort();
+  pop.innerHTML=`<div class="dh"><button type="button" data-n="-1">‹</button><select id="dp-y">${yo.map(y=>`<option ${y===vy?'selected':''}>${y}</option>`).join('')}</select><span>년</span><select id="dp-m">${[...Array(12)].map((_,i)=>`<option value="${i}" ${i===vm?'selected':''}>${i+1}</option>`).join('')}</select><span>월</span><span class="sp"></span><button type="button" data-n="1">›</button></div><div class="dg">${'일월화수목금토'.split('').map(w=>`<div class="dw">${w}</div>`).join('')}${cells}</div><div class="df"><button type="button" data-a="today">오늘</button><button type="button" data-a="clear">지우기</button></div>`};
+ const move=n=>{const d=new Date(vy,vm+n,1);vy=d.getFullYear();vm=d.getMonth();draw()};
+ const open=el=>{close();inp=el;const m=/^(\d{4})-(\d{2})/.exec(el.value),n=new Date();vy=m?+m[1]:n.getFullYear();vm=m?+m[2]-1:n.getMonth();
+  pop=document.createElement('div');pop.id='dpick';document.body.appendChild(pop);draw();
+  const r=el.getBoundingClientRect(),w=296,hh=pop.offsetHeight;let x=Math.min(r.left,innerWidth-w-8),y=r.bottom+4;if(y+hh>innerHeight-8)y=Math.max(8,r.top-hh-4);pop.style.left=Math.max(8,x)+'px';pop.style.top=y+'px';
+  pop.addEventListener('wheel',e=>{e.preventDefault();move(e.deltaY>0?1:-1)},{passive:false});
+  pop.onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.n)return move(+b.dataset.n);const t=inp;
+   const set=v=>{t.value=v;t.dispatchEvent(new Event('input',{bubbles:true}));t.dispatchEvent(new Event('change',{bubbles:true}));close()};
+   if(b.dataset.d)set(b.dataset.d);else if(b.dataset.a==='clear')set('');else if(b.dataset.a==='today'){const n=new Date();set(`${n.getFullYear()}-${p2(n.getMonth()+1)}-${p2(n.getDate())}`)}};
+  pop.onchange=e=>{if(e.target.id==='dp-y')vy=+e.target.value;if(e.target.id==='dp-m')vm=+e.target.value;draw()}};
+ document.addEventListener('mousedown',e=>{const t=e.target;if(t.matches&&t.matches('input[type=date]')&&!t.disabled&&!t.readOnly){e.preventDefault();open(t);return}if(pop&&!pop.contains(t))close()},true);
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&pop){close();e.stopPropagation()}},true)})();
+
 // ---- 11/17 상단 간편 매물등록 ----
 function qaOpen(){document.getElementById('qa')?.remove();const el=document.createElement('div');el.id='qa';
  const dj=[...new Set(ROWS.map(x=>x.danji).filter(Boolean))].sort();let deal='월세';
@@ -898,9 +928,9 @@ async function openDrawer(id,tpl){if(FORM0!==null&&$('#drawer').classList.contai
   <div class="mut" style="font-size:12px;margin-top:4px">여러 개 고를 수 있어요 · 저장될 값: <b id="av-show">${esc(CUR.title||'(없음)')}</b></div>
   <input type="hidden" data-k="title" id="av-title" value="${esc(CUR.title||'')}"></div>
  ${row(`<label class="w2">분류<select data-k="category">${CATS.map(c=>`<option ${c===cat?'selected':''}>${c}</option>`).join('')}</select></label>`)}
- ${sec('📍 매물 정보',['danji','dong','ho','typ','pyeong','direction','usage'].map(fld).join(''))}
+ ${sec('📍 매물 정보',fld('danji').replace(/<label class="/,'<label class="w2 ').replace(/^<label(?! class)/,'<label class="w2"')+['dong','ho','typ','pyeong','direction','usage'].map(fld).join(''))}
  ${ourBox(CUR)}
- <div class="dsec dprice"><h4>💰 거래·가격 <span class="mut" style="font-weight:400">(단위: 만원)</span></h4><div id="dp-tabs"></div><div class="form">${fld('deal')}${['sale','jeonse','deposit','rent'].map(fld).join('')}</div></div>
+ <div class="dsec dprice"><h4>💰 거래·가격 <span class="mut" style="font-weight:400">(단위: 만원)</span></h4><div class="dprow"><div id="dp-tabs"></div><input class="exk-in dpmemo" data-key="가격메모" value="${esc(E['가격메모']??'')}" placeholder="가격 메모 (예: 협의 가능, 융자 있음, 입주 조율)"></div><div class="form"><div style="display:none">${fld('deal')}</div>${['sale','jeonse','deposit','rent'].map(fld).join('')}</div></div>
  ${sec('🏠 현재 임차 · 만기',['cur_deposit','cur_rent','status','manki'].map(fld).join(''))}
  ${row(fld('ad')+fld('ad_type')+`<label class="w2 ${adMemo.length?'':'emp'}">메모<input id="ad-memo" value="${esc(adMemo.join(', '))}" placeholder="예: 대기, 공동부동산확인중"></label>`)}
  ${sec('👤 임대인 · 연락처 · 소유물건 · 메모',['owner','owner_tel'].map(fld).join('')+(own?fld('owner_units').replace(/ emp"/,'"'):fld('owner_units')).replace(/(<\/label>)$/,own+'$1')+`<label class="w2 ${String(E['임대인메모']??'').trim()===''?'emp':''}">메모<input class="exk-in" data-key="임대인메모" value="${esc(E['임대인메모']??'')}"></label>`)}
