@@ -106,7 +106,9 @@ input[type=date]::-webkit-calendar-picker-indicator{display:none}
  nav#tabs{order:5;width:100%;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch}nav button{white-space:nowrap;flex:none;padding:7px 11px}
  header #refresh{margin-left:auto}main{padding:10px}
  #list,.nt-wrap,#recon{overflow-x:auto}th{top:0}
- .form{grid-template-columns:1fr 1fr}.form label.w3,.form label.w4{grid-column:span 2}
+ .form{grid-template-columns:repeat(2,minmax(0,1fr))}.form label.w3,.form label.w4{grid-column:span 2}
+ #drawer,#drawer .bd,#drawer .dsec{max-width:100vw;min-width:0}#drawer .bd{overflow-x:hidden}#drawer .form label{min-width:0}
+ #drawer .form input,#drawer .form select,#drawer .form textarea,.dpmemo{min-width:0;width:100%;max-width:100%}#drawer .form .ms{min-width:0}
  #drawer{width:100vw}#drawer .hd{flex-wrap:wrap}#drawer .hd b{flex:1 1 100%}#drawer .bd{padding:10px}
  .dpt{padding:7px 16px}.dpmemo{min-width:0;flex:1 1 100%}
  #qa .pb{grid-template-columns:1fr}#qa label.w2,#qa .dptabs,#qa .pf{grid-column:auto}
