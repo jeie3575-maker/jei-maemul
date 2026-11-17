@@ -26,6 +26,11 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}td.n{padding-right:
 tr.g-가능,tr.g-급매가능,tr.g-공실,tr.g-퇴거예정{background:#eafbea}tr.g-공동가능,tr.g-공동{background:#f3fcf3}.our{display:inline-block;background:#e6efff;color:#1a4fd6;border:1px solid #9db8f5;border-radius:10px;padding:0 6px;font-size:11px;font-weight:600;margin-left:4px;white-space:nowrap;cursor:help}.our.old{background:#f1f1f1;color:#777;border-color:#ccc}
 .dd{font-weight:600}.dd.r{color:var(--red)}.dd.o{color:var(--org)}.mut{color:var(--mut)}
 #drawer{position:fixed;top:0;right:0;width:min(1200px,96vw);height:100%;background:#fff;box-shadow:-6px 0 24px #0002;transform:translateX(105%);transition:.18s;z-index:10;display:flex;flex-direction:column}
+#drawer2{position:fixed;top:0;left:0;width:440px;max-width:100vw;height:100%;background:#eef1f6;box-shadow:6px 0 24px #0002;z-index:9;display:none;flex-direction:column}
+body.side2 #drawer2{display:flex}body.side2 #drawer{width:min(1200px,calc(100vw - 440px))}
+#drawer2 .hd{display:flex;align-items:center;gap:8px;padding:12px 16px;background:var(--navy);color:#fff}#drawer2 .hd b{flex:1;font-size:15px}#drawer2 .hd .b{border-color:#ffffff40}#drawer2 .bd{overflow:auto;padding:12px;flex:1}#drawer2 .dsec{background:#fff;border:1px solid #c9d1de;border-radius:10px;padding:10px 14px 12px;margin:0 0 12px}#drawer2 .dsec h4{font-size:14px;font-weight:800;color:var(--navy);background:#fff6d6;border-left:5px solid var(--gold);border-radius:4px;padding:5px 10px;margin:0 0 8px}
+a.hoj{color:#1a56db;font-weight:700;text-decoration:underline;cursor:pointer}
+@media(max-width:760px){#drawer2{width:100vw;z-index:11}body.side2 #drawer{width:100vw}}
 #drawer.on{transform:none}#drawer .hd{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line)}
 #drawer .hd b{flex:1;font-size:15px}#drawer .bd{overflow:auto;padding:14px 16px;flex:1}
 .rtt{display:flex;gap:6px;margin:4px 0 8px}.rtt .b.on{background:var(--acc);color:#fff}.ownl{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}.ownl .chip{text-decoration:none;color:inherit;font-size:13px}.ownl i{font-style:normal;color:var(--mut);font-size:11px}
@@ -1357,7 +1362,7 @@ async function renderStores(){const el=$('#d-stores');if(!el||!CUR)return;
  <details style="margin-top:6px"><summary class="mut">건물 전체 ${inB.length}곳 · 층별: ${fk.map(f=>`${f==='지하'||f==='층 미상'?f:f+'층'} ${byF[f]}`).join(' · ')}</summary>
  <table><tr><th>상호</th><th>업종</th><th>분류</th><th>층</th><th>건물명</th></tr>${inB.slice().sort((a,b)=>String(fn(a['층'])).localeCompare(String(fn(b['층'])),'ko',{numeric:true})).map(row).join('')}</table></details>`}
 function renderSub(u){_renderSub(u);if(['상가','오피스'].includes(CUR?.category)){const d=document.createElement('div');d.id='d-stores';d.innerHTML='<p class="mut">입점 업체 불러오는 중…</p>';const sub=$('#d-sub');const h=[...sub.querySelectorAll('h3')].find(x=>x.textContent.startsWith('네이버'));sub.insertBefore(d,h||null);renderStores()}}
-function _renderSub(u){const tb=(rows,cols)=>rows.length?`<table><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr>${rows.map(r=>`<tr>${cols.map(c=>`<td>${esc(r[c])}</td>`).join('')}</tr>`).join('')}</table>`:'<p class="mut">없음</p>';
+function _renderSub(u){const tb=(rows,cols)=>rows.length?`<table><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr>${rows.map(r=>`<tr>${cols.map(c=>`<td>${c==='예상호실'?candLinks(r[c]):esc(r[c])}</td>`).join('')}</tr>`).join('')}</table>`:'<p class="mut">없음</p>';
  const rtc=['계약일','거래','층','전용㎡','보증금(만)','월세(만)','매매가(만)','계약기간','만기','신규/갱신','예상호실','후보수'];
  $('#d-sub').innerHTML=`<h3>상담일지 <span class="mut">(${u.logs.length}건 · 노션 댓글 포함)</span></h3>
  <div style="display:flex;gap:6px;margin-bottom:8px"><textarea id="log-new" rows="2" style="flex:1" placeholder="상담 내용 입력 (⌘+Enter 저장)"></textarea><input id="log-author" placeholder="작성자" style="width:80px" value="${esc(localStorage.author||'')}"><button class="b p" id="log-add">추가</button></div>
@@ -1390,11 +1395,39 @@ $('#d-del').onclick=async()=>{if(!confirm('이 매물을 삭제할까요? (이�
 
 // ---------- 공동중개 ----------
 const coKey=s=>(s||'').replace(/\s*(공인중개사사무소|공인중개사|부동산중개|부동산)\s*$/,'').trim();
+
+// ---- 11/17 예상호실 클릭 → 옆 패널(실거래 보면서 바로 업데이트) ----
+const hoNum=v=>{const m=/(\d{3,4})/.exec(String(v||''));return m?String(+m[1]):''};
+function candLinks(str){const cur=CUR?hoNum(CUR.ho):'';return String(str||'').split(', ').filter(Boolean).map(c=>{const m=/^(?:(\S+?)동\s*)?(\d{3,4})호?$/.exec(c.trim());if(!m)return esc(c);const lab=(m[1]?m[1]+'-':'')+m[2];if(!m[1]&&m[2]===cur&&CUR&&CUR.id)return `<b>${esc(lab)}</b>`;return `<a href="#" class="hoj" data-d="${esc(m[1]||'')}" data-h="${m[2]}" title="옆 창에서 이 호실 열기">${esc(lab)}</a>`}).join(', ')}
+let SIDE=null;
+function sideRow(d,h){const dg=nDong(d||'');return ROWS.find(r=>(r.category||'오피스텔')===(CUR.category||'오피스텔')&&r.danji===CUR.danji&&hoNum(r.ho)===h&&(!dg||!r.dong||nDong(r.dong)===dg||(CUR.danji==='시티파크'&&String(r.dong||'').includes(d))))}
+async function openSide(d,h){let el=$('#drawer2');if(!el){el=document.createElement('div');el.id='drawer2';document.body.appendChild(el)}
+ const r=sideRow(d,h);SIDE=r?r.id:null;document.body.classList.add('side2');
+ const lab=`${esc(CUR.danji)} ${d?esc(d)+'동 ':''}${h}호`;
+ if(!r){el.innerHTML=`<div class="hd"><b>${lab}</b><button class="b" id="s2-x">✕</button></div><div class="bd"><p class="mut">매물장에 없는 호실이에요.</p><button class="b p" id="s2-new">이 호실 새로 등록</button></div>`;
+  $('#s2-x').onclick=closeSide;$('#s2-new').onclick=()=>{const t={category:CUR.category,danji:CUR.danji,dong:d?(d+(/동$/.test(d)?'':'동')):(CUR.dong||''),ho:h,typ:CUR.typ,pyeong:CUR.pyeong,direction:CUR.direction};closeSide();openDrawer(null,t)};return}
+ el.innerHTML=`<div class="hd"><b>${lab}</b><button class="b" id="s2-go" title="메인 창으로 열기(지금 창은 자동 저장)">↔ 메인으로</button><button class="b" id="s2-x">✕</button></div><div class="bd"><p class="mut">불러오는 중…</p></div>`;
+ $('#s2-x').onclick=closeSide;$('#s2-go').onclick=()=>{const id=SIDE;closeSide();openDrawer(id)};
+ let u={logs:[]};try{u=await api('/api/unit?id='+r.id)}catch(e){}
+ if(SIDE!==r.id)return;let xs=[];try{xs=r.category==='아파트'?aptRtAll(r):(RTIDX?rtFor(r).exact:[])}catch(e){}
+ const amt=y=>y['거래']==='매매'?'매 '+won(y['매매가(만)']):y['거래']==='전세'?'전 '+won(y['보증금(만)']):'월 '+won(y['보증금(만)'])+'/'+(y['월세(만)']||0);
+ const F=(k,l,t)=>`<label style="display:block;font-size:12.5px;font-weight:700;margin:6px 0 2px">${l}<input data-s2="${k}" type="${t||'text'}" value="${esc(t==='number'&&r[k]!==''&&r[k]!=null?+r[k]:(r[k]??''))}" style="width:100%;font-size:15px;font-weight:600;padding:6px 8px;border:1.5px solid #b4bfd0;border-radius:7px"></label>`;
+ el.querySelector('.bd').innerHTML=`<div class="dsec"><h4>${esc(r.title||'(가능여부 없음)')} <span class="mut">${esc(r.deal||'')}</span></h4><div class="mut">${[r.typ,r.pyeong?r.pyeong+'평':'',r.direction].filter(Boolean).map(esc).join(' · ')}</div></div>
+ <div class="dsec"><h4>🏠 현재 임차 · 만기 <span class="mut" style="font-weight:400">(칸을 고치면 바로 저장)</span></h4>${F('cur_deposit','현 보증(만)','number')}${F('cur_rent','현 차임(만)','number')}${F('manki','만기','date')}${F('status','현상태')}${F('owner','임대인')}${F('owner_tel','연락처')}<p class="mut" style="margin:6px 0 0">${esc(r.memo||'')}</p></div>
+ <div class="dsec"><h4>📈 이 호실 신고(실거래)</h4>${xs.length?xs.slice(0,8).map((y,i)=>`<div style="border-bottom:1px solid #e3e7ef;padding:5px 0;font-size:13.5px"><b>${esc(y['계약일'])}</b> ${esc(amt(y))} <span class="mut">${esc(y['신규/갱신']||'')} ${y['후보수']>1?'· 후보 '+y['후보수']:''}</span><br><span class="mut">${esc(y['계약기간']||'')} 만기 <b style="color:var(--navy)">${esc(y['만기']||'')}</b></span> ${y['거래']!=='매매'?`<button class="b s2-fill" data-i="${i}" style="float:right">보증·차임 채우기</button>`:''}</div>`).join(''):'<p class="mut">신고 없음</p>'}</div>
+ <div class="dsec"><h4>💬 상담일지</h4><div style="display:flex;gap:6px"><textarea id="s2-log" rows="2" style="flex:1" placeholder="한 줄 메모 (⌘+Enter)"></textarea><button class="b p" id="s2-logadd">추가</button></div>${(u.logs||[]).slice(0,4).map(l=>`<div style="border-left:3px solid #c9d1e0;padding:3px 8px;margin:5px 0;white-space:pre-wrap;font-size:13px"><span class="mut">${esc(String(l.at||'').slice(0,10))} ${esc(l.author||'')}</span><br>${esc(l.text)}</div>`).join('')}</div>`;
+ const save=async(k,v)=>{try{await api('/api/listings',{method:'POST',body:JSON.stringify({id:r.id,category:r.category,[k]:v})});ROWS=await api('/api/listings');renderList();toast('저장했습니다')}catch(e){alert('저장 실패: '+e.message)}};
+ el.querySelectorAll('[data-s2]').forEach(i=>i.onchange=()=>save(i.dataset.s2,i.value));
+ el.querySelectorAll('.s2-fill').forEach(b=>b.onclick=async()=>{const y=xs[+b.dataset.i];const dep=y['보증금(만)']||0,rent=y['거래']==='전세'?0:(y['월세(만)']||0);try{await api('/api/listings',{method:'POST',body:JSON.stringify({id:r.id,category:r.category,cur_deposit:dep,cur_rent:rent})});ROWS=await api('/api/listings');renderList();el.querySelector('[data-s2=cur_deposit]').value=dep;el.querySelector('[data-s2=cur_rent]').value=rent;toast('보증·차임을 채웠어요 (만기는 직접 확인)')}catch(e){alert('저장 실패: '+e.message)}});
+ const addL=async()=>{const t=$('#s2-log').value.trim();if(!t)return;await api('/api/log',{method:'POST',body:JSON.stringify({listing_id:r.id,text:t,author:localStorage.author||''})});toast('상담일지 추가');openSide(d,h)};$('#s2-logadd').onclick=addL;$('#s2-log').onkeydown=e=>{if(e.key==='Enter'&&e.metaKey)addL()}}
+function closeSide(){document.body.classList.remove('side2');SIDE=null}
+document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('a.hoj');if(a){e.preventDefault();openSide(a.dataset.d,a.dataset.h)}});
+new MutationObserver(()=>{if(!$('#drawer').classList.contains('on'))closeSide()}).observe($('#drawer'),{attributes:true,attributeFilter:['class']});
 let RTA=null,RTAK='';let RTAIDX=null;const candS=s=>String(s||'').split(', ').map(c=>c.replace(/^(\S+?)동\s*/,'$1-').replace(/호$/,'')).join(', ');
 function aptRtHtml(){if(!RTA){api('/api/rt_apt').then(d=>{RTA=d;RTAIDX=null;if(CUR&&CUR.category==='아파트')api('/api/unit?id='+CUR.id).then(renderSub)}).catch(()=>{});return '<h3>임대차·매매 신고</h3><p class="mut">불러오는 중…</p>'}
  const r=ROWS.find(x=>x.id===CUR.id)||CUR;const xs=aptRtAll(r);const amt=y=>y['거래']==='매매'?'매 '+won(y['매매가(만)']):y['거래']==='전세'?'전 '+won(y['보증금(만)']):'월 '+won(y['보증금(만)'])+' / '+(y['월세(만)']||0);
  const prev=y=>y['신규/갱신']==='갱신'&&y['종전보증금(만)']!==''&&y['종전보증금(만)']!=null?won(y['종전보증금(만)'])+(y['종전월세(만)']?' / '+y['종전월세(만)']:''):'';
- return `<h3>임대차·매매 신고 <span class="mut">(국토부 실거래 · 같은 층·같은 전용면적 호실이 여러 개면 '후보'로 표시)</span></h3>${xs.length?`<table><tr><th>계약일</th><th>거래</th><th>금액</th><th>계약기간</th><th>만기</th><th>신규/갱신</th><th>갱신요구권</th><th>종전 금액</th><th>층</th><th>전용㎡</th><th>후보</th></tr>${xs.map(y=>`<tr><td>${esc(y['계약일'])}</td><td>${esc(y['거래'])}</td><td>${esc(amt(y))}</td><td>${esc(y['계약기간']||'')}</td><td><b>${esc(y['만기']||'')}</b></td><td>${esc(y['신규/갱신']||'')}</td><td>${esc(y['갱신요구권']||'')}</td><td class="mut">${esc(prev(y))}</td><td>${y['층']??''}</td><td>${y['전용㎡']}</td><td class="mut" style="max-width:260px;white-space:normal">${y['후보수']>1?`${y['후보수']}호실 중 하나: ${esc(candS(y['예상호실']))}`:'이 호실'}</td></tr>`).join('')}</table>`:'<p class="mut">이 호실로 추정되는 신고가 없습니다</p>'}`}
+ return `<h3>임대차·매매 신고 <span class="mut">(국토부 실거래 · 같은 층·같은 전용면적 호실이 여러 개면 '후보'로 표시)</span></h3>${xs.length?`<table><tr><th>계약일</th><th>거래</th><th>금액</th><th>계약기간</th><th>만기</th><th>신규/갱신</th><th>갱신요구권</th><th>종전 금액</th><th>층</th><th>전용㎡</th><th>후보</th></tr>${xs.map(y=>`<tr><td>${esc(y['계약일'])}</td><td>${esc(y['거래'])}</td><td>${esc(amt(y))}</td><td>${esc(y['계약기간']||'')}</td><td><b>${esc(y['만기']||'')}</b></td><td>${esc(y['신규/갱신']||'')}</td><td>${esc(y['갱신요구권']||'')}</td><td class="mut">${esc(prev(y))}</td><td>${y['층']??''}</td><td>${y['전용㎡']}</td><td class="mut" style="max-width:260px;white-space:normal">${y['후보수']>1?`${y['후보수']}호실 중 하나: ${candLinks(y['예상호실'])}`:'이 호실'}</td></tr>`).join('')}</table>`:'<p class="mut">이 호실로 추정되는 신고가 없습니다</p>'}`}
 function leaseBucket(r){const t=leaseFor(r);if(!t||!t.mk)return '신고 없음';const n=new Date(),ym=k=>{const d=new Date(n.getFullYear(),n.getMonth()+k,1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`};
  if(t.mk<ym(0))return '지남';if(t.mk<=ym(3))return '3개월 안';if(t.mk<=ym(6))return '6개월 안';return '6개월 넘음'}
 const DIRS=['남','남동','남서','동','서','북','북동','서북'];let DIRDJ='';
