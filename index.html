@@ -42,6 +42,29 @@ h3{margin:18px 0 6px;font-size:14px}.sub table{font-size:12px}.sub td,.sub th{po
 .box p{margin:6px 0}code{background:#eef1f5;padding:1px 5px;border-radius:4px}
 #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#14213d;color:#fff;padding:8px 16px;border-radius:8px;display:none;z-index:20}
 .empty{padding:40px;text-align:center;color:var(--mut);background:#fff;border:1px dashed var(--line);border-radius:8px}
+
+/* 11/17 리얼맵 체험판 참고 디자인: 진한 네이비 헤더·금색 포인트·글씨 크기 조절 */
+:root{--navy:#14212E;--gold:#F2B705;--gold2:#e0a800;--acc:#1f5fd6}
+body{font-size:calc(13px*var(--fs,1))}
+header{background:var(--navy);padding:8px 18px;box-shadow:0 2px 8px #0003}
+header b{font-size:16px;letter-spacing:-.3px}
+nav#tabs{display:flex;gap:2px;background:#ffffff14;padding:3px;border-radius:10px}
+nav button{color:#cfd8e6;padding:6px 13px;border-radius:8px;font-weight:500}
+nav button:hover{background:#ffffff14}
+nav button.on{background:#fff;color:var(--navy);font-weight:800}
+.fsb{font:inherit;font-weight:800;font-size:13px;padding:4px 10px;border:0;border-radius:8px;background:#ffffff1f;color:#fff;cursor:pointer}.fsb:hover{background:#ffffff3a}
+button.p{background:var(--gold);border-color:var(--gold);color:var(--navy);font-weight:800}button.p:hover{background:var(--gold2)}
+.cat{border-radius:999px;font-weight:600}.cat.on{background:var(--navy);border-color:var(--navy);box-shadow:inset 0 -3px 0 var(--gold)}
+.chip.on{background:var(--navy);border-color:var(--navy)}
+th{background:#e9edf3;color:#2b3645}
+tbody tr:hover{background:#fff8dc}
+#drawer .hd{background:var(--navy);color:#fff}#drawer .hd .b{border-color:#ffffff40}
+#drawer .hd .b.p{background:var(--gold);color:var(--navy);border-color:var(--gold)}
+#promo{position:fixed;inset:0;background:#0007;z-index:30;display:flex;align-items:center;justify-content:center}
+#promo .box{background:#fff;border-radius:14px;width:min(720px,94%);max-height:90vh;overflow:auto;box-shadow:0 12px 40px #0006}
+#promo .ph{background:var(--navy);color:#fff;padding:14px 18px;border-radius:14px 14px 0 0;display:flex;align-items:center;gap:10px}#promo .ph b{flex:1;font-size:16px}
+#promo .pb{padding:14px 18px}#promo textarea{width:100%;min-height:210px;line-height:1.6;font-size:14px}
+#promo .pt{display:flex;gap:6px;margin-bottom:8px}#promo .pt button{flex:1}#promo .pt .on{background:var(--navy);color:#fff;border-color:var(--navy)}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.SB_URL="https://ctgaawyuwqihybxrdcgt.supabase.co";window.SB_ANON="sb_publishable_g-3Lbb_ygZL5gTvDvU06OA_HoWDzGaE";window.META={"fields": [["title", "가능여부", "text"], ["danji", "단지", "select"], ["dong", "동", "text"], ["ho", "호", "text"], ["typ", "타입", "text"], ["pyeong", "평형(전용)", "num"], ["direction", "방향", "multi"], ["deal", "거래유형", "multi"], ["sale", "매매가", "num"], ["jeonse", "전세가", "num"], ["deposit", "보증금", "num"], ["rent", "월세", "num"], ["cur_deposit", "보증(현)", "num"], ["cur_rent", "차임(현)", "num"], ["manki", "만기(년)", "date"], ["status", "현상태", "multi"], ["usage", "용도", "multi"], ["ad", "광고", "multi"], ["ad_type", "광고타입", "multi"], ["consult", "상담", "select"], ["owner", "임대인", "text"], ["owner_tel", "임대인연락처", "text"], ["tenant", "임차인", "text"], ["tenant_tel", "임차인연락처", "text"], ["owner_units", "임대인소유물건", "text"], ["coagent", "공동중개부동산", "text"], ["co_office", "공동중개부동산(사무소)", "text"], ["memo", "비고", "text"]], "options": {"danji": ["래미안", "써밋", "호반", "DK", "시티파크", "파크타워", "아스테리움", "에테르나인용산", "트럼프", "한강대우디오빌", "기타"], "deal": ["매매", "급매", "임대전세", "임대월세", "반전세", "단기", "예정", "지분매매", "분양가", "매매완료"], "direction": ["동", "서", "남", "북", "남동", "남서", "북동", "서북"], "status": ["공실", "입주", "전세완", "월세완", "반전세", "단기", "계약완", "매매완"], "usage": ["주거", "겸용", "일반사업자", "간이사업자", "법인사업자", "일반임대사업자", "주택임대사업자", "사업자", "사업자X/전입X", "확인필요"], "ad": ["뱅크", "네이버", "당근", "블로그", "공동", "대기", "공동부동산확인중", "광고가능- 등록하기", "공동부거절", "임대인요청으로 광고X"], "consult": ["시작 전", "진행 중", "완료"], "ad_type": ["신홍보", "전자홍보", "V2", "VR홍보"]}, "danji_naver": {"래미안": ["래미안용산더센트럴"], "써밋": ["용산푸르지오써밋"], "호반": ["용산호반써밋에이디션"], "DK": ["DK밸리뷰용산"], "시티파크": ["용산시티파크1단지", "용산시티파크2단지"], "파크타워": ["파크타워"], "아스테리움": ["아스테리움용산"], "에테르나인용산": ["에테르나인용산"]}};</script>
 <script>// 클라우드(Supabase) 버전 백엔드: 로컬 server.py 의 /api/* 를 브라우저에서 그대로 흉내낸다.
@@ -347,7 +370,7 @@ async function api(u, o = {}) {
 <style>#tabs button[data-t=io],#tg{display:none}</style></head><body>
 <header><b>🏡 제이부동산 매물장</b><nav id="tabs">
 <button data-t="sise">💹 시세</button><button data-t="list" class="on">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 상담일지</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
-<span class="sp"></span><small id="info"></small><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
+<span class="sp"></span><small id="info"></small><button class="fsb" id="fs-" title="글씨 작게">가−</button><button class="fsb" id="fs+" title="글씨 크게">가+</button><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
 <main>
 <section id="t-list">
  <div class="bar" id="catbar"></div>
@@ -386,7 +409,7 @@ async function api(u, o = {}) {
   <p class="mut">비밀 링크를 한 번 열면 그 기기는 180일 동안 기억됩니다. 링크는 텔레그램으로만 받고 다른 사람에게 보내지 마세요.</p></div>
 </section>
 </main>
-<div id="drawer"><div class="hd"><b id="d-title"></b><button class="b" id="d-copy">복사해서 새로 작성</button><button class="b" id="d-cp" title="손님 페이지에 넣을 매물로 담아 둡니다">손님 페이지에 담기</button><button class="b d" id="d-del">삭제</button><button class="b p" id="d-save">저장</button><button class="b" id="d-close">닫기(자동 저장)</button></div><div class="bd" id="d-body"></div></div>
+<div id="drawer"><div class="hd"><b id="d-title"></b><button class="b" id="d-promo" title="이 매물의 홍보글(네이버·블로그·카톡)을 만들어 줍니다">✨ 홍보글</button><button class="b" id="d-copy">복사해서 새로 작성</button><button class="b" id="d-cp" title="손님 페이지에 넣을 매물로 담아 둡니다">손님 페이지에 담기</button><button class="b d" id="d-del">삭제</button><button class="b p" id="d-save">저장</button><button class="b" id="d-close">닫기(자동 저장)</button></div><div class="bd" id="d-body"></div></div>
 <div id="toast"></div>
 <div id="gate" style="position:fixed;inset:0;background:#f6f7f9;z-index:50;display:flex;align-items:center;justify-content:center">
  <div class="box" style="text-align:center"><h3>🏡 제이부동산 매물장</h3><p id="gate-msg" class="mut">접속 확인 중…</p></div></div>
@@ -549,6 +572,34 @@ const cpCond=x=>[['입주일','move_in'],['거래','want_deal'],['보증금','wa
 const cpGet=()=>{try{return JSON.parse(localStorage.cpBasket||'[]')}catch(e){return []}},cpSet=a=>{try{localStorage.cpBasket=JSON.stringify(a)}catch(e){}};
 function cpBtn(){const b=$('#d-cp');if(!b||!CUR||!CUR.id)return;const on=cpGet().includes(CUR.id);b.textContent=on?'✓ 손님 페이지에 담김 (빼기)':'손님 페이지에 담기';const n=cpGet().length;$('#cp-open').textContent=`👤 손님 페이지${n?` (${n})`:''}`}
 $('#d-cp').onclick=()=>cpPick();
+// ---- 11/17 글씨 크기 + ✨ 홍보글 만들기(템플릿, 외부 전송 없음) ----
+(function(){const set=v=>{v=Math.max(.85,Math.min(1.5,v));document.documentElement.style.setProperty('--fs',v);document.querySelector('main').style.zoom=v;try{localStorage.fs=v}catch(e){}};
+ let v=1;try{v=parseFloat(localStorage.fs)||1}catch(e){}set(v);
+ document.getElementById('fs-').onclick=()=>{v=Math.round((v-.1)*100)/100;set(v)};document.getElementById('fs+').onclick=()=>{v=Math.round((v+.1)*100)/100;set(v)}})();
+function promoTexts(r,extra){
+ const ho=String(r.ho||'').replace(/\D/g,''),fl=ho.length>=3?parseInt(ho.slice(0,ho.length-2)):null,flTxt=fl?(fl>=20?'고층':fl>=10?'중층':'저층'):'';
+ const kd=kinds(r.deal),price=askPrice(r)||'가격 협의';
+ const kind=kd.length?kd.join('·'):'임대';
+ const pyTxt=r.pyeong?`${r.pyeong}평`:'',typ=r.typ?`${r.typ}타입`:'',dir=r.direction?`${r.direction}향`:'';
+ const spec=[typ,pyTxt,dir,fl?`${fl}층${flTxt?'('+flTxt+')':''}`:''].filter(Boolean).join(' · ');
+ const loc=`${r.danji||''}${r.dong?' '+r.dong:''}`.trim(),cat=r.category||'';
+ const ex=extra?extra.trim():'';
+ const nv=`[${loc}] ${kind} ${price} ${spec}`.replace(/\s+/g,' ');
+ const naver=`${nv}\n\n▶ 위치: 용산 ${loc} ${cat}\n▶ 거래: ${kind} ${price}\n▶ 구조: ${spec}\n${r.usage?'▶ 용도: '+r.usage+'\n':''}${ex?'▶ 특징: '+ex+'\n':''}\n깔끔하게 관리된 매물입니다. 방문·현장 확인은 사전 연락 주시면 바로 안내드립니다.\n\n용산호반제이공인중개사`;
+ const blog=`${loc} ${kind} 소개 | ${spec}\n\n안녕하세요, 용산호반제이공인중개사입니다.\n오늘은 ${loc}의 ${kind} 매물을 소개해 드려요.\n\n📍 ${loc} ${cat}\n💰 ${kind} ${price}\n🏠 ${spec}\n${r.usage?'🧾 용도 '+r.usage+'\n':''}${ex?'✨ '+ex+'\n':''}\n용산역·신용산 생활권에서 조건 맞는 집을 찾고 계셨다면 이 매물을 눈여겨보세요.\n자세한 사진과 현장 안내는 편하게 문의 주세요.\n\n#용산${cat||'부동산'} #${(r.danji||'').replace(/\s/g,'')} #${kind.replace(/·/g,'')} #용산호반제이공인중개사`;
+ const kakao=`📢 ${loc} ${kind}\n\n· ${price}\n· ${spec}\n${r.usage?'· 용도 '+r.usage+'\n':''}${ex?'· '+ex+'\n':''}\n보시고 싶으시면 말씀 주세요 😊\n용산호반제이공인중개사`;
+ return {naver,blog,kakao}}
+function promoOpen(){if(!CUR||!CUR.id)return;const r=CUR;let tab='naver',extra='';
+ document.getElementById('promo')?.remove();const el=document.createElement('div');el.id='promo';
+ el.innerHTML=`<div class="box"><div class="ph"><b>✨ 홍보글 — ${esc(cpUnit(r))}</b><button class="b" id="pm-x">닫기</button></div><div class="pb"><div class="pt"><button class="b on" data-t="naver">네이버 광고</button><button class="b" data-t="blog">블로그</button><button class="b" data-t="kakao">카톡·문자</button></div><label class="mut" style="display:block;margin-bottom:6px">특징 한 줄 추가 (선택) <input id="pm-ex" style="width:70%" placeholder="예: 한강 조망, 풀옵션, 즉시 입주"></label><textarea id="pm-t"></textarea><div style="margin-top:10px;display:flex;gap:8px;align-items:center"><button class="b p" id="pm-c">복사하기</button><span class="mut" style="font-size:12px">임대인 이름·연락처·메모는 넣지 않았어요. 올리기 전에 한 번 읽어보세요.</span></div></div></div>`;
+ document.body.appendChild(el);const ta=el.querySelector('#pm-t');
+ const draw=()=>{ta.value=promoTexts(r,extra)[tab];el.querySelectorAll('.pt button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab))};
+ el.querySelectorAll('.pt button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;draw()});
+ el.querySelector('#pm-ex').oninput=e=>{extra=e.target.value;draw()};
+ el.querySelector('#pm-x').onclick=()=>el.remove();el.onclick=e=>{if(e.target===el)el.remove()};
+ el.querySelector('#pm-c').onclick=async()=>{try{await navigator.clipboard.writeText(ta.value)}catch(e){ta.select();document.execCommand('copy')}toast('복사했어요')};draw()}
+$('#d-promo').onclick=promoOpen;
+
 function cpToggleNew(){let a=cpGet();a=a.includes(CUR.id)?a.filter(x=>x!==CUR.id):[...a,CUR.id];cpSet(a);cpBtn();toast(a.includes(CUR.id)?'손님 페이지에 담았어요':'뺐어요');if(CSB&&window.__csDrawB){const on=a.includes(CUR.id);CSB=on?(CSB.includes(CUR.id)?CSB:[...CSB,CUR.id]):CSB.filter(x=>x!==CUR.id);window.__csDrawB()}}
 // [손님 페이지에 담기] → 어떤 손님 페이지에 담을지 고르기 (상담일지 손님 목록 · 최근순 · 검색) / '새 상담으로 담기'
 async function cpPick(){if(!CUR||!CUR.id)return;const lid=CUR.id,unitTxt=cpUnit(CUR);let P=[];
@@ -758,7 +809,7 @@ $('#dir-open').onclick=()=>{const P=$('#dirpanel');P.hidden=!P.hidden;if(!P.hidd
 // ---------- 상세/편집 ----------
 const WIDE={owner_tel:'w3',tenant_tel:'w3',ad_type:'w2',memo:'w4',owner_units:'w2',deal:'w2',ad:'w4',usage:'w2',status:'w2',direction:'w2',title:'w2',coagent:'w2'};
 async function openDrawer(id,tpl){if(FORM0!==null&&$('#drawer').classList.contains('on')&&JSON.stringify(collectForm())!==FORM0){try{await saveForm(false)}catch(e){}}CUR=id?{...ROWS.find(r=>r.id===id)}:(tpl?{...tpl}:{danji:'',deal:'',category:CAT});
- $('#d-title').textContent=id?`${CUR.danji||''} ${CUR.dong||''} ${CUR.ho||''}`:(tpl?'새 매물 (복사본 — 호수 등을 고치고 저장하세요)':'새 매물');$('#d-del').hidden=!id;$('#d-copy').hidden=!id;$('#d-cp').hidden=!id;cpBtn();
+ $('#d-title').textContent=id?`${CUR.danji||''} ${CUR.dong||''} ${CUR.ho||''}`:(tpl?'새 매물 (복사본 — 호수 등을 고치고 저장하세요)':'새 매물');$('#d-del').hidden=!id;$('#d-copy').hidden=!id;$('#d-cp').hidden=!id;$('#d-promo').hidden=!id;cpBtn();
  const fm=Object.fromEntries(META.fields.map(f=>[f[0],f]));const cat=CUR.category||CAT;
  derive(CUR);const avNow=CUR._avail&&CUR._avail!=='표시없음'?CUR._avail:'';const E=CUR.extra||{};
  const hide=k=>k==='usage'&&['아파트','상가','오피스'].includes(cat);  // 용도는 아파트·상가·오피스에선 안 씀(값은 보존)
