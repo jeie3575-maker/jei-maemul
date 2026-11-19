@@ -533,7 +533,7 @@ async function api(u, o = {}) {
 </script>
 <style>#tabs button[data-t=io],#tg{display:none}</style></head><body>
 <header><b>🏡 제이부동산 매물장</b><nav id="tabs">
-<button data-t="sise">💹 시세</button><button data-t="list" class="on">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 상담일지</button><button data-t="brief">📰 정책·뉴스</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
+<button data-t="sise">💹 시세</button><button data-t="list" class="on">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 상담일지</button><button data-t="work">🕘 내 근무</button><button data-t="brief">📰 정책·뉴스</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
 <span class="sp"></span><small id="info"></small><button class="fsb" id="fs-" title="글씨 작게">가−</button><button class="fsb" id="fs+" title="글씨 크게">가+</button><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
 <main>
 <section id="t-list">
@@ -556,6 +556,7 @@ async function api(u, o = {}) {
 </section>
 <div id="t-co" hidden><input type="checkbox" id="co-empty" hidden><div id="co"></div></div>
 <section id="t-brief" hidden></section>
+<section id="t-work" hidden></section>
 <section id="t-recon" hidden><div class="bar"><span id="recon-info" class="mut"></span><button class="b" id="recon-reload">새로고침</button></div>
  <div class="bar" id="recon-catbar" style="margin-bottom:8px"></div><div class="chips" id="recon-danji" style="margin-bottom:8px"></div><div class="chips" id="recon-kind" style="margin-bottom:8px"></div><div class="chips" id="recon-cats" style="margin-bottom:10px"></div><div id="recon"></div></section>
 <section id="t-cs" hidden><div id="cspanel"></div></section>
@@ -1146,7 +1147,7 @@ function homeGuide(){simpleModal('📱 폰 홈 화면에 추가',`<p>앱 설치�
  const B=t=>nav.querySelector(`button[data-t="${t}"]`),cloud=!!window.SB_URL;
  const G=[{n:'매물관리',items:[['call','📞 전화 목록'],['recon','네이버 광고 대조'],['manki','만기 알림']]},{n:'정보실',items:[['brief','📰 정책·뉴스'],['@dir','🧭 라인별 방향표'],['sise','💹 시세'],['io','백업']]},{n:'⚙ 설정',items:[['@man','📖 매물장 사용설명서'],['@rc','🔧 광고 대조 확인 설정'],['@qr','🔳 홈페이지 QR'],['@home','📱 폰 홈 화면에 추가']]}];
  const grp=new Set();G.forEach(g=>g.items.forEach(([t])=>{if(!t.startsWith('@')){grp.add(t);const b=B(t);if(b)b.dataset.g='1'}}));
- [B('list'),B('cs')].forEach(b=>b&&nav.appendChild(b));
+ [B('list'),B('cs'),B('work')].forEach(b=>b&&nav.appendChild(b));
  const dirb=document.getElementById('dir-open');if(dirb)dirb.style.display='none';
  let menu=null;const closeMenu=()=>{menu&&menu.remove();menu=null};
  const go=t=>{closeMenu();if(t==='@man')return manualOpen();if(t==='@rc')return rcSettings();if(t==='@qr')return qrOpen();if(t==='@home')return homeGuide();if(t==='@dir'){B('list').click();setTimeout(()=>{const P=document.getElementById('dirpanel');if(P&&P.hidden)document.getElementById('dir-open').click()},30);return}B(t)?.click()};
@@ -1872,6 +1873,67 @@ $('#refresh').onclick=async()=>{const b=$('#refresh');if(b.disabled)return;b.dis
   $('#info').textContent=`매물 ${ROWS.length.toLocaleString()}건 · ${new Date().toTimeString().slice(0,5)} 새로고침`;
   const t=document.querySelector('#tabs button.on')?.dataset.t;RTA=null;RTAIDX=null;({recon:loadRecon,manki:renderManki,list:renderList,co:renderCo,rta:renderRta,call:renderCall})[t]?.();toast('최신 내용으로 새로고침했습니다')}
  catch(err){alert('새로고침 실패: '+err.message)}finally{b.disabled=false;b.textContent='🔄 새로고침'}};
+// ---- 11/19 근무관리·업무일지 (클라우드 전용) ----
+(function(){if(!window.SB_URL||typeof sb==='undefined'){document.querySelector('#tabs [data-t="work"]')?.remove();return}
+ const T=document.getElementById('t-work');if(!T)return;
+ const KST='Asia/Seoul',ymd=d=>new Date(d).toLocaleDateString('sv-SE',{timeZone:KST}),hm=t=>t?new Date(t).toLocaleTimeString('ko-KR',{timeZone:KST,hour:'2-digit',minute:'2-digit',hour12:false}):'',
+  tm=(v,d)=>v?new Date(d+'T'+v+':00+09:00').toISOString():null,
+  YO='일월화수목금토',dow=d=>YO[new Date(d+'T12:00:00+09:00').getDay()],E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ const NM={'jeie3575+daepyo@gmail.com':'대표','jeie3575@gmail.com':'실장'};
+ let ME='',BOSS=false,WHO='',MON=ymd(Date.now()).slice(0,7),SEL=ymd(Date.now()),DAYS={},LOGS={},PEND=[],tick=null;
+ const mins=(r)=>r&&r.clock_in&&r.clock_out?Math.max(0,Math.round((new Date(r.clock_out)-new Date(r.clock_in))/60000)-(r.break_min||0)):null,
+  fh=m=>m==null?'':Math.floor(m/60)+'h'+String(m%60).padStart(2,'0')+'m';
+ async function loadMon(){const [y,m]=MON.split('-').map(Number),a=MON+'-01',b=ymd(new Date(Date.UTC(y,m,1)));
+  const [d,l]=await Promise.all([sb.from('work_days').select('*').eq('email',WHO).gte('work_date',a).lt('work_date',b),sb.from('work_logs').select('*').eq('email',WHO).gte('work_date',a).lt('work_date',b)]);
+  if(d.error)throw new Error(d.error.message);DAYS={};LOGS={};(d.data||[]).forEach(r=>DAYS[r.work_date]=r);(l.data||[]).forEach(r=>LOGS[r.work_date]=r);
+  if(BOSS){const p=await sb.from('work_logs').select('email,work_date,status').eq('status','상신').order('work_date');PEND=p.data||[]}}
+ async function draw(){const u=(await sb.auth.getUser()).data.user;ME=(u.email||'').toLowerCase();BOSS=ME==='jeie3575+daepyo@gmail.com';if(!WHO)WHO=ME;
+  try{await loadMon()}catch(e){T.innerHTML='<p class="mut">불러오기 실패: '+E(e.message)+'<br>(work.sql 을 아직 실행하지 않았다면 먼저 실행해야 해요)</p>';return}
+  const today=ymd(Date.now()),td=DAYS[today]||{},mine=WHO===ME,[y,m]=MON.split('-').map(Number),last=new Date(y,m,0).getDate();
+  let rows='',tot=0,n=0;for(let i=1;i<=last;i++){const d=MON+'-'+String(i).padStart(2,'0'),r=DAYS[d],l=LOGS[d],mm=mins(r),wk=new Date(d+'T12:00:00+09:00').getDay();if(mm!=null){tot+=mm;n++}
+   const st=l?`<span class="wst wst-${l.status}">${l.status}</span>`:(r&&r.kind==='근무'&&r.clock_in&&d<today?'<span class="mut">일지 없음</span>':'');
+   rows+=`<tr data-d="${d}" class="${d===SEL?'wsel':''}${wk===0?' wsun':''}"><td>${i}일 (${YO[wk]})</td><td>${r?.kind==='휴무'?'<span class="mut">휴무</span>':hm(r?.clock_in)}${r?.edited?' <span title="시각을 직접 고침" style="color:#e8590c">✎</span>':''}</td><td>${r?.kind==='휴무'?'':hm(r?.clock_out)}</td><td>${fh(mm)}</td><td>${st}</td></tr>`}
+  const sel=DAYS[SEL]||{},sl=LOGS[SEL],lock=sl&&sl.status==='승인'||(sl&&sl.status==='상신'&&mine);
+  const pend=BOSS&&PEND.length?`<div class="box" style="margin-bottom:10px;border-color:#e8590c"><b>🔔 승인 대기 ${PEND.length}건</b> ${PEND.map(p=>`<button class="b" data-go="${p.email}|${p.work_date}">${NM[p.email]||p.email} ${p.work_date.slice(5)}</button>`).join(' ')}</div>`:'';
+  T.innerHTML=`<style>#t-work .wst{padding:1px 7px;border-radius:9px;font-size:12px;background:#eee}#t-work .wst-상신{background:#fff3bf}#t-work .wst-승인{background:#d3f9d8}#t-work .wst-반려{background:#ffe3e3}#t-work tr.wsel{background:#fff7e6}#t-work tr.wsun td:first-child{color:#e03131}#t-work tbody tr,#t-work table tr[data-d]{cursor:pointer}#t-work .wg{display:grid;grid-template-columns:minmax(300px,420px) 1fr;gap:14px;align-items:start}@media(max-width:800px){#t-work .wg{grid-template-columns:1fr}}#t-work textarea{width:100%;min-height:220px;font:inherit;padding:8px;box-sizing:border-box}</style>
+  ${pend}<div class="box" style="margin-bottom:10px"><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><b style="font-size:16px">${today.slice(5).replace('-','/')} (${dow(today)}) ${NM[ME]||''}</b>
+   <span>출근 <b>${hm(td.clock_in)||'-'}</b></span><span>퇴근 <b>${hm(td.clock_out)||'-'}</b></span><span id="w-el" class="mut"></span>
+   <button class="b p" id="w-in" ${td.clock_in?'disabled':''}>출근하기</button><button class="b p" id="w-out" ${!td.clock_in?'disabled':''}>퇴근하기</button></div>
+   <div class="mut" style="font-size:12px;margin-top:4px">앱 기록은 참고용이에요. 공식 출퇴근은 하이웍스에도 꼭 찍어 주세요. (퇴근을 다시 누르면 마지막 시각으로 바뀌어요)</div></div>
+  <div class="bar" style="gap:8px;margin-bottom:8px"><button class="b" id="w-pm">◀</button><b>${y}년 ${m}월</b><button class="b" id="w-nm">▶</button>
+   ${BOSS?`<select id="w-who">${Object.entries(NM).map(([e,n])=>`<option value="${e}" ${e===WHO?'selected':''}>${n}</option>`).join('')}</select>`:''}<span class="mut">출근 ${n}일 · 실근무 합계 <b>${fh(tot)||'0h00m'}</b> (휴게 제외)</span></div>
+  <div class="wg"><div><table style="width:100%"><tr><th>날짜</th><th>출근</th><th>퇴근</th><th>실근무</th><th>일지</th></tr>${rows}</table></div>
+  <div class="box"><b>${SEL.slice(5).replace('-','/')} (${dow(SEL)}) ${NM[WHO]||''} ${sl?`<span class="wst wst-${sl.status}">${sl.status}</span>`:''}</b>
+   ${sl&&sl.status==='반려'&&sl.reject_reason?`<div style="color:#e03131;margin:4px 0">반려 사유: ${E(sl.reject_reason)}</div>`:''}
+   <div style="margin:8px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><label>구분 <select id="w-kind" ${mine?'':'disabled'}><option ${sel.kind!=='휴무'?'selected':''}>근무</option><option ${sel.kind==='휴무'?'selected':''}>휴무</option></select></label>
+   <label>출근 <input type="time" id="w-ci" value="${hm(sel.clock_in)}" ${mine?'':'disabled'}></label><label>퇴근 <input type="time" id="w-co" value="${hm(sel.clock_out)}" ${mine?'':'disabled'}></label>
+   <label>휴게 <input type="number" id="w-br" value="${sel.break_min??60}" style="width:60px" ${mine?'':'disabled'}>분</label>${mine?'<button class="b" id="w-sd">시간 저장</button>':''}</div>
+   <textarea id="w-body" placeholder="오늘 한 일을 적어요. 예)\n- 현장 안내 2건 (신용산 ○○오피스텔)\n- 매물 사진·자료 정리, 전화 응대\n(중개보조원 업무: 현장안내·일반서무·단순 보조만. 광고등록·계약서 작성·잔금 처리는 쓰지 않아요)" ${mine&&!lock?'':'readonly'}>${E(sl?.body||'')}</textarea>
+   <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">${mine&&!lock?`<button class="b" id="w-draft">임시저장</button><button class="b p" id="w-sub">상신</button><button class="b" id="w-fill">내 활동 불러오기</button>`:''}
+   ${BOSS&&!mine&&sl&&sl.status==='상신'?`<button class="b p" id="w-ok">승인</button><button class="b" id="w-no">반려</button>`:''}${mine&&sl&&sl.status==='상신'?`<button class="b" id="w-back">상신 취소</button>`:''}</div></div></div>`;
+  const $=s=>T.querySelector(s),go=async f=>{try{await f();await draw()}catch(e){alert('실패: '+e.message)}};
+  $('#w-in').onclick=()=>go(async()=>{const r=await sb.rpc('work_clock',{p_what:'in'});if(r.error)throw r.error;WHO=ME;toast&&toast('출근 기록했어요 — 하이웍스도 찍어 주세요')});
+  $('#w-out').onclick=()=>go(async()=>{const r=await sb.rpc('work_clock',{p_what:'out'});if(r.error)throw r.error;toast&&toast('퇴근 기록했어요 — 하이웍스도 찍어 주세요')});
+  $('#w-pm').onclick=()=>{const d=new Date(y,m-2,1);MON=ymd(d).slice(0,7);SEL=MON+'-01';draw()};$('#w-nm').onclick=()=>{const d=new Date(y,m,1);MON=ymd(d).slice(0,7);SEL=MON+'-01';draw()};
+  $('#w-who')?.addEventListener('change',e=>{WHO=e.target.value;draw()});
+  T.querySelectorAll('tr[data-d]').forEach(tr=>tr.onclick=()=>{SEL=tr.dataset.d;draw()});
+  T.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{const [e,d]=b.dataset.go.split('|');WHO=e;SEL=d;MON=d.slice(0,7);draw()});
+  const saveLog=st=>go(async()=>{const body=$('#w-body').value.trim();if(st==='상신'&&body.length<5)throw new Error('내용을 적어 주세요');
+   const row={email:ME,work_date:SEL,body,status:st};const r=sl?await sb.from('work_logs').update({body,status:st}).eq('id',sl.id):await sb.from('work_logs').insert(row);if(r.error)throw r.error;toast&&toast(st==='상신'?'상신했어요 (대표 승인 대기)':'임시저장했어요')});
+  $('#w-draft')&&($('#w-draft').onclick=()=>saveLog('임시저장'));$('#w-sub')&&($('#w-sub').onclick=()=>saveLog('상신'));
+  $('#w-back')&&($('#w-back').onclick=()=>go(async()=>{const r=await sb.from('work_logs').update({status:'임시저장'}).eq('id',sl.id);if(r.error)throw r.error}));
+  $('#w-ok')&&($('#w-ok').onclick=()=>go(async()=>{const r=await sb.from('work_logs').update({status:'승인'}).eq('id',sl.id);if(r.error)throw r.error;toast&&toast('승인했어요')}));
+  $('#w-no')&&($('#w-no').onclick=()=>{const why=prompt('반려 사유');if(why===null)return;go(async()=>{const r=await sb.from('work_logs').update({status:'반려',reject_reason:why||'수정 필요'}).eq('id',sl.id);if(r.error)throw r.error})});
+  $('#w-sd')&&($('#w-sd').onclick=()=>go(async()=>{const kind=$('#w-kind').value,ci=$('#w-ci').value,co=$('#w-co').value,br=+$('#w-br').value||0;
+   if(ci&&co&&co<=ci)throw new Error('퇴근이 출근보다 빨라요');const v={kind,clock_in:kind==='휴무'?null:tm(ci,SEL),clock_out:kind==='휴무'?null:tm(co,SEL),break_min:br};
+   const r=sel.id?await sb.from('work_days').update(v).eq('id',sel.id):await sb.from('work_days').insert({email:ME,work_date:SEL,...v});if(r.error)throw r.error;toast&&toast('저장했어요')}));
+  $('#w-fill')&&($('#w-fill').onclick=async()=>{try{const a=SEL+'T00:00:00+09:00',b=new Date(new Date(a).getTime()+864e5).toISOString(),au=localStorage.author||NM[ME]||'';
+    const [c,l]=await Promise.all([sb.from('consult_logs').select('at,text,kind,client_name').eq('by',ME).gte('at',a).lt('at',b).not('kind','in','(check,deal,stage,staff,cat,view,page)'),sb.from('logs').select('at,text,listing_id').eq('author',au).gte('at',a).lt('at',b)]);
+    const L=[...(c.data||[]).map(x=>'- 상담 기록'+(x.client_name?' ('+x.client_name+')':'')),...(l.data||[]).map(x=>{const r=ROWS.find(r=>r.id===x.listing_id);return '- 매물 응대'+(r?' ('+[r.danji,r.dong,r.ho].filter(Boolean).join(' ')+')':'')})];
+    const ta=$('#w-body');ta.value=(ta.value?ta.value+'\n':'')+(L.length?L.join('\n'):'(앱에 남은 활동이 없어요)')+'\n⚠ 위는 참고용이에요. 중개보조원 업무(현장안내·일반서무·단순 보조)만 남기고 고쳐 주세요.'}catch(e){alert(e.message)}});
+  clearInterval(tick);const el=$('#w-el');if(el&&td.clock_in&&!td.clock_out){const up=()=>{const m=Math.round((Date.now()-new Date(td.clock_in))/60000);el.textContent='경과 '+Math.floor(m/60)+'h'+String(m%60).padStart(2,'0')+'m'};up();tick=setInterval(()=>{if(T.hidden)clearInterval(tick);else up()},30000)}}
+ document.querySelector('#tabs [data-t="work"]')?.addEventListener('click',()=>{WHO='';draw()});
+})();
 async function boot(){const g=$('#gate'),m=$('#gate-msg');
  const k=new URLSearchParams(location.hash.slice(1)).get('k')||new URLSearchParams(location.search).get('k');
  if(k){try{const [e,pw]=atob(k.replace(/-/g,'+').replace(/_/g,'/')).split('\n');const {error}=await sb.auth.signInWithPassword({email:e,password:pw});
