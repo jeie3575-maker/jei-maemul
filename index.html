@@ -1147,7 +1147,7 @@ function homeGuide(){simpleModal('📱 폰 홈 화면에 추가',`<p>앱 설치�
  const B=t=>nav.querySelector(`button[data-t="${t}"]`),cloud=!!window.SB_URL;
  const G=[{n:'매물관리',items:[['call','📞 전화 목록'],['recon','네이버 광고 대조'],['manki','만기 알림']]},{n:'정보실',items:[['brief','📰 정책·뉴스'],['@dir','🧭 라인별 방향표'],['sise','💹 시세'],['io','백업']]},{n:'⚙ 설정',items:[['@man','📖 매물장 사용설명서'],['@rc','🔧 광고 대조 확인 설정'],['@qr','🔳 홈페이지 QR'],['@home','📱 폰 홈 화면에 추가']]}];
  const grp=new Set();G.forEach(g=>g.items.forEach(([t])=>{if(!t.startsWith('@')){grp.add(t);const b=B(t);if(b)b.dataset.g='1'}}));
- [B('list'),B('cs'),B('work')].forEach(b=>b&&nav.appendChild(b));
+ [B('list'),B('cs')].forEach(b=>b&&nav.appendChild(b));
  const dirb=document.getElementById('dir-open');if(dirb)dirb.style.display='none';
  let menu=null;const closeMenu=()=>{menu&&menu.remove();menu=null};
  const go=t=>{closeMenu();if(t==='@man')return manualOpen();if(t==='@rc')return rcSettings();if(t==='@qr')return qrOpen();if(t==='@home')return homeGuide();if(t==='@dir'){B('list').click();setTimeout(()=>{const P=document.getElementById('dirpanel');if(P&&P.hidden)document.getElementById('dir-open').click()},30);return}B(t)?.click()};
@@ -1159,6 +1159,7 @@ function homeGuide(){simpleModal('📱 폰 홈 화면에 추가',`<p>앱 설치�
    const r=b.getBoundingClientRect();menu.style.top=(r.bottom+6)+'px';if(innerWidth<=760){menu.style.left='10px';menu.style.right='10px'}else{menu.style.left=Math.max(8,Math.min(r.left,innerWidth-menu.offsetWidth-8))+'px'}};
   return b};
  const gb=G.map(mk);
+ {const wb=B('work');if(wb)nav.appendChild(wb)}
  const sync=()=>{const cur=nav.querySelector('button[data-t].on')?.dataset.t;G.forEach((g,i)=>gb[i].classList.toggle('on',g.items.some(([t])=>t===cur)))};
  nav.querySelectorAll('button[data-t]').forEach(b=>b.addEventListener('click',()=>setTimeout(sync,0)));
  document.addEventListener('click',e=>{if(menu&&!menu.contains(e.target))closeMenu()});addEventListener('resize',closeMenu);
