@@ -1880,7 +1880,7 @@ $('#refresh').onclick=async()=>{const b=$('#refresh');if(b.disabled)return;b.dis
  const KST='Asia/Seoul',ymd=d=>new Date(d).toLocaleDateString('sv-SE',{timeZone:KST}),hm=t=>t?new Date(t).toLocaleTimeString('ko-KR',{timeZone:KST,hour:'2-digit',minute:'2-digit',hour12:false}):'',
   tm=(v,d)=>v?new Date(d+'T'+v+':00+09:00').toISOString():null,
   YO='일월화수목금토',dow=d=>YO[new Date(d+'T12:00:00+09:00').getDay()],E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
- const NM={'jeie3575+daepyo@gmail.com':'대표','jeie3575@gmail.com':'실장'};
+ const NM={'jeie3575+daepyo@gmail.com':'대표','jeie3575@gmail.com':'박윤진 실장'};
  let ME='',BOSS=false,WHO='',MON=ymd(Date.now()).slice(0,7),SEL=ymd(Date.now()),DAYS={},LOGS={},PEND=[],tick=null;
  const mins=(r)=>r&&r.clock_in&&r.clock_out?Math.max(0,Math.round((new Date(r.clock_out)-new Date(r.clock_in))/60000)-(r.break_min||0)):null,
   fh=m=>m==null?'':Math.floor(m/60)+'h'+String(m%60).padStart(2,'0')+'m';
