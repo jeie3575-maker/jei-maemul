@@ -1531,14 +1531,14 @@ async function openDrawer(id,tpl){if(FORM0!==null&&$('#drawer').classList.contai
   const lab=k=>{const e=$('#d-body').querySelector('[data-k="'+k+'"]');return e?e.closest('label'):null};
   const chips=t=>[...dm.querySelectorAll('.chip')].filter(c=>MAP[t].includes(c.textContent));
   const val=k=>{const e=$('#d-body').querySelector('[data-k="'+k+'"]');return e?e.value:''};
-  const isOn=t=>chips(t).some(c=>c.classList.contains('on'))||FLD[t].some(k=>val(k)!=='');
+  const OFF=new Set();const isOn=t=>chips(t).some(c=>c.classList.contains('on'))||(!OFF.has(t)&&FLD[t].some(k=>val(k)!==''));
   box.className='dptabs';
   const draw=()=>{box.innerHTML=['매매','전세','월세'].map(t=>`<button type="button" class="dpt ${isOn(t)?'on':''}" data-t="${t}">${t}</button>`).join('')+`<span class="dpsum" id="dp-sum"></span>`;
    for(const t of Object.keys(FLD))for(const k of FLD[t]){const l=lab(k);if(l){l.classList.toggle('pv-on',isOn(t));l.classList.toggle('pv-off',!isOn(t))}}
    const lb=lab('deposit');if(lb&&lb.firstChild)lb.firstChild.textContent=isOn('월세')?'보증금 (월세일 때)':'보증금';
    const s=[];if(isOn('매매')&&val('sale'))s.push('매매 '+won(+val('sale')));if(isOn('전세')&&val('jeonse'))s.push('전세 '+won(+val('jeonse')));if(isOn('월세')&&(val('deposit')||val('rent')))s.push('월세 '+won(+val('deposit')||0)+' - '+(val('rent')||0));
    $('#dp-sum').textContent=s.join('   ·   ')};
-  box.onclick=e=>{const b=e.target.closest('.dpt');if(!b)return;const t=b.dataset.t;if(b.classList.contains('on')&&chips(t).some(c=>c.classList.contains('on'))){chips(t).forEach(c=>c.classList.remove('on'))}else{const c=chips(t)[0];if(c&&!chips(t).some(x=>x.classList.contains('on')))c.classList.add('on')}
+  box.onclick=e=>{const b=e.target.closest('.dpt');if(!b)return;const t=b.dataset.t;if(isOn(t)){chips(t).forEach(c=>c.classList.remove('on'));OFF.add(t)}else{OFF.delete(t);const c=chips(t)[0];if(c&&!chips(t).some(x=>x.classList.contains('on')))c.classList.add('on')}
    // 값만 있고 칩이 없는 경우: 탭을 끄려면 값은 그대로 두고 표시만 유지
    draw()};
   dm.addEventListener('click',()=>setTimeout(draw,0));$('#d-body').addEventListener('input',e=>{if(e.target.matches('[data-k=sale],[data-k=jeonse],[data-k=deposit],[data-k=rent]'))$('#dp-sum')&&draw()});
