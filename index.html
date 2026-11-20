@@ -491,7 +491,12 @@ async function api(u, o = {}) {
     case '/api/official': return (await loadRef('official')).rows;
     case '/api/bldreg': return (await loadRef('bldreg')).rows;
     case '/api/rt_apt': return (await loadRef('rt_apt')).rows;
-    case '/api/my_edits': return (await all(() => sb.from('history').select('listing_id,at').neq('who', 'sync').not('who', 'like', '%@example.com').order('id'))).map(h => [h.listing_id, h.at]);
+    case '/api/my_edits': {
+      const h = (await all(() => sb.from('history').select('listing_id,at').neq('who', 'sync').not('who', 'like', '%@example.com').order('id'))).map(h => [h.listing_id, h.at]);
+      // 직접 등록한 매물(텔레그램 자료·에이커트리 등)은 등록일을 수정일로 취급
+      const n = (await all(() => sb.from('listings').select('id,created').in('source', ['telegram', 'acretree']).order('id'))).map(x => [x.id, x.created]);
+      return h.concat(n);
+    }
     case '/api/client_create': { const d = JSON.parse(o.body); const {data, error} = await sb.rpc('create_client_page', {p_name: d.name || null, p_phone: d.phone, p_ids: d.ids, p_pw: d.pw || null, p_move_in: d.move_in || null, p_deal: d.deal || null, p_deposit: d.deposit || null, p_rent: d.rent || null, p_note: d.note || null, p_memo: d.memo || null, p_days: d.days || 30, p_by: null}); if (error) throw new Error(error.message); return data }
     case '/api/client_list': { const cols = 'token,client_name,phone,title,listing_ids,created,expires,fails,locked,views,last_view,created_by,move_in,want_deal,want_deposit,want_rent,agent_memo,note'; let r = await sb.from('client_pages').select(cols + ',pw_plain').order('created', {ascending: false}).limit(200); if (r.error && /pw_plain/.test(r.error.message)) r = await sb.from('client_pages').select(cols).order('created', {ascending: false}).limit(200); return chk(r) }
     case '/api/client_extend': { const d = JSON.parse(o.body); const {data, error} = await sb.rpc('extend_client_page', {p_token: d.token, p_days: d.days || 30}); if (error) throw new Error(error.message); return data }
