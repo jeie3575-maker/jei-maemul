@@ -593,7 +593,7 @@ const toast=t=>{const e=$('#toast');e.textContent=t;e.style.display='block';clea
 const won=v=>{if(v==null||v==='')return'';v=Math.round(v);const e=Math.floor(v/10000),m=v%10000;return e&&m?`${e}억 ${m.toLocaleString()}`:e?`${e}억`:m.toLocaleString()};
 const kinds=d=>{d=(d||'').replace('매매완료','');const k=[];if(/매매|급매/.test(d))k.push('매매');if(d.includes('임대전세'))k.push('전세');if(/임대월세|반전세|단기/.test(d))k.push('월세');return k};
 // ---- 실거래 연결 ----
-let RT=null,RTIDX=null;const DNM={"래미안":["래미안용산더센트럴"],"써밋":["용산푸르지오써밋"],"호반":["용산호반써밋에이디션"],"DK":["DK밸리뷰용산"],"시티파크":["용산시티파크1단지","용산시티파크2단지"],"파크타워":["파크타워"],"아스테리움":["아스테리움용산"],"에테르나인용산":["에테르나인용산"]};
+let RT=null,RTIDX=null;const DNM={"래미안":["래미안용산더센트럴"],"써밋":["용산푸르지오써밋"],"호반":["용산호반써밋에이디션"],"DK":["DK밸리뷰용산"],"시티파크":["용산시티파크1단지","용산시티파크2단지"],"파크타워":["파크타워"],"아스테리움":["아스테리움용산"],"에테르":["에테르나인용산"]};
 const nDong=s=>{const m=/^\s*([A-Za-z]|\d+)/.exec(s||'');return m?m[1].toUpperCase():''};
 function rtIndex(){RTIDX={};for(const r of RT){(RTIDX[r['단지']]||=[]).push(r);r._hos=String(r['예상호실']||'').split(',').map(x=>/^\s*(?:([A-Z0-9]+)동\s*)?(\d{3,4})호/.exec(x.trim())).filter(Boolean).map(m=>[m[1]||'',m[2]])}}
 const rtPrice=r=>r['거래']==='매매'?'매 '+won(r['매매가(만)']):r['거래']==='전세'?'전 '+won(r['보증금(만)']):'월 '+won(r['보증금(만)'])+'/'+(r['월세(만)']||0);
