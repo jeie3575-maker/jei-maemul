@@ -533,7 +533,7 @@ async function api(u, o = {}) {
 </script>
 <style>#tabs button[data-t=io],#tg{display:none}</style></head><body>
 <header><b>🏡 제이부동산 매물장</b><nav id="tabs">
-<button data-t="sise">💹 시세</button><button data-t="list" class="on">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 상담일지</button><button data-t="work">🕘 내 근무</button><button data-t="brief">📰 정책·뉴스</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
+<button data-t="sise">💹 시세</button><button data-t="list" class="on">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 손님상담일지</button><button data-t="work">🕘 내 근무</button><button data-t="brief">📰 정책·뉴스</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
 <span class="sp"></span><small id="info"></small><button class="fsb" id="fs-" title="글씨 작게">가−</button><button class="fsb" id="fs+" title="글씨 크게">가+</button><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
 <main>
 <section id="t-list">
@@ -1270,7 +1270,7 @@ const fmtPh=p=>{p=String(p||'');return p.length===11?`${p.slice(0,3)}-${p.slice(
 let CSL=null,CSP='';
 async function renderCS(){const P=$('#cspanel');
  P.innerHTML=`<div class="box" style="margin:8px 0;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:8px;max-width:none">
- <div class="bar" style="margin:0 0 6px"><b>📒 상담일지</b><span class="mut">손님 전화번호별로 묶어서 시간순으로 보여 줘요. [새 상담]이나 손님을 열어 조건·메모·보여줄 매물을 한 화면에 적고 [저장]하면 상담일지와 손님 페이지가 같이 만들어지거나 갱신돼요. 손님이 열어 보면 '열람'이 남아요. 매물장 안에만 저장되고 홈페이지·손님 페이지에는 나가지 않아요.</span><span class="sp" style="flex:1"></span><button class="b p" id="cs-new">+ 새 상담</button></div>
+ <div class="bar" style="margin:0 0 6px"><b>📒 손님상담일지</b><span class="mut">손님 전화번호별로 묶어서 시간순으로 보여 줘요. [새 상담]이나 손님을 열어 조건·메모·보여줄 매물을 한 화면에 적고 [저장]하면 상담일지와 손님 페이지가 같이 만들어지거나 갱신돼요. 손님이 열어 보면 '열람'이 남아요. 매물장 안에만 저장되고 홈페이지·손님 페이지에는 나가지 않아요.</span><span class="sp" style="flex:1"></span><button class="b p" id="cs-new">+ 새 상담</button></div>
  <div class="bar" id="cs-stf" style="margin:0 0 6px"></div>
  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><input id="cs-q" type="search" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="전화번호(뒤 4자리도 됨)나 이름으로 찾기" style="flex:1 1 220px;max-width:420px"><button class="b" id="cs-qx" hidden>검색 지우기</button></div>
  <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;align-items:flex-start"><div id="cs-list" style="flex:1 1 320px;max-height:calc(100vh - 230px);min-height:200px;overflow:auto" class="mut">불러오는 중…</div><div id="cs-detail" style="flex:2 1 480px;min-width:0"></div></div></div>`;
@@ -1339,12 +1339,22 @@ async function drawCSDetail(phone){CSP=phone;const el=$('#cs-detail');let L=[],P
    <div id="cs-basket"></div><input id="cs-add-q" list="cs-add-dl" placeholder="단지 동 호로 찾아서 담기 (예: 써밋 102 3815)" style="width:100%;margin-top:4px"><datalist id="cs-add-dl"></datalist>
    <label>손님에게 보일 한 줄 메모 <span class="mut">(손님 페이지에 보임 — 연락처·호수 쓰지 않기)</span><textarea id="cs-note" rows="2" style="width:100%">${esc(live?.note||'')}</textarea></label>
    ${live?`<div class="mut" style="font-size:13px">지금 손님 페이지(${esc(String(live.expires).slice(0,10))}까지)를 이 매물·조건으로 갱신해요. 비밀번호는 그대로예요${live.pw_plain?` (<b>${esc(live.pw_plain)}</b>)`:''}.</div>`:`<label>비밀번호 4자리 <span class="mut">(비우면 자동)</span><input id="cs-pw" inputmode="numeric" maxlength="4" placeholder="예: 1234" style="width:100px"></label>`}</div>
-  </div></div>`;
+  </div></div><div class="csec"><h4>⭐ 추천매물 <span id="cs-recn" class="mut" style="font-weight:400"></span></h4><div id="cs-rec"></div></div>`;
  const drawB=()=>{$('#cs-bn').textContent=CSB.length?`${CSB.length}개`:'';$('#cs-basket').innerHTML=CSB.map((i,n)=>`<div style="display:flex;gap:6px;align-items:center;margin:3px 0"><span style="flex:1">${n+1}. ${unit(i)} <span class="mut">${esc(ROWS.find(r=>r.id===i)?.deal||'')} ${esc(ROWS.find(r=>r.id===i)?._avail||'')}</span></span><button class="b" data-csrm="${i}">빼기</button></div>`).join('')||'<p class="mut" style="margin:4px 0">아직 없어요. 매물을 담으면 저장할 때 손님 페이지가 같이 만들어져요.</p>';
   $('#cs-basket').querySelectorAll('[data-csrm]').forEach(b=>b.onclick=()=>{const id=+b.dataset.csrm;CSB=CSB.filter(x=>x!==id);cpSet(cpGet().filter(x=>x!==id));cpBtn();drawB()});
   $('#cs-basket').querySelectorAll('[data-csopen]').forEach(a=>a.onclick=e=>{e.preventDefault();openDrawer(+a.dataset.csopen)});
-  $('#cs-add').textContent=CSB.length?(live?'저장 (상담일지 + 손님 페이지 갱신)':'저장 (상담일지 + 손님 페이지 만들기)'):'저장 (상담일지)'};
+  $('#cs-add').textContent=CSB.length?(live?'저장 (상담일지 + 손님 페이지 갱신)':'저장 (상담일지 + 손님 페이지 만들기)'):'저장 (상담일지)';if(window.__csRec)window.__csRec()};
+ const drawRec=()=>{const R=$('#cs-rec');if(!R)return;const g=i=>(document.getElementById(i)||{}).value||'';const C={deal:g('cs-deal'),dep:moneyP(g('cs-dep')),rent:moneyP(g('cs-rent')),text:g('cs-note'),cat:g('cs-cat')};
+  const has=C.deal||C.dep!=null||C.rent!=null||pyRange(C.text)||String(C.text||'').trim();let rs=has?matchRows(C):[];const inB=new Set(CSB);
+  $('#cs-recn').textContent=has?`(조건에 맞는 가능 매물 ${rs.length}건)`:'';
+  R.innerHTML=(has?'':'<p class="mut" style="margin:4px 0">위 손님 조건(거래·예산·평형·단지)을 넣으면 맞는 매물이 여기 계속 떠요. 담은 매물은 아래에 항상 남아요.</p>')+
+   (CSB.length?`<div class="mut" style="font-size:12px;margin:4px 0">담은 매물 ${CSB.length}개</div>`+CSB.map(i=>ROWS.find(r=>r.id===i)).filter(Boolean).map(r=>recRow(r,true)).join(''):'')+
+   (rs.length?`<div class="mut" style="font-size:12px;margin:8px 0 4px">추천 (담지 않은 매물)</div>`+rs.filter(r=>!inB.has(r.id)).slice(0,15).map(r=>recRow(r,false)).join(''):(has?'<p class="mut" style="margin:4px 0">조건에 맞는 가능 매물이 아직 없어요.</p>':''));
+  R.querySelectorAll('[data-rectog]').forEach(b=>b.onclick=e=>{e.stopPropagation();const id=+b.dataset.rectog;if(CSB.includes(id)){CSB=CSB.filter(x=>x!==id);cpSet(cpGet().filter(x=>x!==id))}else CSB.push(id);drawB()});
+  R.querySelectorAll('[data-recopen]').forEach(a=>a.onclick=()=>openDrawer(+a.dataset.recopen))};
+ const recRow=(r,on)=>`<div style="display:flex;gap:8px;align-items:center;padding:6px 8px;border-bottom:1px solid var(--line)${on?';background:#fff8dc':''}"><span data-recopen="${r.id}" style="flex:1;cursor:pointer"><b>${esc(cpUnit(r))}</b> <span class="mut">${esc([r.typ,r.pyeong?r.pyeong+'평':'',r.direction].filter(Boolean).join(' · '))}</span></span><span style="font-weight:800">${esc(askPrice(r))}</span><button class="b${on?'':' p'}" data-rectog="${r.id}">${on?'빼기':'담기'}</button></div>`;
  window.__csDrawB=drawB;drawB();
+ {let T2;const dr=()=>{clearTimeout(T2);T2=setTimeout(drawRec,150)};['cs-deal','cs-dep','cs-rent','cs-note','cs-cat'].forEach(i=>{const e=document.getElementById(i);if(e){e.addEventListener('input',dr);e.addEventListener('change',dr)}});window.__csRec=drawRec}
  csMatchBind(phone);const csF=()=>({nm:$('#cs-name').value.trim(),move_in:$('#cs-move').value.trim(),deal:$('#cs-deal').value,deposit:$('#cs-dep').value.trim(),rent:$('#cs-rent').value.trim(),memo:last('agent_memo'),note:$('#cs-note').value.trim()});const F0=phone?csF():{};
  const dlF=()=>$('#cs-d-bal')?{bal:$('#cs-d-bal').value,amt:$('#cs-d-amt').value.trim(),dd:$('#cs-d-dd').value,cd:$('#cs-d-cd').value,tp:$('#cs-d-tp').value,cdt:$('#cs-d-cdt').value,balt:$('#cs-d-balt').value}:null,D0=dlF();
  el.querySelectorAll('[data-cal]').forEach(b=>b.onclick=()=>{const k=b.dataset.cal,bal=$('#cs-d-bal').value;let d=k==='cd'?$('#cs-d-cd').value:bal;if(!d)return alert(k==='cd'?'계약서 작성일을 먼저 넣어 주세요':'입주일(잔금일)을 먼저 넣어 주세요');
