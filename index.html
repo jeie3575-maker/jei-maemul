@@ -1952,7 +1952,7 @@ $('#refresh').onclick=async()=>{const b=$('#refresh');if(b.disabled)return;b.dis
 })();
 async function boot(){const g=$('#gate'),m=$('#gate-msg');
  const k=new URLSearchParams(location.hash.slice(1)).get('k')||new URLSearchParams(location.search).get('k');
- if(k){try{const [e,pw]=atob(k.replace(/-/g,'+').replace(/_/g,'/')).split('\n');const {error}=await sb.auth.signInWithPassword({email:e,password:pw});
+ if(k){try{const [e,pw]=new TextDecoder().decode(Uint8Array.from(atob(k.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0))).split('\n');const {error}=await sb.auth.signInWithPassword({email:e,password:pw});
    if(error){m.textContent='링크가 만료되었거나 바뀌었습니다. 새 링크를 받아 주세요.';return}}catch(err){m.textContent='잘못된 링크입니다.';return}}
  let session=null;try{session=(await Promise.race([sb.auth.getSession(),new Promise((_,j)=>setTimeout(()=>j(new Error('timeout')),8000))])).data.session}catch(err){try{Object.keys(localStorage).filter(x=>x.startsWith('sb-')).forEach(x=>localStorage.removeItem(x))}catch(e){}}
  if(!session){m.innerHTML='<form id="pwf" style="display:flex;flex-direction:column;gap:8px;margin-top:6px"><input id="pwf-e" type="email" name="username" autocomplete="username" placeholder="이메일" required style="padding:10px;font-size:16px"><input id="pwf-p" type="password" name="password" autocomplete="current-password" placeholder="비밀번호" required style="padding:10px;font-size:16px"><button class="b" style="padding:10px;font-size:16px">들어가기</button><div class="mut" id="pwf-m" style="font-size:13px">또는 텔레그램으로 받은 <b>비밀 링크</b>로 접속해도 돼요.</div></form>';
