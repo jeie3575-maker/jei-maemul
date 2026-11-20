@@ -1955,7 +1955,8 @@ async function boot(){const g=$('#gate'),m=$('#gate-msg');
  if(k){try{const [e,pw]=atob(k.replace(/-/g,'+').replace(/_/g,'/')).split('\n');const {error}=await sb.auth.signInWithPassword({email:e,password:pw});
    if(error){m.textContent='링크가 만료되었거나 바뀌었습니다. 새 링크를 받아 주세요.';return}}catch(err){m.textContent='잘못된 링크입니다.';return}}
  let session=null;try{session=(await Promise.race([sb.auth.getSession(),new Promise((_,j)=>setTimeout(()=>j(new Error('timeout')),8000))])).data.session}catch(err){try{Object.keys(localStorage).filter(x=>x.startsWith('sb-')).forEach(x=>localStorage.removeItem(x))}catch(e){}}
- if(!session){m.innerHTML='텔레그램으로 받은 <b>비밀 링크</b>로 접속해 주세요.';return}
+ if(!session){m.innerHTML='<form id="pwf" style="display:flex;flex-direction:column;gap:8px;margin-top:6px"><input id="pwf-e" type="email" name="username" autocomplete="username" placeholder="이메일" required style="padding:10px;font-size:16px"><input id="pwf-p" type="password" name="password" autocomplete="current-password" placeholder="비밀번호" required style="padding:10px;font-size:16px"><button class="b" style="padding:10px;font-size:16px">들어가기</button><div class="mut" id="pwf-m" style="font-size:13px">또는 텔레그램으로 받은 <b>비밀 링크</b>로 접속해도 돼요.</div></form>';
+  $('#pwf').onsubmit=async ev=>{ev.preventDefault();const pm=$('#pwf-m');pm.textContent='확인 중…';const {error}=await sb.auth.signInWithPassword({email:$('#pwf-e').value.trim(),password:$('#pwf-p').value});if(error){pm.textContent='이메일이나 비밀번호가 맞지 않아요.';return}location.reload()};return}
  const nm=session.user.user_metadata?.name;if(nm)localStorage.author=nm;
  if(!/[?&]pane=/.test(location.search))sb.from('access_log').insert({email:session.user.email,name:nm||'',kind:k?'login':'open',ua:navigator.userAgent.slice(0,200)}).then(()=>{});
  g.remove();try{await load()}catch(err){alert('불러오기 실패: '+err.message)}}
