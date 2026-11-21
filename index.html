@@ -694,7 +694,7 @@ function renderFx(base){const inD=base.filter(r=>!F.danji.size||F.danji.has(r.da
 function filtered(){const q=$('#q').value.trim().toLowerCase();const tm=typeMap(ROWS.filter(r=>(r.category||'오피스텔')===CAT&&(!F.danji.size||F.danji.has(r.danji))));return ROWS.filter(r=>{if((r.category||'오피스텔')!==CAT)return false;if(!fxPass(r,tm))return false;
  if(NEW30){r._reg=myEdDate(r,$('#nw1').value,$('#nw2').value);if(!r._reg)return false}const our=$('#f-our')&&$('#f-our').checked;if(our&&!ourC(r))return false;if(!our&&$('#f-active').checked&&!active(r))return false;if($('#f-ad').checked&&!/네이버|뱅크/.test(r.ad||''))return false;
  if(F.danji.size&&!F.danji.has(r.danji))return false;if(F.avail.size&&!(r._avs||[r._avail]).some(a=>F.avail.has(a)))return false;if(F.adt.size&&!String(r.ad_type||'').split(', ').some(x=>F.adt.has(x)))return false;if(CAT==='오피스텔'&&F.use.size&&!String(r.usage||'(미입력)').split(', ').some(x=>F.use.has(x)))return false;if(F.kind.size&&!kinds(r.deal).some(k=>F.kind.has(k)))return false;
- if(!qPass(r,q))return false;return true})}
+ if(!qPass(r,q))return false;if(window.nfPass&&!window.nfPass(r,tm))return false;return true})}
 
 const INLINE=['danji','dong','ho','typ','pyeong','direction','usage','deal','cur_deposit','cur_rent','manki','status','owner','owner_tel','memo','ad','ad_type','co_office'];
 const COLS=[['_reg','수정일'],['_avail','가능여부'],['_chk','확인일'],['co_office','공동중개부동산'],['danji','단지'],['_addr','주소'],['dong','동'],['ho','호'],['typ','타입'],['pyeong','전용평','n'],['_jibun','지분/평단가'],['_yeon','연면적평'],['_daeji','대지지분(평)'],['direction','방향'],['usage','용도'],['deal','거래유형'],['_ask','희망가'],
@@ -2078,7 +2078,7 @@ async function boot(){const g=$('#gate'),m=$('#gate-msg');
  g.remove();try{await load()}catch(err){alert('불러오기 실패: '+err.message)}}
 boot();
 </script><script>
-(function(){const IDS=['f-kind','f-avail','f-use','recon-danji','recon-kind','call-st','call-cat'];
+(function(){const IDS=['recon-danji','recon-kind','call-st','call-cat'];
 const st=document.createElement('style');st.textContent='.chipsel-h{display:none!important}.chips[hidden]{display:none!important}select.chipsel{font-size:15px;padding:5px 6px;max-width:100%}';document.head.appendChild(st);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms)),key=c=>(c.childNodes[0]?.textContent||'').trim();
 function setup(id){const box=document.getElementById(id);if(!box||box.dataset.cs)return;box.dataset.cs=1;box.classList.add('chipsel-h');
@@ -2096,18 +2096,61 @@ function init(){IDS.forEach(setup)}init();setInterval(init,1500)})();
 </script>
 <script>
 (function(){const D=document,G=id=>D.getElementById(id);
-const st=D.createElement('style');st.textContent='#fadd{display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center;position:relative}#fadd .fp{font:inherit;font-size:14px;border:1px solid var(--acc,#e8a900);background:color-mix(in srgb,var(--acc,#e8a900) 14%,#fff);border-radius:10px;padding:7px 10px;cursor:pointer}#fadd .fa{font:inherit;font-size:14px;border:1px dashed #b8bfcc;background:#fff;border-radius:10px;padding:7px 11px;cursor:pointer;color:#1f6fd1}#fmenu{position:absolute;left:0;top:100%;margin-top:4px;background:#fff;border:1px solid #d9dee7;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:4px 0;z-index:30;min-width:210px}#fmenu button{display:block;width:100%;text-align:left;font:inherit;font-size:15px;border:0;background:none;padding:11px 14px;cursor:pointer}#fmenu button:hover{background:#f3f5f9}@media(max-width:760px){#q-help{display:none}}';D.head.appendChild(st);
-const ITEMS=[['f-active','진행 중인 매물만'],['f-our','우리 계약만'],['f-ad','광고 표시된 것만'],['f-new','최근 수정']];
+const st=D.createElement('style');st.textContent='#nf{display:inline-flex;gap:8px;flex-wrap:wrap;align-items:center;position:relative}#nf .nc{display:inline-flex;align-items:center;gap:4px;border:1px solid #d9dee7;border-radius:10px;padding:3px 4px 3px 9px;background:#fff;font-size:14px}#nf .nc.on{border-color:#e8a900;background:#fff8e1}#nf .nc span{color:#7b8190;white-space:nowrap}#nf .nc select,#nf .nc input{font:inherit;font-size:14px;border:0;background:transparent;padding:5px 2px;max-width:150px}#nf .nc input{width:52px;border-bottom:1px solid #d9dee7}#nf .nc button{border:0;background:none;color:#999;font-size:14px;cursor:pointer;padding:4px 6px}#nf .fa{font:inherit;font-size:14px;border:1px dashed #b8bfcc;background:#fff;border-radius:10px;padding:7px 11px;cursor:pointer;color:#1f6fd1}#nfm{position:absolute;left:0;top:100%;margin-top:4px;background:#fff;border:1px solid #d9dee7;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:4px 0;z-index:30;min-width:200px}#nfm button{display:block;width:100%;text-align:left;font:inherit;font-size:15px;border:0;background:none;padding:11px 14px;cursor:pointer}#nfm button:hover{background:#f3f5f9}#nfm hr{border:0;border-top:1px solid #e3e6ec;margin:4px 0}#nfm small{display:block;color:#7b8190;padding:4px 14px 0;font-size:12px}@media(max-width:760px){#q-help{display:none}}';D.head.appendChild(st);
+const KEYS={avail:'가능여부',danji:'단지',dong:'동',ho:'호',typ:'타입',py:'평수',use:'용도',status:'현상태',ad:'광고',adt:'광고타입'};
+const SETK={avail:'avail',danji:'danji',use:'use',adt:'adt'};
+const Q=[['f-active','진행 중인 매물만'],['f-our','우리 계약만'],['f-ad','광고 표시된 것만'],['f-new','최근 수정']];
+let NF={dong:'',ho:'',typ:'',status:'',ad:'',py1:'',py2:'',cat:null},NFA;
+try{NFA=JSON.parse(localStorage.nfa||'null')}catch(e){}if(!Array.isArray(NFA))NFA=['avail','danji'];
+const save=()=>{try{localStorage.nfa=JSON.stringify(NFA)}catch(e){}};
+const val=k=>SETK[k]?([...F[SETK[k]]][0]||''):(NF[k]||'');
+function setVal(k,v){if(SETK[k]){F[SETK[k]].clear();if(v)F[SETK[k]].add(v)}else NF[k]=v;if(k==='danji'){NF.dong=NF.ho=NF.typ=''}renderList()}
+const hasAd=r=>/네이버|뱅크/.test(r.ad||'');
+window.nfPass=function(r,tm){if(NF.dong&&nDongLbl(r)!==NF.dong)return false;if(NF.ho&&String(r.ho||'(미입력)')!==NF.ho)return false;if(NF.typ&&tkeyOf(r,tm)!==NF.typ)return false;if(NF.status&&String(r.status||'(미입력)')!==NF.status)return false;
+ if(NF.ad&&(NF.ad==='광고 없음'?hasAd(r):!new RegExp(NF.ad).test(r.ad||'')))return false;
+ if(NF.py1!==''||NF.py2!==''){const p=+r.pyeong;if(!(p>0)||(NF.py1!==''&&p<+NF.py1)||(NF.py2!==''&&p>+NF.py2))return false}return true};
+function opts(k){const rows=ROWS.filter(r=>(r.category||'오피스텔')===CAT&&(k==='danji'||!F.danji.size||F.danji.has(r.danji)));const c={};const add=v=>{if(v!==''&&v!=null)c[v]=(c[v]||0)+1};
+ if(k==='avail'){rows.forEach(r=>(r._avs||[r._avail]).forEach(add));return AVAIL.filter(a=>c[a]).map(a=>[a,c[a]])}
+ if(k==='adt'){rows.forEach(r=>String(r.ad_type||'').split(', ').filter(Boolean).forEach(add));return (META.options.ad_type||[]).filter(a=>c[a]).map(a=>[a,c[a]])}
+ if(k==='use'){rows.forEach(r=>String(r.usage||'(미입력)').split(', ').filter(Boolean).forEach(add))}
+ else if(k==='danji')rows.forEach(r=>add(r.danji&&r.danji!=='null'?r.danji:''));
+ else if(k==='dong')rows.forEach(r=>add(nDongLbl(r)));
+ else if(k==='ho')rows.forEach(r=>add(String(r.ho||'(미입력)')));
+ else if(k==='typ'){const tm=typeMap(rows);rows.forEach(r=>add(tkeyOf(r,tm)))}
+ else if(k==='status')rows.forEach(r=>add(String(r.status||'(미입력)').slice(0,24)));
+ else if(k==='ad'){rows.forEach(r=>{if(/네이버/.test(r.ad||''))add('네이버');if(/뱅크/.test(r.ad||''))add('뱅크');if(!hasAd(r))add('광고 없음')});return ['네이버','뱅크','광고 없음'].filter(a=>c[a]).map(a=>[a,c[a]])}
+ const nat=['dong','ho'].includes(k);return Object.keys(c).sort((a,b)=>nat?String(a).localeCompare(String(b),'ko',{numeric:true}):(a==='(미입력)'?1:b==='(미입력)'?-1:c[b]-c[a])).map(v=>[v,c[v]])}
 const isOn=id=>{const e=G(id);return !!e&&(e.type==='checkbox'?e.checked:e.classList.contains('on'))};
-function setup(){const f=G('f-kind');if(!f||G('fadd'))return;
- ITEMS.forEach(([id])=>{const e=G(id);if(!e)return;(e.type==='checkbox'?e.closest('label'):e).classList.add('chipsel-h')});
- const w=D.createElement('span');w.id='fadd';const sel=f.nextElementSibling&&f.nextElementSibling.classList.contains('chipsel')?f.nextElementSibling:f;sel.parentNode.insertBefore(w,sel.nextSibling);
- const draw=()=>{const on=ITEMS.filter(([id])=>isOn(id)),off=ITEMS.filter(([id])=>!isOn(id)&&G(id));
-  w.innerHTML=on.map(([id,l])=>`<button class="fp" data-x="${id}" type="button">${l} ✕</button>`).join('')+(off.length?`<button class="fa" id="fabtn" type="button">＋ 필터 추가</button>`:'');
-  w.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>{G(b.dataset.x).click();setTimeout(draw,50)});
-  const fb=G('fabtn');if(fb)fb.onclick=e=>{e.stopPropagation();const m=G('fmenu');if(m){m.remove();return}const d=D.createElement('div');d.id='fmenu';d.innerHTML=off.map(([id,l])=>`<button type="button" data-a="${id}">${l}</button>`).join('');w.appendChild(d);d.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{G(b.dataset.a).click();d.remove();setTimeout(draw,50)})}};
- D.addEventListener('click',e=>{const m=G('fmenu');if(m&&!e.target.closest('#fadd'))m.remove()});
- draw();setInterval(()=>{if(!G('fmenu'))draw()},1200)}
-setup();setInterval(setup,1500)})();
+function hideOld(){['f-avail','f-use','f-adt','f-danji'].forEach(id=>{const e=G(id);if(!e)return;e.style.setProperty('display','none','important');const p=e.previousElementSibling;if(p&&p.tagName==='SPAN'&&p.classList.contains('mut'))p.style.setProperty('display','none','important')});
+ Q.forEach(([id])=>{const e=G(id);if(!e)return;(e.type==='checkbox'?e.closest('label'):e).style.setProperty('display','none','important')})}
+function resetAll(){NF={dong:'',ho:'',typ:'',status:'',ad:'',py1:'',py2:'',cat:CAT}}
+const els={};
+function mk(k){const w=D.createElement('span');w.className='nc';w.dataset.k=k;
+ w.innerHTML=`<span>${KEYS[k]}</span>`+(k==='py'?`<input inputmode="decimal" placeholder="부터" data-p="py1">~<input inputmode="decimal" placeholder="까지" data-p="py2"><span>평</span>`:`<select></select>`)+`<button type="button" title="이 필터 빼기">✕</button>`;
+ if(k==='py'){w.querySelectorAll('input').forEach(i=>{i.value=NF[i.dataset.p];i.oninput=()=>{NF[i.dataset.p]=i.value.trim();renderList()}})}
+ else w.querySelector('select').onchange=e=>setVal(k,e.target.value);
+ w.querySelector('button').onclick=()=>{if(k==='py'){NF.py1=NF.py2=''}else setVal(k,'');NFA=NFA.filter(x=>x!==k);save();renderList()};return w}
+function fill(k){const w=els[k],v=val(k);w.classList.toggle('on',k==='py'?(NF.py1!==''||NF.py2!==''):!!v);if(k==='py')return;const s=w.querySelector('select');if(D.activeElement===s)return;
+ const o=opts(k),tot=o.reduce((a,b)=>a+b[1],0);s.innerHTML=`<option value="">전체</option>`+o.map(([x,n])=>`<option value="${esc(x)}">${esc(String(x).slice(0,20))} ${n}</option>`).join('');if(v&&!o.some(([x])=>x===v))s.insertAdjacentHTML('beforeend',`<option value="${esc(v)}">${esc(v)} 0</option>`);s.value=v}
+function draw(){const f=G('f-kind');if(!f||typeof META==='undefined'||!META||typeof ROWS==='undefined'||!ROWS.length)return;let w=G('nf');
+ if(!w){w=D.createElement('span');w.id='nf';f.parentNode.insertBefore(w,f.nextSibling);
+  D.addEventListener('click',e=>{const m=G('nfm');if(m&&!e.target.closest('#nf'))m.remove()})}
+ if(NF.cat!==CAT){resetAll();NFA=NFA.filter(k=>k!=='use'||CAT==='오피스텔')}
+ hideOld();
+ NFA.filter(k=>KEYS[k]&&!(k==='use'&&CAT!=='오피스텔')).forEach(k=>{if(!els[k])els[k]=mk(k)});
+ const order=NFA.filter(k=>els[k]&&!(k==='use'&&CAT!=='오피스텔'));
+ const cur=[...w.children].filter(c=>c.classList.contains('nc')).map(c=>c.dataset.k);
+ if(cur.join()!==order.join()){[...w.querySelectorAll('.nc,.fa,.qp')].forEach(c=>c.remove());order.forEach(k=>w.appendChild(els[k]));}
+ order.forEach(fill);
+ w.querySelectorAll('.qp,.fa').forEach(c=>c.remove());
+ Q.filter(([id])=>isOn(id)).forEach(([id,l])=>{const b=D.createElement('button');b.className='fa qp';b.type='button';b.style.cssText='border-style:solid;border-color:#e8a900;background:#fff8e1;color:#1f2430';b.textContent=l+' ✕';b.onclick=()=>{G(id).click();setTimeout(draw,50)};w.appendChild(b)});
+ const add=Object.keys(KEYS).filter(k=>!NFA.includes(k)&&!(k==='use'&&CAT!=='오피스텔')),qo=Q.filter(([id])=>G(id)&&!isOn(id));
+ if(add.length||qo.length){const b=D.createElement('button');b.className='fa';b.type='button';b.textContent='＋ 필터 추가';b.onclick=e=>{e.stopPropagation();const m=G('nfm');if(m){m.remove();return}const d=D.createElement('div');d.id='nfm';
+  d.innerHTML=(add.length?'<small>필터</small>'+add.map(k=>`<button type="button" data-k="${k}">${KEYS[k]}</button>`).join(''):'')+(qo.length?'<hr><small>빠른 조건</small>'+qo.map(([id,l])=>`<button type="button" data-q="${id}">${l}</button>`).join(''):'');
+  w.appendChild(d);d.querySelectorAll('[data-k]').forEach(x=>x.onclick=()=>{NFA.push(x.dataset.k);save();d.remove();draw()});d.querySelectorAll('[data-q]').forEach(x=>x.onclick=()=>{G(x.dataset.q).click();d.remove();setTimeout(draw,50)})};w.appendChild(b)}}
+const oc=window.clearFilters;window.clearFilters=function(){resetAll();Object.values(els).forEach(w=>w.querySelectorAll('input').forEach(i=>i.value=''));return oc.apply(this,arguments)};
+const orl=window.renderList;window.renderList=function(){const r=orl.apply(this,arguments);try{draw()}catch(e){console.error(e)}return r};
+const t=setInterval(()=>{if(typeof META!=='undefined'&&META&&typeof ROWS!=='undefined'&&ROWS.length){try{draw()}catch(e){}clearInterval(t)}},500);
+})();
 </script>
 </body></html>
