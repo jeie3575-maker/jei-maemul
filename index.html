@@ -586,7 +586,7 @@ async function api(u, o = {}) {
   <p class="mut">비밀 링크를 한 번 열면 그 기기는 180일 동안 기억됩니다. 링크는 텔레그램으로만 받고 다른 사람에게 보내지 마세요.</p></div>
 </section>
 </main>
-<div id="drawer"><div class="hd"><b id="d-title"></b><button class="b" id="d-promo" title="노션 단지 소개 양식으로 홍보글(블로그·네이버·카톡) 자동 작성">✨ 홍보글</button><button class="b" id="d-bld" title="건축물대장 정보 · 확인·설명서 초안">🏛 대장·확인서</button><button class="b" id="d-copy">복사해서 새로 작성</button><button class="b" id="d-cp" title="손님 페이지에 넣을 매물로 담아 둡니다">손님 페이지에 담기</button><button class="b d" id="d-del">삭제</button><button class="b p" id="d-save">저장</button><button class="b" id="d-close">닫기(자동 저장)</button></div><div class="bd" id="d-body"></div></div>
+<div id="drawer"><div class="hd"><b id="d-title"></b><button class="b" id="d-promo" title="노션 단지 소개 양식으로 홍보글(블로그·네이버·카톡) 자동 작성">✨ 홍보글</button><button class="b" id="d-bld" title="건축물대장 정보 · 확인·설명서 초안">🏛 대장·확인서</button><button class="b" id="d-mk" title="이 매물 임차인·임대인에게 만기 안내 문자">📩 만기 문자</button><button class="b" id="d-copy">복사해서 새로 작성</button><button class="b" id="d-cp" title="손님 페이지에 넣을 매물로 담아 둡니다">손님 페이지에 담기</button><button class="b d" id="d-del">삭제</button><button class="b p" id="d-save">저장</button><button class="b" id="d-close">닫기(자동 저장)</button></div><div class="bd" id="d-body"></div></div>
 <div id="toast"></div>
 <div id="gate" style="position:fixed;inset:0;background:#f6f7f9;z-index:50;display:flex;align-items:center;justify-content:center">
  <div class="box" style="text-align:center"><h3>🏡 제이부동산 매물장</h3><p id="gate-msg" class="mut">접속 확인 중…</p></div></div>
@@ -856,7 +856,7 @@ function feeCalc(r,u){const kd=kinds(r.deal);let src=kd.includes('매매')?'매�
  let fee=Math.round(amt*rate/100);if(cap&&fee>cap)fee=cap;
  return `거래금액 기준 ${amt.toLocaleString()}만원${src==='임대'&&(kd.includes('월세'))?' (보증금+월세×100 환산)':''} · 상한요율 ${rate}%${cap?' (한도 '+cap+'만원)':''}${note} → <b>중개보수 약 ${fee.toLocaleString()}만원 이내</b> (부가세 별도, 쌍방 각각 · 협의로 낮출 수 있어요)`}
 
-$('#d-promo').onclick=promoOpen;$('#d-bld').onclick=()=>bldOpen(false);
+$('#d-promo').onclick=promoOpen;$('#d-mk').onclick=()=>mankiSmsOpen(CUR);$('#d-bld').onclick=()=>bldOpen(false);
 // ================= 11/17 리얼맵 설명서 반영 =================
 const moneyP=s=>{s=String(s||'').replace(/[,\s]/g,'');let m=/(\d+(?:\.\d+)?)억(\d+)?/.exec(s);if(m)return Math.round(+m[1]*10000+(+m[2]||0));m=/(\d+(?:\.\d+)?)/.exec(s);return m?Math.round(+m[1]):null};
 const pyRange=t=>{const m=/(\d+(?:\.\d+)?)\s*평\s*(이상|이하|대)?/.exec(String(t||''));if(!m)return null;const v=+m[1];return m[2]==='이상'?[v,1e9]:m[2]==='이하'?[0,v]:m[2]==='대'?[Math.floor(v/10)*10,Math.floor(v/10)*10+9.99]:[v-3,v+5]};
@@ -996,6 +996,16 @@ async function vendorOpen(){let V=[];const load=async()=>{try{V=(await api('/api
   B0.querySelectorAll('tr[data-id]').forEach(tr=>tr.onclick=()=>{const v=V.find(x=>x.id===tr.dataset.id);const H=B0.querySelector('#vd-h');H.innerHTML=`<div style="border:1px solid var(--line);border-radius:6px;padding:8px;margin-top:10px"><b>${esc(v.name)}</b> <button class="b" id="vd-e">수정</button> ${v.tel?`<a class="b" href="tel:${esc(v.tel.replace(/[^\d]/g,''))}">전화</a>`:''}<div style="margin:6px 0"><b>상담이력</b></div>${(v.hist||[]).map(h=>`<div class="mut" style="font-size:13px">${esc(h.d)} ${esc(h.t)}</div>`).join('')||'<div class="mut">없음</div>'}<div style="display:flex;gap:6px;margin-top:6px"><input id="vd-hn" placeholder="이력 추가 (예: 견적 문의 · 평면도 제작 상담)" style="flex:1"><button class="b" id="vd-ha">추가</button></div></div>`;
    H.querySelector('#vd-e').onclick=()=>{edit=v;draw()};H.querySelector('#vd-ha').onclick=async()=>{const t=H.querySelector('#vd-hn').value.trim();if(!t)return;const d=new Date(),ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');try{await save({...v,hist:[{d:ds,t},...(v.hist||[])].slice(0,100)});draw();B0.querySelector(`tr[data-id="${v.id}"]`)?.click()}catch(e){alert(e.message)}}})};
  draw()}
+async function mankiSmsOpen(r){if(!r||!r.id)return;let cur={};try{cur=((await api('/api/sms_tpl_get'))||{}).tpl||{}}catch(_){}
+ const unit=cpUnit(r),mk=String(r.manki||'').slice(0,10),ok=/^\d{4}-\d\d-\d\d$/.test(mk);
+ const T0=new Date();T0.setHours(0,0,0,0);const days=ok?Math.round((new Date(mk+'T00:00:00')-T0)/864e5):null,mon=days==null?'':Math.max(1,Math.round(days/30)),md=ok?((new Date(mk+'T00:00:00').getMonth()+1)+'월 '+new Date(mk+'T00:00:00').getDate()+'일'):'';
+ const nm=v=>{const m=String(v||'').match(/[가-힣]{2,4}/);return m?m[0]:''},nums=v=>[...new Set([...String(v||'').replace(/(\d)[\s-]+(?=\d)/g,'$1').matchAll(/01[016789]\d{7,8}/g)].map(m=>m[0]))];
+ const fill=(k,n)=>{let s=cur[k]||SMS_DEF[k]||'';if(!n)s=s.replace('{이름}님 ','').replace('{이름}님','');return s.replace('{이름}',n).replace('{물건}',unit).replace('{날짜}',md).replace('{개월}',mon).replace('{일수}',days==null?'':days)};
+ const sec=(id,title,to,k,n,on)=>`<fieldset style="margin:8px 0;padding:8px;border:1px solid var(--line);border-radius:6px"><legend><label><input type="checkbox" id="${id}-on" ${on?'checked':''}> <b>${title}</b>에게 보내기</label></legend><input id="${id}-to" value="${esc(to)}" placeholder="번호" style="width:100%"><textarea id="${id}-t" rows="4" style="width:100%;margin-top:6px;font-size:14px">${esc(fill(k,n))}</textarea><div class="mut" style="font-size:12px">${n?esc(n)+'님 · ':''}문구는 설정 ▾ 문자 문구 관리에서 바꿀 수 있어요</div></fieldset>`;
+ const tn=nums(r.tenant_tel),on=nums(r.owner_tel);
+ const el=simpleModal('📩 만기 문자',`<div class="mut" style="font-size:13px">${esc(unit)} · 만기 ${ok?esc(md)+(days>=0?' ('+days+'일 후)':' (지남)'):'<b>미입력</b>'}</div>`+sec('t','임차인',tn[0]||'','mk2',nm(r.tenant),!!tn.length)+sec('o','임대인',on[0]||'','omk2',nm(r.owner),!tn.length&&!!on.length)+`<div style="margin-top:8px"><button class="b p" id="mk-go">보내기</button></div>`);
+ el.querySelector('#mk-go').onclick=async e=>{const jobs=[];for(const [id,lab] of [['t','임차인'],['o','임대인']]){if(!el.querySelector('#'+id+'-on').checked)continue;const to=el.querySelector('#'+id+'-to').value.replace(/\D/g,''),tx=el.querySelector('#'+id+'-t').value.trim();if(to.length<10)return alert(lab+' 번호를 확인해 주세요');if(!tx)return alert(lab+' 문구를 적어 주세요');if(/\{|\}/.test(tx))return alert(lab+' 문구에 { } 빈칸이 남아 있어요');jobs.push([lab,to,tx])}
+  if(!jobs.length)return alert('보낼 사람을 선택해 주세요');if(!confirm(jobs.map(j=>j[0]+' '+j[1]+'\n'+j[2]).join('\n\n')+'\n\n위 문자를 보낼까요?'))return;e.target.disabled=true;try{for(const j of jobs)await api('/api/sms_send',{method:'POST',body:JSON.stringify({phone:j[1],to:j[1],text:j[2]})});toast('발송 요청했어요 — 잠시 뒤 상담일지에 결과가 남아요');el.remove()}catch(x){alert('요청 실패: '+x.message);e.target.disabled=false}}}
 async function smsSendOpen(phone){let cur={},VDL=[];try{cur=((await api('/api/sms_tpl_get'))||{}).tpl||{}}catch(_){}try{VDL=(await api('/api/vendor_list'))||[]}catch(_){}
  const L=(CSL||[]).filter(x=>x.phone===phone);let dv={};for(const x of L)if(x.kind==='deal'){try{dv=JSON.parse(x.text)}catch(_){}}
  const name=($('#cs-name')&&$('#cs-name').value.trim())||(L.find(x=>x.client_name)||{}).client_name||'',lid=(CST[phone]||{}).listing_id,r0=lid?ROWS.find(r=>r.id===lid):null,unit=r0?cpUnit(r0)||'':'';
@@ -1576,7 +1586,7 @@ $('#dir-open').onclick=()=>{const P=$('#dirpanel');P.hidden=!P.hidden;if(!P.hidd
 // ---------- 상세/편집 ----------
 const WIDE={owner_tel:'w3',tenant_tel:'w3',ad_type:'w2',memo:'w4',owner_units:'w2',deal:'w2',ad:'w4',usage:'w2',status:'w2',direction:'w2',title:'w2',coagent:'w2'};
 async function openDrawer(id,tpl){if(FORM0!==null&&$('#drawer').classList.contains('on')&&JSON.stringify(collectForm())!==FORM0){try{await saveForm(false)}catch(e){}}CUR=id?{...ROWS.find(r=>r.id===id)}:(tpl?{...tpl}:{danji:'',deal:'',category:CAT});
- $('#d-title').textContent=id?`${CUR.danji||''} ${CUR.dong||''} ${CUR.ho||''}`:(tpl?'새 매물 (복사본 — 호수 등을 고치고 저장하세요)':'새 매물');$('#d-del').hidden=!id;$('#d-copy').hidden=!id;$('#d-cp').hidden=!id;$('#d-promo').hidden=!id;$('#d-bld').hidden=!id;cpBtn();
+ $('#d-title').textContent=id?`${CUR.danji||''} ${CUR.dong||''} ${CUR.ho||''}`:(tpl?'새 매물 (복사본 — 호수 등을 고치고 저장하세요)':'새 매물');$('#d-del').hidden=!id;$('#d-copy').hidden=!id;$('#d-cp').hidden=!id;$('#d-promo').hidden=!id;$('#d-mk').hidden=!id;$('#d-bld').hidden=!id;cpBtn();
  const fm=Object.fromEntries(META.fields.map(f=>[f[0],f]));const cat=CUR.category||CAT;
  derive(CUR);const avNow=CUR._avail&&CUR._avail!=='표시없음'?CUR._avail:'';const E=CUR.extra||{};
  const hide=k=>k==='usage'&&['아파트','상가','오피스'].includes(cat);  // 용도는 아파트·상가·오피스에선 안 씀(값은 보존)
