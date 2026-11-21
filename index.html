@@ -2075,10 +2075,10 @@ async function boot(){const g=$('#gate'),m=$('#gate-msg');
 boot();
 </script><script>
 (function(){const IDS=['f-kind','f-avail','f-use','recon-danji','recon-kind','call-st','call-cat'];
-const st=document.createElement('style');st.textContent='.chipsel-h{display:none!important}select.chipsel{font-size:15px;padding:5px 6px;max-width:100%}';document.head.appendChild(st);
+const st=document.createElement('style');st.textContent='.chipsel-h{display:none!important}.chips[hidden]{display:none!important}select.chipsel{font-size:15px;padding:5px 6px;max-width:100%}';document.head.appendChild(st);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms)),key=c=>(c.childNodes[0]?.textContent||'').trim();
 function setup(id){const box=document.getElementById(id);if(!box||box.dataset.cs)return;box.dataset.cs=1;box.classList.add('chipsel-h');
- const sel=document.createElement('select');sel.className='chipsel';box.parentNode.insertBefore(sel,box);let busy=false;
+ const sel=document.createElement('select');sel.className='chipsel';box.parentNode.insertBefore(sel,box.nextSibling);let busy=false;
  const sync=()=>{if(busy)return;const ch=[...box.querySelectorAll('.chip')];sel.style.display=(!ch.length||box.style.display==='none'||box.hidden)?'none':'';
   const hasAll=ch.length&&/전체/.test(key(ch[0])),on=ch.find(c=>c.classList.contains('on'));
   sel.innerHTML=(hasAll?'':'<option value="">전체</option>')+ch.map(c=>{const n=c.querySelector('i');return `<option value="${key(c).replace(/"/g,'&quot;')}">${key(c)}${n?' '+n.textContent:''}</option>`}).join('');
