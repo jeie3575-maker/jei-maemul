@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=0.5,maximum-scale=5"><style>html{-webkit-text-size-adjust:100%}@media(max-width:760px){input,select,textarea{font-size:16px!important}#t-cs{overflow:visible!important}#cs-list{max-height:none!important;overflow:visible!important}#cspanel div:has(>#cs-detail:not(:empty)) #cs-list{display:none}#cs-detail .cshd{top:46px}.cs-back{display:inline-block!important}}.cs-back{display:none}</style>
 <title>제이부동산 매물장</title><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="매물장"><meta name="mobile-web-app-capable" content="yes">
 <style>
 :root{--bg:#f6f7f9;--card:#fff;--line:#e3e6ea;--text:#1d2430;--mut:#6b7480;--acc:#1f6feb;--red:#d1242f;--org:#bc4c00;--grn:#1a7f37;--yel:#fff8c5}
@@ -542,7 +542,7 @@ async function api(u, o = {}) {
 }
 </script>
 <style>#tabs button[data-t=io],#tg{display:none}</style></head><body>
-<header><b>🏡 제이부동산 매물장</b><input id="pl-top" placeholder="🔎 통합조회" title="이름·전화번호·단지·메모 등 아무거나 + Enter: 매물장·손님상담일지·문자·협력업체 전체 검색" style="width:120px;min-width:90px;margin:0 8px;padding:3px 8px;border-radius:14px;border:1px solid var(--line);font-size:13px"><nav id="tabs">
+<header><b id="home-t" style="cursor:pointer" title="메인(매물장)으로">🏡 제이부동산 매물장</b><input id="pl-top" placeholder="🔎 통합조회" title="이름·전화번호·단지·메모 등 아무거나 + Enter: 매물장·손님상담일지·문자·협력업체 전체 검색" style="width:120px;min-width:90px;margin:0 8px;padding:3px 8px;border-radius:14px;border:1px solid var(--line);font-size:13px"><nav id="tabs">
 <button data-t="sise">💹 시세</button><button data-t="list" class="on">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 손님상담일지</button><button data-t="work">🕘 내 근무</button><button data-t="brief">📰 정책·뉴스</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
 <span class="sp"></span><small id="info"></small><button class="fsb" id="fs-" title="글씨 작게">가−</button><button class="fsb" id="fs+" title="글씨 크게">가+</button><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
 <main>
@@ -652,7 +652,7 @@ const askPrice=r=>{const k=kinds(r.deal),o=[];if(k.includes('매매')&&r.sale)o.
 const dday=s=>s?Math.round((new Date(s)-new Date(new Date().toDateString()))/864e5):null;
 const ddHtml=s=>{const d=dday(s);if(d==null)return'';return `<span class="dd ${d<0?'r':d<=31?'r':d<=92?'o':''}">${d<0?'지남 '+(-d)+'일':'D-'+d}</span>`};
 
-document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{if(!window.__inPop&&!window.__noTabPush&&((history.state||{}).t!==b.dataset.t||(history.state||{}).jv!=='tab')){try{history.pushState({jv:'tab',t:b.dataset.t},'')}catch(_){}}window.__noTabPush=false;if(!window.__keepScroll)window.scrollTo(0,0);document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
  document.querySelectorAll('main>section').forEach(s=>s.hidden=s.id!=='t-'+b.dataset.t);({recon:loadRecon,manki:renderManki,list:renderList,co:renderCo,rta:renderRta,call:renderCall,cs:renderCS,sise:renderSise})[b.dataset.t]?.()});
 
 function chips(el,opts,set,cb,counts){el.innerHTML=opts.map(o=>`<span class="chip ${set.has(o)?'on':''}" data-v="${esc(o)}">${esc(o)}${counts?`<i>${counts[o]||0}</i>`:''}</span>`).join('');
@@ -929,17 +929,31 @@ var KSEL=-1;document.addEventListener('keydown',e=>{if(!['ArrowDown','ArrowUp','
  if(e.key==='Enter'){if(KSEL>=0&&trs[KSEL]){e.preventDefault();openDrawer(+trs[KSEL].dataset.id)}return}
  e.preventDefault();KSEL=Math.max(0,Math.min(trs.length-1,KSEL+(e.key==='ArrowDown'?1:-1)));trs.forEach((x,i)=>x.classList.toggle('ksel',i===KSEL));trs[KSEL].scrollIntoView({block:'nearest'})});
 // ---- CSV · QR · 홈 화면 안내 ----
-function simpleModal(title,html){document.getElementById('promo')?.remove();const el=document.createElement('div');el.id='promo';el.innerHTML=`<div class="box"><div class="ph"><b>${title}</b><button class="b" id="pm-x">닫기</button></div><div class="pb">${html}</div></div>`;document.body.appendChild(el);el.querySelector('#pm-x').onclick=()=>el.remove();el.onclick=e=>{if(e.target===el)el.remove()};return el}
+function simpleModal(title,html){document.getElementById('promo')?.remove();const el=document.createElement('div');el.id='promo';el.innerHTML=`<div class="box"><div class="ph"><b>${title}</b><button class="b" id="pm-x">닫기</button></div><div class="pb">${html}</div></div>`;document.body.appendChild(el);const cl=()=>{if(!el.isConnected)return;if((history.state||{}).jv==='modal'&&!window.__inPop){history.back()}else el.remove()};el.querySelector('#pm-x').onclick=cl;el.onclick=e=>{if(e.target===el)cl()};if(!window.__inPop){try{history.pushState({jv:'modal',t:curTabId()},'')}catch(_){}}return el}
 
 const SMS_KINDS=[['cd3','계약서 작성일 3일 전'],['cd1','계약서 작성일 1일 전'],['mid3','중도금일 3일 전'],['bal3','잔금일 3일 전'],['mv1','잔금·입주일 1일 전'],['mk2','만기 2개월 전 · 임차인용'],['omk2','만기 2개월 전 · 임대인용']];
 const SMS_DEF={cd3:'안녕하세요~ 용산 호반제이 공인중개사사무소입니다! {이름}님, {물건} 계약이 {날짜}에 예정되어 있어 안내드립니다! 신분증 및 도장 지참하시여 방문 부탁드리며, 변동사항 있으시면 연락 주세요!',cd1:'안녕하세요~ 용산 호반제이 공인중개사사무소입니다! {이름}님, {물건} 계약이 {날짜}에 예정되어 있어 안내드립니다! 신분증 및 도장 지참하시여 방문 부탁드립니다!\n\n아래 저희 사무실 네이버지도 URL 보내드립니다.\n지하2-3층에 주차하시고 1층으로 오시면 됩니다!\nhttps://naver.me/FZ8Fbw0p',mid3:'안녕하세요~ 용산 호반제이 공인중개사사무소입니다! {이름}님, {물건} 중도금일은 {날짜}({일수}일 후)입니다. 납부 준비 확인 부탁드립니다!',bal3:'안녕하세요~ 용산 호반제이 공인중개사사무소입니다! {이름}님, {물건} 잔금일은 {날짜}({일수}일 후)입니다. 잔금 준비와 관리비 정산·이사 일정 확인 부탁드립니다.',mv1:'안녕하세요~ 용산 호반제이 공인중개사사무소입니다! {이름}님, 내일({날짜}) {물건} 잔금일입니다. 신분증 지참과 관리비 정산, 열쇠 인계 사항을 미리 확인 부탁드립니다. 문의는 언제든 연락 주세요!',mk2:'안녕하세요~ 용산 호반제이 공인중개사사무소입니다! {이름}님, {물건} 임대차 계약 만기가 {날짜}({개월}개월 후)입니다. 재계약이나 이전 계획이 있으시면 편하실 때 연락 주세요!',omk2:'안녕하세요~ 용산 호반제이 공인중개사사무소입니다! {이름}님, {물건} 임대차 계약 만기가 {날짜}({개월}개월 후)입니다. 재계약 여부와 조건(임대료 조정 등), 또는 재임대 계획을 편하실 때 알려 주세요. 새 임차인 일정도 미리 준비해 드리겠습니다!'};
 
 
+// ---- 11/21 뒤로가기(이전 화면) · 메인 이동 ----
+const curTabId=()=>(document.querySelector('#tabs button.on')||{}).dataset?.t||'list';
+try{history.scrollRestoration='manual';history.replaceState({jv:'tab',t:curTabId()},'')}catch(_){}
+document.getElementById('home-t')?.addEventListener('click',async()=>{document.getElementById('promo')?.remove();try{await closeDrawer()}catch(_){}document.querySelector('#tabs button[data-t="list"]')?.click();window.scrollTo(0,0)});
+window.addEventListener('popstate',async e=>{if(window.__popres){const r=window.__popres;window.__popres=null;return r()}
+ const s=e.state||{jv:'tab',t:'list'};window.__inPop=true;
+ try{const pm=document.getElementById('promo');if(pm&&s.jv!=='modal')pm.remove();
+  if($('#drawer').classList.contains('on')&&s.jv!=='drawer')await closeDrawer();
+  const tab=t=>{if(t&&curTabId()!==t){window.__keepScroll=true;document.querySelector(`#tabs button[data-t="${t}"]`)?.click();window.__keepScroll=false}};
+  if(s.jv==='tab'){tab(s.t);if(s.t==='cs'&&CSP&&$('#cs-detail')){CSP='';$('#cs-detail').innerHTML=''}}
+  else if(s.jv==='cs'){tab('cs');drawCSDetail(s.p,true)}
+  else if(s.jv==='modal'){tab(s.t);if(!document.getElementById('promo')){if(s.pl!=null)phoneLookupOpen(s.pl);else history.back()}else if(pm&&s.pl==null){}}
+  else if(s.jv==='drawer'){if(!$('#drawer').classList.contains('on'))history.back()}
+ }finally{window.__inPop=false}});
 // ---- 11/21 통합조회 (매물·손님상담일지·문자기록·협력업체 전체 검색) · 협력업체 ----
 document.getElementById('pl-top')?.addEventListener('keydown',e=>{if(e.key!=='Enter')return;const v=e.target.value.trim();if(!v)return;e.target.value='';phoneLookupOpen(v)});
 function phoneLookupOpen(pre){
  const el=simpleModal('🔎 통합조회',`<div style="display:flex;gap:6px"><input id="pl-q" placeholder="이름 · 전화번호 · 단지 · 호수 · 메모 등 아무거나" style="flex:1;font-size:16px"><button class="b p" id="pl-go">검색</button></div><div class="mut" style="font-size:12px;margin-top:4px">띄어쓰기로 여러 단어를 넣으면 모두 들어간 것만 찾아요. 전화번호는 하이픈·띄어쓰기 상관없이 일부만 넣어도 돼요.</div><div id="pl-r" style="margin-top:10px" class="mut">매물장 전체(소유자·임차인·메모 포함) · 손님 상담일지 · 문자 기록 · 협력업체를 한 번에 찾아요.</div>`);
- const q=el.querySelector('#pl-q'),R=el.querySelector('#pl-r');let VD=null,seq=0;
+ const q=el.querySelector('#pl-q'),R=el.querySelector('#pl-r');let VD=null,seq=0;const keepQ=()=>{try{if((history.state||{}).jv==='modal')history.replaceState({...history.state,pl:q.value},'')}catch(_){}};
  const SK=new Set(['id','notion_id','notion_url','source','created','updated','notion_created','notion_edited','extra']);
  const LB={title:'제목',danji:'단지',dong:'동',ho:'호',typ:'타입',deal:'거래',status:'상태',usage:'용도',ad:'광고',consult:'상담',owner:'임대인',owner_tel:'임대인 연락처',tenant:'임차인',tenant_tel:'임차인 연락처',owner_units:'소유구분',coagent:'공동중개',co_office:'업체',memo:'메모',category:'분류',manki:'만기'};
  const rowF=r=>{const f=[];for(const k in r){if(SK.has(k))continue;const v=r[k];if(v==null||v===''||typeof v==='object')continue;f.push([LB[k]||k,String(v)])}const ex=r.extra;if(ex&&typeof ex==='object')for(const k in ex){const v=ex[k];if(v!=null&&v!=='')f.push([k,typeof v==='object'?JSON.stringify(v):String(v)])}return f};
@@ -948,7 +962,7 @@ function phoneLookupOpen(pre){
  const hit=(f,tk)=>{let first=null;for(const x of tk){let ok=null;for(const [l,v] of f){const m=x.re.exec(v);if(m){ok=[l,v,m.index];break}}if(!ok)return null;if(!first)first=ok}return first};
  let TK=[];const hl=s=>{s=String(s);const rs=[];for(const x of TK){x.rg.lastIndex=0;let m;while((m=x.rg.exec(s))&&m[0]){rs.push([m.index,m.index+m[0].length])}}rs.sort((a,b)=>a[0]-b[0]);let o='',p=0;for(const [a,b] of rs){if(a<p)continue;o+=esc(s.slice(p,a))+'<mark style="background:#ffe066;color:#222;padding:0 1px;border-radius:2px">'+esc(s.slice(a,b))+'</mark>';p=b}return o+esc(s.slice(p))};
  const snip=(h,w)=>{const [l,v,i]=h;const a=Math.max(0,i-18),t=String(v).replace(/\s+/g,' ');return esc(l)+': '+(a?'…':'')+hl(t.slice(a,a+(w||60)))};
- const run=async()=>{const s=q.value.trim(),tk=parse(s),my=++seq;TK=tk;
+ const run=async()=>{const s=q.value.trim(),tk=parse(s),my=++seq;TK=tk;keepQ();
   if(!tk.length){R.innerHTML='';return}
   if(tk.length===1&&tk[0].t.length<2)return R.innerHTML='<span class="mut">두 글자 이상 넣어 주세요</span>';
   if(tk.length===1&&tk[0].d&&tk[0].d.length<3&&tk[0].t===tk[0].d)return R.innerHTML='<span class="mut">숫자는 3자리 이상 넣어 주세요</span>';
@@ -966,7 +980,7 @@ function phoneLookupOpen(pre){
   let h=`<h4 style="margin:6px 0">🏠 매물 ${rows.length}건</h4>`+(rows.slice(0,M).map(([r,x])=>`<div style="display:flex;gap:8px;align-items:center;padding:4px 6px;border-bottom:1px solid var(--line)"><span data-pl-open="${esc(r.id)}" style="flex:1;cursor:pointer"><b>${hl(cpUnit(r))}</b> <span class="mut">${esc(r.category||'')}</span><div class="mut" style="font-size:12px">${snip(x)}</div></span><span>${esc(askPrice(r))}</span></div>`).join('')||'<div class="mut">없음</div>')+more(rows.length);
   h+=`<h4 style="margin:12px 0 6px">📒 손님 상담일지 ${gs.length}명</h4>`+(gs.slice(0,M).map(([ph,nm,x])=>`<div style="border:1px solid var(--line);border-radius:6px;padding:6px 8px;margin:5px 0;display:flex;gap:8px;align-items:center"><span style="flex:1"><b>${nm?hl(nm):'(이름 없음)'}</b> ${hl(fmtPh(ph))} <span class="mut">· ${esc((CST[ph]||{}).stage||'상담중')}</span><div class="mut" style="font-size:12px">${snip(x,80)}</div></span><button class="b" data-pl-cs="${esc(ph)}">열기</button></div>`).join('')||'<div class="mut">없음</div>')+more(gs.length);
   if(vds.length)h+=`<h4 style="margin:12px 0 6px">🏢 협력업체 ${vds.length}곳</h4>`+vds.slice(0,M).map(([v,x])=>`<div data-pl-vd style="padding:4px 6px;border-bottom:1px solid var(--line);cursor:pointer"><b>${hl(v.name||'')}</b> <span class="mut">${esc(v.cat||'')} ${hl(v.tel||'')}</span><div class="mut" style="font-size:12px">${snip(x)}</div></div>`).join('');
-  R.innerHTML=h;R.querySelectorAll('[data-pl-open]').forEach(a=>a.onclick=()=>{el.remove();openDrawer(isNaN(+a.dataset.plOpen)?a.dataset.plOpen:+a.dataset.plOpen)});R.querySelectorAll('[data-pl-cs]').forEach(b=>b.onclick=()=>{const p=b.dataset.plCs;el.remove();document.querySelector('#tabs button[data-t="cs"]').click();setTimeout(()=>drawCSDetail(p),250)});R.querySelectorAll('[data-pl-vd]').forEach(b=>b.onclick=()=>{el.remove();vendorOpen()})};
+  R.innerHTML=h;R.querySelectorAll('[data-pl-open]').forEach(a=>a.onclick=()=>{el.remove();openDrawer(isNaN(+a.dataset.plOpen)?a.dataset.plOpen:+a.dataset.plOpen)});R.querySelectorAll('[data-pl-cs]').forEach(b=>b.onclick=()=>{const p=b.dataset.plCs;el.remove();window.__noTabPush=true;document.querySelector('#tabs button[data-t="cs"]').click();setTimeout(()=>drawCSDetail(p),250)});R.querySelectorAll('[data-pl-vd]').forEach(b=>b.onclick=()=>{el.remove();vendorOpen()})};
  el.querySelector('#pl-go').onclick=run;let tm;q.oninput=()=>{clearTimeout(tm);tm=setTimeout(run,350)};q.onkeydown=e=>{if(e.key==='Enter'){clearTimeout(tm);run()}};if(pre){q.value=pre;run()}else q.focus()}
 const VD_CATS=['평면도','분양대행사','인테리어','철거','이사·청소','대출상담사','법무·세무','변호사·행정사','교육·강좌','기타'];
 async function vendorOpen(){let V=[];const load=async()=>{try{V=(await api('/api/vendor_list'))||[]}catch(e){alert('불러오지 못했어요: '+e.message)}};await load();let cat='전체',edit=null;
@@ -1392,14 +1406,14 @@ function csPagesBind(el,phone){const re=()=>drawCSDetail(phone);
  el.querySelectorAll('[data-cpl]').forEach(b=>b.onclick=()=>navigator.clipboard.writeText(CP_SITE+b.dataset.cpl).then(()=>toast('링크를 복사했어요 (비밀번호는 따로)')));
  el.querySelectorAll('[data-cpd]').forEach(b=>b.onclick=async()=>{if(!confirm('이 손님 페이지를 지울까요? 링크가 바로 닫혀요.'))return;await api('/api/client_delete?token='+encodeURIComponent(b.dataset.cpd),{method:'POST'});toast('지웠어요');re()})}
 let CSB=null;   // 지금 손님 화면에서 '보여줄 매물' (담기 바구니와 합침)
-async function drawCSDetail(phone){CSP=phone;const el=$('#cs-detail');let L=[],P=[];
+async function drawCSDetail(phone,fromPop){CSP=phone;const el=$('#cs-detail');if(phone&&!fromPop&&!window.__inPop&&(history.state||{}).p!==phone){try{history.pushState({jv:'cs',p:phone,t:'cs'},'')}catch(_){}}let L=[],P=[];
  if(phone){try{[L,P]=await Promise.all([api('/api/consult_get?phone='+encodeURIComponent(phone)),api('/api/client_list')]);P=P.filter(p=>p.phone===phone)}catch(e){el.textContent='못 불러왔어요: '+e.message;return}}
  const name=(L.slice().reverse().find(x=>x.client_name)||{}).client_name||'';
  const last=k=>{for(let i=L.length-1;i>=0;i--)if(L[i][k])return L[i][k];return ''};
  const live=P.find(p=>new Date(p.expires)>new Date()&&!p.locked)||P.find(p=>new Date(p.expires)>new Date())||null;
  CSB=[...new Set([...(live?live.listing_ids||[]:[]),...cpGet()])];
  const unit=i=>{const r=ROWS.find(x=>x.id===i);return r?`<a href="#" data-csopen="${i}">${esc(cpUnit(r))}</a>`:'(지운 매물)'};
- el.innerHTML=`<div class="cshd"><h4 style="margin:0">${phone?esc(name||'이름 없음')+' · '+esc(fmtPh(phone)):'새 상담'}</h4>${phone?`<a href="tel:${esc(phone)}" class="mut">전화 걸기</a>`:''}<span style="margin-left:auto;display:flex;gap:6px">${phone?`<button class="b d" id="cs-delall">🗑 전체 삭제</button>`:''}<button class="b p" id="cs-add">저장</button></span></div>
+ el.innerHTML=`<div class="cshd"><button class="b cs-back" id="cs-back">← 목록</button><h4 style="margin:0">${phone?esc(name||'이름 없음')+' · '+esc(fmtPh(phone)):'새 상담'}</h4>${phone?`<a href="tel:${esc(phone)}" class="mut">전화 걸기</a>`:''}<span style="margin-left:auto;display:flex;gap:6px">${phone?`<button class="b d" id="cs-delall">🗑 전체 삭제</button>`:''}<button class="b p" id="cs-add">저장</button></span></div>
  ${phone?`<div class="csec"><h4>📌 진행 상황</h4>${csStaffHtml(L)}${csStageHtml(phone,L)}${csCheckHtml(phone,L)}${csPagesHtml(P)}</div>`:''}
  <div class="csec"><h4>📝 상담 기록</h4><div style="display:flex;gap:6px;margin:0 0 8px;align-items:stretch"><textarea id="cs-text" rows="2" style="flex:1;min-width:0" placeholder="상담 메모 입력 (⌘+Enter 저장 · 상담일지에만 남음 · 작성자는 로그인한 계정으로 자동)"></textarea><button class="b p" id="cs-text-save">저장</button></div><div id="cs-result"></div>
  <div style="max-height:min(60vh,520px);overflow:auto;margin:8px 0 0">${L.map(x=>`<div class="cslog" style="border-left:5px solid ${x.kind==='view'?'#7aa7ff':x.kind==='page'?'var(--acc,#f26b1d)':'#b4bfd0'}">
@@ -1450,6 +1464,7 @@ async function drawCSDetail(phone){CSP=phone;const el=$('#cs-detail');let L=[],P
   const det=[k==='mf'?'잔금일 '+bal+' · 관리사무소에 관리비 정산 요청':'',$('#cs-d-amt').value.trim()?'계약금액 '+$('#cs-d-amt').value.trim():'',bal&&k!=='bal'?'잔금일 '+bal:''].filter(Boolean).join('\n');
   b.disabled=true;api('/api/gcal_add',{method:'POST',body:JSON.stringify({tag:phone+'-'+k,title:ttl,date:d,details:det,time:k==='cd'?$('#cs-d-cdt').value:k==='bal'?$('#cs-d-balt').value:'',dur:60})}).then(r=>{if(r&&r.error)throw new Error(r.error);toast('호반제이 캘린더에 넣었어요 · '+d+(k==='cd'&&$('#cs-d-cdt').value?' '+$('#cs-d-cdt').value:k==='bal'&&$('#cs-d-balt').value?' '+$('#cs-d-balt').value:''))}).catch(e=>alert('캘린더 저장 실패: '+e.message)).finally(()=>b.disabled=false)});
  $('#cs-text-save').onclick=()=>$('#cs-add').click();
+ $('#cs-back').onclick=()=>{if((history.state||{}).jv==='cs')history.back();else{CSP='';el.innerHTML=''}};if(innerWidth<=760)window.scrollTo(0,0);
  $('#cs-text').onkeydown=e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)){e.preventDefault();$('#cs-add').click()}};
 
  const sg=$('#cs-stage');if(sg){sg.onchange=()=>{$('#cs-stl').hidden=sg.value==='상담중'};const sq=$('#cs-stq');sq.oninput=()=>{const ws=sq.value.trim().split(/\s+/);if(sq.value.trim().length<2)return;$('#cs-stq-dl').innerHTML=ROWS.filter(r=>ws.every(x=>cpUnit(r).includes(x))).slice(0,30).map(r=>`<option value="${esc(cpUnit(r))}">`).join('')}}
@@ -1638,7 +1653,7 @@ async function openDrawer(id,tpl){if(FORM0!==null&&$('#drawer').classList.contai
  $('#d-body').querySelectorAll('[data-open]').forEach(a=>a.onclick=e=>{e.preventDefault();openDrawer(+a.dataset.open)});
  const exWire=()=>$('#ex-box').querySelectorAll('.ex-del').forEach(x=>x.onclick=()=>x.parentElement.remove());exWire();
  $('#ex-add').onclick=()=>{$('#ex-box').insertAdjacentHTML('beforeend',exRow('',''));exWire();$('#ex-box').lastElementChild.querySelector('.ex-k').focus()};
- setTimeout(markForm,0);$('#av-clear').onclick=()=>{$('#av-chips').querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));$('#av-date').value='';avSet()};$('#drawer').classList.add('on');
+ setTimeout(markForm,0);$('#av-clear').onclick=()=>{$('#av-chips').querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));$('#av-date').value='';avSet()};$('#drawer').classList.add('on');if(!window.__inPop&&(history.state||{}).jv!=='drawer'){try{history.pushState({jv:'drawer',t:curTabId()},'')}catch(_){}}
  if(id)renderSub(await api('/api/unit?id='+id))}
 // ---------- 같은 층 입점 업체 (소상공인 상가정보) ----------
 const STORE_BLD={'센트럴파크':[['서빙고로 17'],['센트럴파크']],'래미안':[['한강대로 95'],['래미안']],'써밋':[['한강대로 69'],['푸르지오']],'호반':[['한강대로 66'],['호반']],
@@ -1685,7 +1700,7 @@ function collectForm(){const d={id:CUR.id,category:CUR.category||CAT};$('#d-body
 let FORM0=null;const markForm=()=>{FORM0=JSON.stringify(collectForm())};
 async function saveForm(reopen){const d=collectForm();if(JSON.stringify(d)===FORM0&&CUR.id){return null}
  const r=await api('/api/listings',{method:'POST',body:JSON.stringify(d)});ROWS=await api('/api/listings');renderList();FORM0=JSON.stringify(d);toast(reopen?'저장했습니다':'바뀐 내용을 자동 저장했습니다');if(reopen)openDrawer(r.id);return r}
-async function closeDrawer(){if(!$('#drawer').classList.contains('on'))return;const dirty=FORM0!==null&&JSON.stringify(collectForm())!==FORM0;$('#drawer').classList.remove('on');if(dirty){try{await saveForm(false)}catch(err){alert('자동 저장 실패: '+err.message+'\n다시 열어서 [저장]을 눌러 주세요.')}}FORM0=null}
+async function closeDrawer(){if(!$('#drawer').classList.contains('on'))return;const dirty=FORM0!==null&&JSON.stringify(collectForm())!==FORM0;$('#drawer').classList.remove('on');if(dirty){try{await saveForm(false)}catch(err){alert('자동 저장 실패: '+err.message+'\n다시 열어서 [저장]을 눌러 주세요.')}}FORM0=null;if(!window.__inPop&&(history.state||{}).jv==='drawer')await new Promise(r=>{window.__popres=r;history.back();setTimeout(r,400)})}
 $('#d-close').onclick=closeDrawer;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
 $('#d-save').onclick=()=>saveForm(true);
