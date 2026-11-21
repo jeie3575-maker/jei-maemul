@@ -542,7 +542,7 @@ async function api(u, o = {}) {
 }
 </script>
 <style>#tabs button[data-t=io],#tg{display:none}</style></head><body>
-<header><b>🏡 제이부동산 매물장</b><nav id="tabs">
+<header><b>🏡 제이부동산 매물장</b><input id="pl-top" inputmode="numeric" placeholder="🔎 번호 조회" title="전화번호 뒷자리 4자리 이상 + Enter: 손님·매물·문자 통합조회" style="width:120px;min-width:90px;margin:0 8px;padding:3px 8px;border-radius:14px;border:1px solid var(--line);font-size:13px"><nav id="tabs">
 <button data-t="sise">💹 시세</button><button data-t="list" class="on">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 손님상담일지</button><button data-t="work">🕘 내 근무</button><button data-t="brief">📰 정책·뉴스</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
 <span class="sp"></span><small id="info"></small><button class="fsb" id="fs-" title="글씨 작게">가−</button><button class="fsb" id="fs+" title="글씨 크게">가+</button><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
 <main>
@@ -936,6 +936,7 @@ const SMS_DEF={ocd3:'[용산호반제이공인중개사] {이름}님 안녕하�
 
 
 // ---- 11/21 번호 통합조회 · 협력업체 ----
+document.getElementById('pl-top')?.addEventListener('keydown',e=>{if(e.key!=='Enter')return;const v=e.target.value.trim();if(v.replace(/\D/g,'').length<4)return toast&&toast('숫자 4자리 이상 넣어 주세요');e.target.value='';phoneLookupOpen(v)});
 function phoneLookupOpen(pre){
  const el=simpleModal('🔎 번호 통합조회',`<div style="display:flex;gap:6px"><input id="pl-q" inputmode="numeric" placeholder="전화번호 (뒷 4자리 이상)" style="flex:1;font-size:16px"><button class="b p" id="pl-go">조회</button></div><div id="pl-r" style="margin-top:10px" class="mut">번호를 넣으면 손님 상담일지 · 임대인/임차인 매물 · 문자 기록을 한 번에 보여줘요.</div>`);
  const q=el.querySelector('#pl-q'),R=el.querySelector('#pl-r'),dg=s=>String(s||'').replace(/(\d)[\s-]+(?=\d)/g,'$1').replace(/\D+/g,' ');
