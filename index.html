@@ -542,7 +542,7 @@ async function api(u, o = {}) {
 }
 </script>
 <style>#tabs button[data-t=io],#tg{display:none}</style></head><body>
-<header><b>🏡 제이부동산 매물장</b><input id="pl-top" inputmode="numeric" placeholder="🔎 번호 조회" title="전화번호 뒷자리 4자리 이상 + Enter: 손님·매물·문자 통합조회" style="width:120px;min-width:90px;margin:0 8px;padding:3px 8px;border-radius:14px;border:1px solid var(--line);font-size:13px"><nav id="tabs">
+<header><b>🏡 제이부동산 매물장</b><input id="pl-top" placeholder="🔎 통합조회" title="이름·전화번호·단지·메모 등 아무거나 + Enter: 매물장·손님상담일지·문자·협력업체 전체 검색" style="width:120px;min-width:90px;margin:0 8px;padding:3px 8px;border-radius:14px;border:1px solid var(--line);font-size:13px"><nav id="tabs">
 <button data-t="sise">💹 시세</button><button data-t="list" class="on">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 손님상담일지</button><button data-t="work">🕘 내 근무</button><button data-t="brief">📰 정책·뉴스</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
 <span class="sp"></span><small id="info"></small><button class="fsb" id="fs-" title="글씨 작게">가−</button><button class="fsb" id="fs+" title="글씨 크게">가+</button><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
 <main>
@@ -935,21 +935,37 @@ const SMS_KINDS=[['cd3','계약서 작성일 3일 전'],['cd1','계약서 작성
 const SMS_DEF={cd3:'안녕하세요~ 용산 호반제이 공인중개사사무소입니다! {이름}님, {물건} 계약이 {날짜}에 예정되어 있어 안내드립니다! 신분증 및 도장 지참하시여 방문 부탁드리며, 변동사항 있으시면 연락 주세요!',cd1:'안녕하세요~ 용산 호반제이 공인중개사사무소입니다! {이름}님, {물건} 계약이 {날짜}에 예정되어 있어 안내드립니다! 신분증 및 도장 지참하시여 방문 부탁드립니다!\n\n아래 저희 사무실 네이버지도 URL 보내드립니다.\n지하2-3층에 주차하시고 1층으로 오시면 됩니다!\nhttps://naver.me/FZ8Fbw0p',mid3:'안녕하세요~ 용산 호반제이 공인중개사사무소입니다! {이름}님, {물건} 중도금일은 {날짜}({일수}일 후)입니다. 납부 준비 확인 부탁드립니다!',bal3:'안녕하세요~ 용산 호반제이 공인중개사사무소입니다! {이름}님, {물건} 잔금일은 {날짜}({일수}일 후)입니다. 잔금 준비와 관리비 정산·이사 일정 확인 부탁드립니다.',mv1:'안녕하세요~ 용산 호반제이 공인중개사사무소입니다! {이름}님, 내일({날짜}) {물건} 잔금일입니다. 신분증 지참과 관리비 정산, 열쇠 인계 사항을 미리 확인 부탁드립니다. 문의는 언제든 연락 주세요!',mk3:'안녕하세요~ 용산 호반제이 공인중개사사무소입니다! {이름}님, {물건} 임대차 계약 만기가 {날짜}({개월}개월 후)입니다. 재계약이나 이전 계획이 있으시면 편하실 때 연락 주세요!',mk2:'안녕하세요~ 용산 호반제이 공인중개사사무소입니다! {이름}님, {물건} 임대차 계약 만기가 {날짜}({개월}개월 후)입니다. 재계약이나 이전 계획이 있으시면 편하실 때 연락 주세요!'};
 
 
-// ---- 11/21 번호 통합조회 · 협력업체 ----
-document.getElementById('pl-top')?.addEventListener('keydown',e=>{if(e.key!=='Enter')return;const v=e.target.value.trim();if(v.replace(/\D/g,'').length<4)return toast&&toast('숫자 4자리 이상 넣어 주세요');e.target.value='';phoneLookupOpen(v)});
+// ---- 11/21 통합조회 (매물·손님상담일지·문자기록·협력업체 전체 검색) · 협력업체 ----
+document.getElementById('pl-top')?.addEventListener('keydown',e=>{if(e.key!=='Enter')return;const v=e.target.value.trim();if(!v)return;e.target.value='';phoneLookupOpen(v)});
 function phoneLookupOpen(pre){
- const el=simpleModal('🔎 번호 통합조회',`<div style="display:flex;gap:6px"><input id="pl-q" inputmode="numeric" placeholder="전화번호 (뒷 4자리 이상)" style="flex:1;font-size:16px"><button class="b p" id="pl-go">조회</button></div><div id="pl-r" style="margin-top:10px" class="mut">번호를 넣으면 손님 상담일지 · 임대인/임차인 매물 · 문자 기록을 한 번에 보여줘요.</div>`);
- const q=el.querySelector('#pl-q'),R=el.querySelector('#pl-r'),dg=s=>String(s||'').replace(/(\d)[\s-]+(?=\d)/g,'$1').replace(/\D+/g,' ');
- const run=()=>{const d=q.value.replace(/\D/g,'');if(d.length<4){R.innerHTML='<span class="mut">숫자 4자리 이상 넣어 주세요</span>';return}
-  const hasN=t=>dg(t).split(' ').some(x=>x&&x.includes(d));
-  const own=[];for(const r of ROWS){if(hasN(r.owner_tel))own.push([r,'임대인·소유자',r.owner]);if(hasN(r.tenant_tel))own.push([r,'임차인',r.tenant])}
-  const gs=csGroups().filter(g=>g.phone.includes(d));
-  let h='';
-  h+=`<h4 style="margin:6px 0">📒 손님 상담일지 ${gs.length}명</h4>`+(gs.map(g=>{const L=(CSL||[]).filter(x=>x.phone===g.phone).sort((a,b)=>String(b.at).localeCompare(String(a.at)));const nm=(L.find(x=>x.client_name)||{}).client_name||'';const memos=L.filter(x=>x.kind==='memo'&&x.text&&!/^📨|^❗/.test(x.text)).slice(0,3);const sms=L.filter(x=>x.text&&/^📨 문자 발송/.test(x.text)).slice(0,5);
-   return `<div style="border:1px solid var(--line);border-radius:6px;padding:8px;margin:6px 0"><b>${esc(nm||'(이름 없음)')}</b> ${esc(fmtPh(g.phone))} <span class="mut">· ${esc((CST[g.phone]||{}).stage||'상담중')}</span> <button class="b" data-pl-cs="${esc(g.phone)}">상담일지 열기</button>${memos.map(m=>`<div class="mut" style="font-size:13px;margin-top:3px">${esc(String(m.at).slice(5,10))} ${esc(String(m.text).replace(/\s+/g,' ').slice(0,90))}</div>`).join('')}${sms.length?`<div style="font-size:13px;margin-top:4px"><b>💬 문자 기록</b>${sms.map(m=>`<div class="mut">${esc(String(m.at).slice(5,10))} ${esc(String(m.text).replace('📨 문자 발송: ','').slice(0,80))}</div>`).join('')}</div>`:''}</div>`}).join('')||'<div class="mut">없음</div>');
-  h+=`<h4 style="margin:10px 0 6px">🏠 연락처로 걸린 매물 ${own.length}건</h4>`+(own.slice(0,40).map(([r,role,nm])=>`<div style="display:flex;gap:8px;align-items:center;padding:4px 6px;border-bottom:1px solid var(--line)"><span data-pl-open="${r.id}" style="flex:1;cursor:pointer"><b>${esc(cpUnit(r))}</b> <span class="mut">${esc(r.category||'')} · ${esc(role)}${nm?' '+esc(String(nm).slice(0,12)):''}</span></span><span>${esc(askPrice(r))}</span></div>`).join('')||'<div class="mut">없음</div>');
-  R.innerHTML=h;R.querySelectorAll('[data-pl-open]').forEach(a=>a.onclick=()=>{el.remove();openDrawer(+a.dataset.plOpen)});R.querySelectorAll('[data-pl-cs]').forEach(b=>b.onclick=()=>{const p=b.dataset.plCs;el.remove();B('cs').click();setTimeout(()=>drawCSDetail(p),250)})};
- el.querySelector('#pl-go').onclick=run;q.onkeydown=e=>{if(e.key==='Enter')run()};if(pre){q.value=pre;run()}else q.focus()}
+ const el=simpleModal('🔎 통합조회',`<div style="display:flex;gap:6px"><input id="pl-q" placeholder="이름 · 전화번호 · 단지 · 호수 · 메모 등 아무거나" style="flex:1;font-size:16px"><button class="b p" id="pl-go">검색</button></div><div class="mut" style="font-size:12px;margin-top:4px">띄어쓰기로 여러 단어를 넣으면 모두 들어간 것만 찾아요. 전화번호는 하이픈·띄어쓰기 상관없이 일부만 넣어도 돼요.</div><div id="pl-r" style="margin-top:10px" class="mut">매물장 전체(소유자·임차인·메모 포함) · 손님 상담일지 · 문자 기록 · 협력업체를 한 번에 찾아요.</div>`);
+ const q=el.querySelector('#pl-q'),R=el.querySelector('#pl-r');let VD=null,seq=0;
+ const SK=new Set(['id','notion_id','notion_url','source','created','updated','notion_created','notion_edited','extra']);
+ const LB={title:'제목',danji:'단지',dong:'동',ho:'호',typ:'타입',deal:'거래',status:'상태',usage:'용도',ad:'광고',consult:'상담',owner:'임대인',owner_tel:'임대인 연락처',tenant:'임차인',tenant_tel:'임차인 연락처',owner_units:'소유구분',coagent:'공동중개',co_office:'업체',memo:'메모',category:'분류',manki:'만기'};
+ const rowF=r=>{const f=[];for(const k in r){if(SK.has(k))continue;const v=r[k];if(v==null||v===''||typeof v==='object')continue;f.push([LB[k]||k,String(v)])}const ex=r.extra;if(ex&&typeof ex==='object')for(const k in ex){const v=ex[k];if(v!=null&&v!=='')f.push([k,typeof v==='object'?JSON.stringify(v):String(v)])}return f};
+ const parse=s=>s.toLowerCase().split(/\s+/).filter(Boolean).map(t=>({t,d:/^[\d\-]+$/.test(t)?t.replace(/\D/g,''):''}));
+ const hit=(f,tk)=>{let first=null;for(const x of tk){let ok=null;for(const [l,v] of f){const lv=v.toLowerCase();let i=lv.indexOf(x.t);if(i<0&&x.d.length>=3){const dv=v.replace(/\D/g,'');if(dv.includes(x.d))i=0}if(i>=0){ok=[l,v,i];break}}if(!ok)return null;if(!first)first=ok}return first};
+ const snip=(h,w)=>{const [l,v,i]=h;const a=Math.max(0,i-18),t=String(v).replace(/\s+/g,' ');return `${l}: ${a?'…':''}${t.slice(a,a+(w||60))}`};
+ const run=async()=>{const s=q.value.trim(),tk=parse(s),my=++seq;
+  if(!tk.length){R.innerHTML='';return}
+  if(tk.length===1&&tk[0].t.length<2)return R.innerHTML='<span class="mut">두 글자 이상 넣어 주세요</span>';
+  if(tk.length===1&&tk[0].d&&tk[0].d.length<3&&tk[0].t===tk[0].d)return R.innerHTML='<span class="mut">숫자는 3자리 이상 넣어 주세요</span>';
+  R.innerHTML='<span class="mut">찾는 중…</span>';
+  try{await ensureCS()}catch(_){}
+  if(VD===null){try{VD=(await api('/api/vendor_list'))||[]}catch(_){VD=[]}}
+  if(my!==seq)return;
+  const rows=[];for(const r of ROWS){const h=hit(rowF(r),tk);if(h)rows.push([r,h])}
+  const G=new Map();for(const x of CSL||[]){if(!x.phone)continue;(G.get(x.phone)||G.set(x.phone,[]).get(x.phone)).push(x)}
+  const gs=[];for(const [ph,L0] of G){const L=L0.slice().sort((a,b)=>String(b.at).localeCompare(String(a.at)));const nm=(L.find(x=>x.client_name)||{}).client_name||'';
+   const f=[['전화',ph],['이름',nm]];for(const x of L){if(['view','check','deal','staff','cat','stage','smstpl','vendor','smsq'].includes(x.kind))continue;const d=String(x.at).slice(5,10);if(x.text)f.push([d+' '+(/^📨/.test(x.text)?'문자':'메모'),x.text]);if(x.cond)f.push([d+' 조건',x.cond]);if(x.agent_memo)f.push([d+' 담당메모',x.agent_memo])}
+   const h=hit(f,tk);if(h)gs.push([ph,nm,h,L.length])}
+  const vds=[];for(const v of VD){const f=Object.entries(v).filter(([k,x])=>x!=null&&x!==''&&typeof x!=='object'&&!['id','del','at'].includes(k)).map(([k,x])=>[k==='cat'?'분류':k==='name'?'업체':k==='tel'?'연락처':k==='memo'?'메모':k,String(x)]);const h=hit(f,tk);if(h)vds.push([v,h])}
+  const M=40,more=(n)=>n>M?`<div class="mut" style="font-size:12px;padding:4px 6px">…외 ${n-M}건 더 있어요. 단어를 더 넣어 좁혀 보세요.</div>`:'';
+  let h=`<h4 style="margin:6px 0">🏠 매물 ${rows.length}건</h4>`+(rows.slice(0,M).map(([r,x])=>`<div style="display:flex;gap:8px;align-items:center;padding:4px 6px;border-bottom:1px solid var(--line)"><span data-pl-open="${esc(r.id)}" style="flex:1;cursor:pointer"><b>${esc(cpUnit(r))}</b> <span class="mut">${esc(r.category||'')}</span><div class="mut" style="font-size:12px">${esc(snip(x))}</div></span><span>${esc(askPrice(r))}</span></div>`).join('')||'<div class="mut">없음</div>')+more(rows.length);
+  h+=`<h4 style="margin:12px 0 6px">📒 손님 상담일지 ${gs.length}명</h4>`+(gs.slice(0,M).map(([ph,nm,x])=>`<div style="border:1px solid var(--line);border-radius:6px;padding:6px 8px;margin:5px 0;display:flex;gap:8px;align-items:center"><span style="flex:1"><b>${esc(nm||'(이름 없음)')}</b> ${esc(fmtPh(ph))} <span class="mut">· ${esc((CST[ph]||{}).stage||'상담중')}</span><div class="mut" style="font-size:12px">${esc(snip(x,80))}</div></span><button class="b" data-pl-cs="${esc(ph)}">열기</button></div>`).join('')||'<div class="mut">없음</div>')+more(gs.length);
+  if(vds.length)h+=`<h4 style="margin:12px 0 6px">🏢 협력업체 ${vds.length}곳</h4>`+vds.slice(0,M).map(([v,x])=>`<div data-pl-vd style="padding:4px 6px;border-bottom:1px solid var(--line);cursor:pointer"><b>${esc(v.name||'')}</b> <span class="mut">${esc(v.cat||'')} ${esc(v.tel||'')}</span><div class="mut" style="font-size:12px">${esc(snip(x))}</div></div>`).join('');
+  R.innerHTML=h;R.querySelectorAll('[data-pl-open]').forEach(a=>a.onclick=()=>{el.remove();openDrawer(isNaN(+a.dataset.plOpen)?a.dataset.plOpen:+a.dataset.plOpen)});R.querySelectorAll('[data-pl-cs]').forEach(b=>b.onclick=()=>{const p=b.dataset.plCs;el.remove();document.querySelector('#tabs button[data-t="cs"]').click();setTimeout(()=>drawCSDetail(p),250)});R.querySelectorAll('[data-pl-vd]').forEach(b=>b.onclick=()=>{el.remove();vendorOpen()})};
+ el.querySelector('#pl-go').onclick=run;let tm;q.oninput=()=>{clearTimeout(tm);tm=setTimeout(run,350)};q.onkeydown=e=>{if(e.key==='Enter'){clearTimeout(tm);run()}};if(pre){q.value=pre;run()}else q.focus()}
 const VD_CATS=['평면도','분양대행사','인테리어','철거','이사·청소','대출상담사','법무·세무','변호사·행정사','교육·강좌','기타'];
 async function vendorOpen(){let V=[];const load=async()=>{try{V=(await api('/api/vendor_list'))||[]}catch(e){alert('불러오지 못했어요: '+e.message)}};await load();let cat='전체',edit=null;
  const el=simpleModal('🏢 협력업체',`<div id="vd-b"></div>`),B0=el.querySelector('#vd-b');
