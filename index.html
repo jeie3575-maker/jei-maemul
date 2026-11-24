@@ -1283,7 +1283,7 @@ async function myInfoOpen(){
 }
 
 // ---- 회원 관리(관리자=실장만): 가입 승인·거절·비번 재설정·삭제 ----
-function whoShow(name,email){const b=document.getElementById('who-b');if(!b)return;b.textContent='👤 '+(name||String(email||'').split('@')[0])+' ▾';b.title=email||'';b.hidden=false;b.style.cursor='pointer';
+function whoShow(name,email){const b=document.getElementById('who-b');if(!b)return;b.textContent='👤 '+(name||String(email||'').split('@')[0])+' ▾';try{document.title='제이매물장/'+(name||String(email||'').split('@')[0].replace(/@.*/,''))}catch(_){}b.title=email||'';b.hidden=false;b.style.cursor='pointer';
  b.onclick=e=>{e.stopPropagation();const old=document.getElementById('who-m');if(old){old.remove();return}
   const m=document.createElement('div');m.id='who-m';m.style.cssText='position:fixed;z-index:9999;background:#fff;border:1px solid #c9d1de;border-radius:12px;box-shadow:0 6px 24px #14213d33;padding:8px;min-width:180px';
   m.innerHTML='<div style="padding:6px 10px;font-size:13px;color:#6b7480">'+(name||'')+'<br><span style="font-size:11.5px">'+String(email||'').replace(/@jei\.local$/i,'').replace(/</g,'')+'</span></div><button type="button" class="b" data-a="work" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px">'+(window.__boss&&!window.__admin?'👥 직원근무':'🕘 내 근무')+'</button><button type="button" class="b" data-a="info" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px">🪪 내 정보 · 비밀번호 바꾸기</button><button type="button" class="b" data-a="out" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px;color:#c0392b">로그아웃</button>';
