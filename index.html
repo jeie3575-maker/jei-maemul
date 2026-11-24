@@ -548,7 +548,7 @@ async function api(u, o = {}) {
 </script>
 <style>#tabs button[data-t=io],#tg{display:none}</style></head><body>
 <header><b id="home-t" style="cursor:pointer" title="메인(매물장)으로">🏡 제이부동산 매물장</b><span id="who-b" hidden style="margin-left:10px;font-size:12.5px;font-weight:800;background:#fff6d6;color:#14213d;border:1px solid #e0c46a;border-radius:999px;padding:2px 10px;white-space:nowrap"></span><input id="pl-top" placeholder="🔎 통합조회" title="이름·전화번호·단지·메모 등 아무거나 + Enter: 매물장·손님상담일지·문자·협력업체 전체 검색" style="width:120px;min-width:90px;margin:0 8px;padding:3px 8px;border-radius:14px;border:1px solid var(--line);font-size:13px"><nav id="tabs">
-<button data-t="sise">💹 시세</button><button data-t="list" class="on">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 손님상담일지</button><button data-t="work">🕘 내 근무</button><button data-t="brief">📰 정책·뉴스</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
+<button data-t="sise">💹 시세</button><button data-t="list" class="on">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 손님상담일지</button><button data-t="cal">📅 일정</button><button data-t="work">🕘 내 근무</button><button data-t="brief">📰 정책·뉴스</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
 <span class="sp"></span><small id="info"></small><button class="fsb" id="fs-" title="글씨 작게">가−</button><button class="fsb" id="fs+" title="글씨 크게">가+</button><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
 <main>
 <section id="t-list">
@@ -574,6 +574,7 @@ async function api(u, o = {}) {
 <section id="t-work" hidden></section>
 <section id="t-recon" hidden><div class="bar"><span id="recon-info" class="mut"></span><button class="b" id="recon-reload">새로고침</button></div>
  <div class="bar" id="recon-catbar" style="margin-bottom:8px"></div><div class="chips" id="recon-danji" style="margin-bottom:8px"></div><div class="chips" id="recon-kind" style="margin-bottom:8px"></div><div class="chips" id="recon-cats" style="margin-bottom:10px"></div><div id="recon"></div></section>
+<section id="t-cal" hidden><div class="bar"><span class="mut">호반제이 구글 캘린더 (계약서 작성일·잔금일 등)</span><a class="b" id="cal-open" target="_blank" rel="noopener" href="https://calendar.google.com/calendar/u/0/r?cid=e3623f5aed2ef4d6314f6135a5b7607fc9962ea23b3df7148b8fb809bfdf979e@group.calendar.google.com">새 창에서 열기</a></div><div id="cal-box"></div></section>
 <section id="t-cs" hidden><div id="cspanel"></div></section>
 <section id="t-call" hidden><div class="bar"><div class="chips" id="call-st"></div><span class="mut">|</span><div class="chips" id="call-cat"></div><select id="call-dj"></select><span class="sp" style="flex:1"></span><span id="call-cnt" class="mut"></span></div>
  <div class="bar mut" style="font-size:12px">네이버 광고 대조 + 만기 1개월 안 매물을 임대인별로 묶었어요. 순서: 매물 받기(타사광고) → 만기 임박 → 가능·가격 확인. 버튼을 누르면 상담일지에 "날짜 통화 – 결과"가 남아요. 부재·나중에는 일주일 뒤(다음 주)에 다시 나와요.</div>
@@ -2242,5 +2243,12 @@ const oc=window.clearFilters;window.clearFilters=function(){resetAll();Object.va
 const orl=window.renderList;window.renderList=function(){const r=orl.apply(this,arguments);try{draw()}catch(e){console.error(e)}return r};
 const t=setInterval(()=>{if(typeof META!=='undefined'&&META&&typeof ROWS!=='undefined'&&ROWS.length){try{draw()}catch(e){}clearInterval(t)}},500);
 })();
+
+// ---- 일정 탭: 구글 캘린더 임베드 ----
+(function(){const btn=document.querySelector('#tabs button[data-t="cal"]');if(!btn)return;
+ const draw=()=>{const bx=document.getElementById('cal-box');if(!bx||bx.dataset.on)return;bx.dataset.on=1;
+  const src='e3623f5aed2ef4d6314f6135a5b7607fc9962ea23b3df7148b8fb809bfdf979e@group.calendar.google.com';
+  bx.innerHTML='<iframe src="https://calendar.google.com/calendar/embed?src='+encodeURIComponent(src)+'&src='+encodeURIComponent('ko.south_korea#holiday@group.v.calendar.google.com')+'&ctz=Asia%2FSeoul&mode=MONTH&wkst=1&showTitle=0&showPrint=0&showTz=0&hl=ko" style="width:100%;height:calc(100vh - 150px);min-height:480px;border:1px solid #d9dee7;border-radius:10px;background:#fff"></iframe><div class="mut" style="font-size:12.5px;margin-top:6px">일정이 안 보이면 이 브라우저에서 구글에 로그인(호반제이 캘린더를 공유받은 계정)해 주세요.</div>'};
+ btn.addEventListener('click',()=>setTimeout(draw,0))})();
 </script>
 </body></html>
