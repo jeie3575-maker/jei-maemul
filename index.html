@@ -162,6 +162,13 @@ header .sp{flex:1 1 0;min-width:0}
  header #home-t{margin-right:auto}
 }
 @media(min-width:761px) and (max-width:980px){.fsb{padding:5px 8px}nav#tabs button,.tgrp>button{padding:6px 10px}}
+/* 상세페이지(드로어) 반응형 */
+#drawer .hd,#drawer2 .hd{flex-wrap:wrap;gap:6px 8px}
+#drawer .hd b,#drawer2 .hd b{flex:1 1 260px;min-width:0;overflow-wrap:anywhere}
+#drawer .hd .b,#drawer2 .hd .b{white-space:nowrap}
+#drawer .form{grid-template-columns:repeat(4,minmax(0,1fr))}
+#drawer .form label{min-width:0}#drawer .form input,#drawer .form select,#drawer .form textarea{min-width:0;max-width:100%;box-sizing:border-box}
+@media(max-width:1000px){#drawer .form{grid-template-columns:repeat(2,minmax(0,1fr))}#drawer .form label.w3,#drawer .form label.w4{grid-column:span 2}}
 #qa .box{width:min(520px,calc(100vw - 24px));overflow-x:hidden}#qa .pb{box-sizing:border-box;width:100%}#qa label{min-width:0}#qa input,#qa select{width:100%;min-width:0;box-sizing:border-box}
 #qa .dptabs .dpt{flex:1}#qa .pf .b{flex:1 1 auto}#qa .pf .qsum{flex:1 1 100%;min-height:22px}#qa .pf .sp{display:none}
 #qa{overflow:hidden;touch-action:none}#qa .box{touch-action:pan-y}
