@@ -145,6 +145,23 @@ input[type=date]::-webkit-calendar-picker-indicator{display:none}
 .tmenu button:hover{background:#fff1bf}.tmenu button.on{background:var(--navy);color:#fff}
 .tbadge{display:inline-block;min-width:18px;padding:0 6px;margin-left:5px;border-radius:999px;background:#d1242f;color:#fff;font-size:12px;font-weight:800;line-height:18px;text-align:center}
 @media(max-width:760px){.tmenu{position:fixed;left:10px;right:10px;top:auto;min-width:0}}
+/* 11/24 헤더 반응형: 어떤 폭에서도 글자 세로 꺾임 없이 자연스럽게 줄바꿈 */
+header{flex-wrap:wrap;gap:6px 12px}
+header #home-t,#who-b,#info,.fsb,#refresh{white-space:nowrap;flex:none}
+header #pl-top{flex:1 1 130px;max-width:240px;width:auto!important;min-width:100px!important;margin:0!important;box-sizing:border-box}
+header .sp{flex:1 1 0;min-width:0}
+@media(min-width:761px){
+ nav#tabs{flex:0 1 auto;flex-wrap:wrap;min-width:0}
+ nav#tabs button,.tgrp>button{white-space:nowrap;flex:none}
+}
+@media(min-width:761px) and (max-width:1180px){
+ nav#tabs{order:5;flex:1 1 100%}
+ header .sp{display:block}
+ #info{display:none}
+ header #pl-top{flex:1 1 160px}
+ header #home-t{margin-right:auto}
+}
+@media(min-width:761px) and (max-width:980px){.fsb{padding:5px 8px}nav#tabs button,.tgrp>button{padding:6px 10px}}
 #qa .box{width:min(520px,calc(100vw - 24px));overflow-x:hidden}#qa .pb{box-sizing:border-box;width:100%}#qa label{min-width:0}#qa input,#qa select{width:100%;min-width:0;box-sizing:border-box}
 #qa .dptabs .dpt{flex:1}#qa .pf .b{flex:1 1 auto}#qa .pf .qsum{flex:1 1 100%;min-height:22px}#qa .pf .sp{display:none}
 #qa{overflow:hidden;touch-action:none}#qa .box{touch-action:pan-y}
