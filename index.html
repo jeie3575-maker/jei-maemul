@@ -233,7 +233,9 @@ body.side2 #drawer{width:min(1200px,calc(100vw - 420px))}body.side2 #drawer2{wid
 // 클라우드(Supabase) 버전 백엔드: 로컬 server.py 의 /api/* 를 브라우저에서 그대로 흉내낸다.
 // 필요: window.SB_URL, window.SB_ANON, window.META (meta.json), supabase-js v2
 const ME = '용산호반제이';
-const sb = supabase.createClient(window.SB_URL, window.SB_ANON, {auth: {persistSession: true, autoRefreshToken: true}});
+// 탭마다 따로 로그인: 세션을 sessionStorage(탭 전용)에 저장, 탭별 storageKey라 다른 탭 로그인과 섞이지 않음
+const _tabId = (() => { try { let t = sessionStorage.getItem('jei_tab'); if (!t) { t = Math.random().toString(36).slice(2, 10); sessionStorage.setItem('jei_tab', t) } return t } catch (e) { return 'x' } })();
+const sb = supabase.createClient(window.SB_URL, window.SB_ANON, {auth: {persistSession: true, autoRefreshToken: true, storage: window.sessionStorage, storageKey: 'sb-tab-' + _tabId}});
 const CLOUD = true;
 let _cache = {listings: null, logs: null, naver: null, rt: null};
 
