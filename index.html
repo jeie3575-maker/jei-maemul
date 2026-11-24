@@ -801,7 +801,7 @@ function promoOpen(){if(!CUR||!CUR.id)return;const r=CUR;let tab='blog',extra=''
  el.querySelectorAll('.pt button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;draw()});
  el.querySelectorAll('[data-o]').forEach(c=>c.onchange=()=>{o[c.dataset.o]=c.checked;draw()});
  el.querySelector('#pm-ex').oninput=e=>{extra=e.target.value;draw()};
- el.querySelector('#pm-x').onclick=()=>el.remove();el.onclick=e=>{if(e.target===(el)&&window.__md===e.target)el.remove()};
+ el.querySelector('#pm-x').onclick=()=>el.remove();
  el.querySelector('#pm-c').onclick=async()=>{try{await navigator.clipboard.writeText(ta.value)}catch(e){ta.select();document.execCommand('copy')}toast('복사했어요')};draw()}
 // ---- 🏛 건축물대장 + 📋 확인·설명서 초안 ----
 async function bldAll(){if(window.__bld)return window.__bld;try{const d=await api('/api/bldreg');window.__bld=d.complexes||{}}catch(e){window.__bld={}}return window.__bld}
@@ -848,7 +848,7 @@ async function bldOpen(draft){if(!CUR||!CUR.id)return;const r=CUR;const A=await 
   <div class="mut" style="font-size:12px;margin-top:8px">건축물대장 정보는 ${u?'호실 단위로':'단지 기준으로'} 자동 채웠어요. 최종 서식은 등기부·건축물대장·토지대장을 직접 확인해 작성하세요.</div></div>`;
  }
  el.innerHTML=`<div class="box"><div class="ph"><b>${draft?'📋 확인·설명서 초안':'🏛 건축물대장'} — ${esc(cpUnit(r))}</b>${draft?'<button class="b p" id="bl-print">🖨 인쇄·PDF</button>':'<button class="b" id="bl-draft">📋 확인·설명서 초안</button>'}<button class="b" id="pm-x">닫기</button></div><div class="pb">${body}</div></div>`;
- document.body.appendChild(el);el.querySelector('#pm-x').onclick=()=>el.remove();el.onclick=e=>{if(e.target===(el)&&window.__md===e.target)el.remove()};
+ document.body.appendChild(el);el.querySelector('#pm-x').onclick=()=>el.remove();
  el.querySelector('#bl-draft')?.addEventListener('click',()=>bldOpen(true));el.querySelector('#bl-print')?.addEventListener('click',()=>window.print());
  el.querySelector('#bl-fill')?.addEventListener('click',async()=>{try{const v=Math.round(u.area/PY*100)/100;await api('/api/listings',{method:'POST',body:JSON.stringify({id:r.id,category:r.category,pyeong:String(v)})});r.pyeong=v;const l=ROWS.find(x=>x.id===r.id);if(l)l.pyeong=v;toast('장부 전용평을 반영했어요 — 상세를 다시 열면 보여요');bldOpen(false)}catch(e){alert('저장 실패: '+e.message)}})}
 function feeCalc(r,u){const kd=kinds(r.deal);let src=kd.includes('매매')?'매매':'임대',amt=0,txt='';
@@ -936,7 +936,7 @@ var KSEL=-1;document.addEventListener('keydown',e=>{if(!['ArrowDown','ArrowUp','
  if(e.key==='Enter'){if(KSEL>=0&&trs[KSEL]){e.preventDefault();openDrawer(+trs[KSEL].dataset.id)}return}
  e.preventDefault();KSEL=Math.max(0,Math.min(trs.length-1,KSEL+(e.key==='ArrowDown'?1:-1)));trs.forEach((x,i)=>x.classList.toggle('ksel',i===KSEL));trs[KSEL].scrollIntoView({block:'nearest'})});
 // ---- CSV · QR · 홈 화면 안내 ----
-function simpleModal(title,html){document.getElementById('promo')?.remove();const el=document.createElement('div');el.id='promo';el.innerHTML=`<div class="box"><div class="ph"><b>${title}</b><button class="b" id="pm-x">닫기</button></div><div class="pb">${html}</div></div>`;document.body.appendChild(el);const cl=()=>{if(!el.isConnected)return;if((history.state||{}).jv==='modal'&&!window.__inPop){history.back()}else el.remove()};el.querySelector('#pm-x').onclick=cl;el.onclick=e=>{if(e.target===(el)&&window.__md===e.target)cl()};if(!window.__inPop){try{history.pushState({jv:'modal',t:curTabId()},'')}catch(_){}}return el}
+function simpleModal(title,html){document.getElementById('promo')?.remove();const el=document.createElement('div');el.id='promo';el.innerHTML=`<div class="box"><div class="ph"><b>${title}</b><button class="b" id="pm-x">닫기</button></div><div class="pb">${html}</div></div>`;document.body.appendChild(el);const cl=()=>{if(!el.isConnected)return;if((history.state||{}).jv==='modal'&&!window.__inPop){history.back()}else el.remove()};el.querySelector('#pm-x').onclick=cl;;if(!window.__inPop){try{history.pushState({jv:'modal',t:curTabId()},'')}catch(_){}}return el}
 
 const SMS_CARDS=[['실장 박윤진','[명함]\n용산 호반제이 공인중개사사무소\n실장·중개보조원 박윤진\n휴대폰 010-5801-6003\n전화 02-797-3575\n서울시 용산구 한강대로 66 용산호반써밋에이디션 107호'],['대표 송영주','[명함]\n용산 호반제이 공인중개사사무소\n대표·공인중개사 송영주\n휴대폰 010-9524-6002\n전화 02-797-3575\n서울시 용산구 한강대로 66 용산호반써밋에이디션 107호']];
 const SMS_CARDLK=[['실장 박윤진','https://jeie-realty.github.io/c/ba1fbffcca.html'],['대표 송영주','https://jeie-realty.github.io/c/098f2ba362.html']];
@@ -1061,7 +1061,7 @@ function manualOpen(){document.getElementById('manual')?.remove();document.getEl
  el.id='manual';el.style.cssText='position:fixed;inset:0;background:#0007;z-index:30;display:flex;align-items:center;justify-content:center';
  el.innerHTML=`<div class="box"><div class="ph"><b>📖 매물장 사용설명서</b><button class="b" id="mn-x">닫기</button></div><div class="pb"><div class="top">${S.map(s=>`<button type="button" data-k="${s[1]}">${({menu:'🏠 화면',find:'🔍 찾기',take:'📌 챙길 것',brief:'📰 정책·뉴스',drawer:'📂 상세',qa:'➕ 등록',cs:'📒 상담·계약',mg:'🛠 매물관리',info:'ℹ 정보실',set:'⚙ 설정',phone:'📱 폰',faq:'❓ 질문'})[s[1]]}</button>`).join('')}</div>${S.map((s,i)=>`<details data-k="${s[1]}" ${i===0?'open':''}><summary>${s[0]}</summary><div class="mb">${s[2]}</div></details>`).join('')}</div></div>`;
  document.body.appendChild(el);
- el.querySelector('#mn-x').onclick=()=>el.remove();el.onclick=e=>{if(e.target===(el)&&window.__md===e.target)el.remove()};
+ el.querySelector('#mn-x').onclick=()=>el.remove();
  el.querySelector('.top').onclick=e=>{const b=e.target.closest('button');if(!b)return;const d=el.querySelector(`details[data-k="${b.dataset.k}"]`);el.querySelectorAll('details').forEach(x=>x.open=x===d);d.scrollIntoView({block:'start',behavior:'smooth'})}}
 // ---- 정책·뉴스 탭: 정책브리핑 (국토교통부·금융위원회·재정경제부·국무조정실 보도자료 / 정책브리핑 korea.kr 에서 확인한 내용을 쉬운 말로 정리) ----
 const BR_ASOF='2026.11.17',BR_LAST='2026.11.17';
@@ -1375,13 +1375,14 @@ function qaOpen(keep){document.getElementById('qa')?.remove();const el=document.
   <label style="grid-column:1/-1">소유자·연락처 (선택)<input id="qa-own" placeholder="홍길동 010-1234-5678" autocomplete="off"></label>
   <div class="pf"><span class="qsum" id="qa-sum"></span><span class="sp" style="flex:1"></span><button class="b" id="qa-more">저장 후 상세 열기</button><button class="b" id="qa-next">저장 후 계속</button><button class="b p" id="qa-save">저장 (Enter)</button></div></div></div>`;
  document.body.appendChild(el);const g=i=>el.querySelector('#'+i);
+ {const fillDl=()=>{const c=g('qa-cat').value;g('qa-dl').innerHTML=[...new Set(ROWS.filter(x=>(x.category||'오피스텔')===c).map(x=>x.danji).filter(Boolean))].sort().map(d=>`<option value="${esc(d)}">`).join('')};g('qa-cat').addEventListener('change',fillDl);fillDl()}
  const num=s=>{s=String(s||'').replace(/,/g,'').trim();if(!s)return '';const m=/^(?:(\d+(?:\.\d+)?)\s*억)?\s*(\d+)?$/.exec(s);if(!m)return NaN;return Math.round((+m[1]||0)*10000+(+m[2]||0))};
  const draw=()=>{g('qa-tabs').querySelectorAll('.dpt').forEach(b=>b.classList.toggle('on',b.dataset.t===deal));
   g('qa-l1').firstChild.textContent=deal==='매매'?'매매가 (만원)':deal==='전세'?'전세가 (만원)':'보증금 (만원) · 5000/320처럼도 돼요';g('qa-l2').style.display=deal==='월세'?'':'none';
   const a=num(g('qa-p1').value),b=num(g('qa-p2').value);g('qa-sum').textContent=a===''||isNaN(a)?'':deal==='월세'?`보증금 ${won(a)} - 월세 ${b===''||isNaN(b)?0:b}`:`${deal} ${won(a)}`};
  g('qa-tabs').onclick=e=>{const b=e.target.closest('.dpt');if(b){deal=b.dataset.t;draw();g('qa-p1').focus()}};
  g('qa-p1').oninput=()=>{if(deal==='월세'&&g('qa-p1').value.includes('/')){const [a,b]=g('qa-p1').value.split('/');g('qa-p1').value=a.trim();g('qa-p2').value=(b||'').trim()}draw()};g('qa-p2').oninput=draw;draw();
- const close=()=>el.remove();g('qa-x').onclick=close;el.onclick=e=>{if(e.target===(el)&&window.__md===e.target)close()};
+ const close=()=>el.remove();g('qa-x').onclick=close;
  const parseHo=(raw,dong,dn)=>{const ts=raw.split(/[,\s]+/).filter(Boolean);if(!ts.length)return [{dong,ho:''}];return ts.map(t=>{const m=/^(\d{1,3})-(\d{2,4})$/.exec(t);if(m&&!dong){const ex=[...new Set(ROWS.filter(r=>(r.danji||'')===dn).map(r=>r.dong).filter(Boolean))].find(d=>String(d).startsWith(m[1]));return {dong:ex||m[1]+'동',ho:m[2]}}return {dong,ho:t}})};
  const save=async mode=>{const dn=g('qa-dj').value.trim(),dg=g('qa-dong').value.trim(),cat=g('qa-cat').value;
   if(!dn){alert('건물명을 넣어 주세요');g('qa-dj').focus();return}
@@ -1900,7 +1901,7 @@ function callItems(){const by=new Map(ROWS.filter(r=>!(r.extra||{})['전화제�
 function textDlg(title,old){return new Promise(res=>{const w=document.createElement('div');w.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px';
  w.innerHTML=`<div style="background:#fff;border-radius:10px;padding:14px;width:min(560px,100%);box-shadow:0 8px 30px rgba(0,0,0,.25)"><b>${esc(title)}</b><textarea style="width:100%;min-height:180px;margin:8px 0;font:inherit;padding:8px;box-sizing:border-box">${esc(old)}</textarea><div style="display:flex;gap:6px;justify-content:flex-end;align-items:center"><span class="mut" style="font-size:12px;margin-right:auto">Enter = 줄바꿈 · ⌘/Ctrl+Enter = 저장</span><button class="b" data-x="0">취소</button><button class="b p" data-x="1">저장</button></div></div>`;
  document.body.appendChild(w);const ta=w.querySelector('textarea');ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);
- const fin=ok=>{w.remove();res(ok?ta.value:null)};w.querySelectorAll('[data-x]').forEach(b=>b.onclick=e=>{e.stopPropagation();fin(b.dataset.x==='1')});w.onclick=e=>{if(e.target===(w)&&window.__md===e.target)fin(false)};
+ const fin=ok=>{w.remove();res(ok?ta.value:null)};w.querySelectorAll('[data-x]').forEach(b=>b.onclick=e=>{e.stopPropagation();fin(b.dataset.x==='1')});
  w.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Escape')fin(false);if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)){e.preventDefault();fin(true)}})})}
 function callKey(r){const t=String(r.owner_tel||'').match(/01[016789][\d\- ]{7,10}|0\d{1,2}[\- ]?\d{3,4}[\- ]?\d{4}/);if(t)return 'T'+t[0].replace(/\D/g,'');return null}
 async function renderCall(){if(!RECON){$('#call').innerHTML='<p class="mut">불러오는 중…</p>';try{RECON=await api('/api/recon')}catch(e){RECON={rows:[]}}}
@@ -2236,7 +2237,7 @@ function draw(){const f=G('f-kind');if(!f||typeof META==='undefined'||!META||typ
  const add=Object.keys(KEYS).filter(k=>!NFA.includes(k)&&!(k==='use'&&CAT!=='오피스텔')),qo=Q.filter(([id])=>G(id)&&!isOn(id));
  if(add.length||qo.length){const b=D.createElement('button');b.className='fa';b.type='button';b.textContent='＋ 필터 추가';b.onclick=e=>{e.stopPropagation();const m=G('nfm');if(m){m.remove();return}const d=D.createElement('div');d.id='nfm';
   d.innerHTML=(add.length?'<small>필터</small>'+add.map(k=>`<button type="button" data-k="${k}">${KEYS[k]}</button>`).join(''):'')+(qo.length?'<hr><small>빠른 조건</small>'+qo.map(([id,l])=>`<button type="button" data-q="${id}">${l}</button>`).join(''):'');
-  w.appendChild(d);d.querySelectorAll('[data-k]').forEach(x=>x.onclick=()=>{NFA.push(x.dataset.k);save();d.remove();draw()});d.querySelectorAll('[data-q]').forEach(x=>x.onclick=()=>{G(x.dataset.q).click();d.remove();setTimeout(draw,50)})};w.appendChild(b)}}
+  w.appendChild(d);{const r=b.getBoundingClientRect();d.style.cssText+=`;position:fixed;left:${Math.max(8,Math.min(r.left,innerWidth-220))}px;top:${r.bottom+4}px;max-height:${Math.max(160,innerHeight-r.bottom-16)}px;overflow:auto`}d.querySelectorAll('[data-k]').forEach(x=>x.onclick=()=>{NFA.push(x.dataset.k);save();d.remove();draw()});d.querySelectorAll('[data-q]').forEach(x=>x.onclick=()=>{G(x.dataset.q).click();d.remove();setTimeout(draw,50)})};w.appendChild(b)}}
 const oc=window.clearFilters;window.clearFilters=function(){resetAll();Object.values(els).forEach(w=>w.querySelectorAll('input').forEach(i=>i.value=''));return oc.apply(this,arguments)};
 const orl=window.renderList;window.renderList=function(){const r=orl.apply(this,arguments);try{draw()}catch(e){console.error(e)}return r};
 const t=setInterval(()=>{if(typeof META!=='undefined'&&META&&typeof ROWS!=='undefined'&&ROWS.length){try{draw()}catch(e){}clearInterval(t)}},500);
