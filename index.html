@@ -1286,7 +1286,7 @@ async function myInfoOpen(){
 function whoShow(name,email){const b=document.getElementById('who-b');if(!b)return;b.textContent='👤 '+(name||String(email||'').split('@')[0])+' ▾';b.title=email||'';b.hidden=false;b.style.cursor='pointer';
  b.onclick=e=>{e.stopPropagation();const old=document.getElementById('who-m');if(old){old.remove();return}
   const m=document.createElement('div');m.id='who-m';m.style.cssText='position:fixed;z-index:9999;background:#fff;border:1px solid #c9d1de;border-radius:12px;box-shadow:0 6px 24px #14213d33;padding:8px;min-width:180px';
-  m.innerHTML='<div style="padding:6px 10px;font-size:13px;color:#6b7480">'+(name||'')+'<br><span style="font-size:11.5px">'+String(email||'').replace(/@jei\.local$/i,'').replace(/</g,'')+'</span></div><button type="button" class="b" data-a="work" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px">'+(window.__boss?'👥 직원근무':'🕘 내 근무')+'</button><button type="button" class="b" data-a="info" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px">🪪 내 정보 · 비밀번호 바꾸기</button><button type="button" class="b" data-a="out" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px;color:#c0392b">로그아웃</button>';
+  m.innerHTML='<div style="padding:6px 10px;font-size:13px;color:#6b7480">'+(name||'')+'<br><span style="font-size:11.5px">'+String(email||'').replace(/@jei\.local$/i,'').replace(/</g,'')+'</span></div><button type="button" class="b" data-a="work" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px">'+(window.__boss&&!window.__admin?'👥 직원근무':'🕘 내 근무')+'</button><button type="button" class="b" data-a="info" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px">🪪 내 정보 · 비밀번호 바꾸기</button><button type="button" class="b" data-a="out" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px;color:#c0392b">로그아웃</button>';
   document.body.appendChild(m);const r=b.getBoundingClientRect();m.style.top=(r.bottom+6)+'px';m.style.left=Math.max(8,Math.min(r.left,innerWidth-m.offsetWidth-8))+'px';
   m.onclick=async ev=>{const t=ev.target.closest('[data-a]');if(!t)return;ev.stopPropagation();if(t.dataset.a==='work'){m.remove();document.querySelector('#tabs button[data-t="work"]')?.click()}else if(t.dataset.a==='info'){m.remove();myInfoOpen()}else if(confirm('로그아웃할까요?')){try{await sb.auth.signOut()}catch(x){}try{localStorage.removeItem('author')}catch(x){}location.reload()}};
   setTimeout(()=>document.addEventListener('click',function f(){m.remove();document.removeEventListener('click',f)}),0)}}
@@ -2058,7 +2058,7 @@ $('#refresh').onclick=async()=>{const b=$('#refresh');if(b.disabled)return;b.dis
   tm=(v,d)=>v?new Date(d+'T'+v+':00+09:00').toISOString():null,
   YO='일월화수목금토',dow=d=>YO[new Date(d+'T12:00:00+09:00').getDay()],E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
  const NM={};let ALLD=[],ALLL=[],BOSSMAIL='';
- let ME='',BOSS=false,WHO='',MON=ymd(Date.now()).slice(0,7),SEL=ymd(Date.now()),DAYS={},LOGS={},PEND=[],tick=null;
+ let ME='',BOSS=false,ADMIN=false,WHO='',MON=ymd(Date.now()).slice(0,7),SEL=ymd(Date.now()),DAYS={},LOGS={},PEND=[],tick=null;
  const mins=(r)=>r&&r.clock_in&&r.clock_out?Math.max(0,Math.round((new Date(r.clock_out)-new Date(r.clock_in))/60000)-(r.break_min||0)):null,
   fh=m=>m==null?'':Math.floor(m/60)+'h'+String(m%60).padStart(2,'0')+'m';
  async function loadMon(){const [y,m]=MON.split('-').map(Number),a=MON+'-01',b=ymd(new Date(Date.UTC(y,m,1)));
@@ -2067,7 +2067,7 @@ $('#refresh').onclick=async()=>{const b=$('#refresh');if(b.disabled)return;b.dis
   if(BOSS){const p=await sb.from('work_logs').select('email,work_date,status').eq('status','상신').order('work_date');PEND=p.data||[];
   const [ad,al]=await Promise.all([sb.from('work_days').select('email,work_date,kind,clock_in,clock_out,break_min').gte('work_date',a).lt('work_date',b),sb.from('work_logs').select('email,work_date,status').gte('work_date',a).lt('work_date',b)]);ALLD=ad.data||[];ALLL=al.data||[]}}
 
- function roster(y,m,last,today){const staff=Object.keys(NM).filter(e=>e!==ME);if(!staff.length)return'';const R={};ALLD.forEach(r=>R[r.email+'|'+r.work_date]=r);const L={};ALLL.forEach(r=>L[r.email+'|'+r.work_date]=r);
+ function roster(y,m,last,today){const staff=Object.keys(NM).filter(e=>e!==ME&&!(ADMIN&&/daepyo/i.test(e)));if(!staff.length)return'';const R={};ALLD.forEach(r=>R[r.email+'|'+r.work_date]=r);const L={};ALLL.forEach(r=>L[r.email+'|'+r.work_date]=r);
   const tot={};staff.forEach(e=>tot[e]={t:0,c:0});
   let h='<tr><th>날짜</th>'+staff.map(e=>`<th>${E(NM[e])}</th>`).join('')+'</tr>',rows='';
   for(let i=1;i<=last;i++){const d=y+'-'+String(m).padStart(2,'0')+'-'+String(i).padStart(2,'0'),wk=new Date(y,m-1,i).getDay();
@@ -2078,7 +2078,7 @@ $('#refresh').onclick=async()=>{const b=$('#refresh');if(b.disabled)return;b.dis
    rows+=(d===today?'<tr style="outline:2px solid #e8590c">':'<tr>')+row+'</tr>'}
   const sum='<tr style="font-weight:800;background:#f7f9fc"><td>합계</td>'+staff.map(e=>`<td style="text-align:center">${tot[e].c}일 · ${fh(tot[e].t)||'0h00m'}</td>`).join('')+'</tr>';
   return `<div class="box" style="margin-bottom:10px"><b>👥 직원 근무표 ${y}년 ${m}월</b><div class="mut" style="font-size:12px;margin:3px 0 6px">시간 = 출근~퇴근 · 실근무 | 색: 노랑=상신, 초록=승인, 빨강=반려, 파랑=일지 없음/임시저장 | 칸을 누르면 그날 일지가 열려요</div><table style="width:100%;border-collapse:collapse;font-size:13px">${h}${sum}${rows}</table></div>`}
- async function draw(){const u=(await sb.auth.getUser()).data.user;ME=(u.email||'').toLowerCase();{const md=u.user_metadata||{},fn=((md.name||'')+' '+(md.role||'')).trim();if(fn)NM[ME]=fn}try{BOSS=(await sb.rpc('is_boss')).data===true}catch(x){BOSS=false}BOSSMAIL=BOSS?ME:BOSSMAIL;if(BOSS){NM[ME]=NM[ME]||'대표';try{const au=await sb.from('allowed_users').select('email,name');(au.data||[]).forEach(r=>{const k=String(r.email).toLowerCase();if(!NM[k]||k!==ME&&NM[k]===k)NM[k]=(k===ME?'대표':(r.name||k.split('@')[0]))})}catch(x){}}if(!WHO)WHO=(BOSS?(Object.keys(NM).find(e=>e!==ME)||ME):ME);
+ async function draw(){const u=(await sb.auth.getUser()).data.user;ME=(u.email||'').toLowerCase();{const md=u.user_metadata||{},fn=((md.name||'')+' '+(md.role||'')).trim();if(fn)NM[ME]=fn}try{BOSS=(await sb.rpc('is_boss')).data===true}catch(x){BOSS=false}try{ADMIN=BOSS&&(await sb.rpc('is_admin')).data===true}catch(x){ADMIN=false}BOSSMAIL=BOSS?ME:BOSSMAIL;if(BOSS){NM[ME]=NM[ME]||'대표';try{const au=await sb.from('allowed_users').select('email,name');(au.data||[]).forEach(r=>{const k=String(r.email).toLowerCase();if(!NM[k]||k!==ME&&NM[k]===k)NM[k]=(k===ME?'대표':(r.name||k.split('@')[0]))})}catch(x){}}if(!WHO)WHO=((BOSS&&!ADMIN)?(Object.keys(NM).find(e=>e!==ME)||ME):ME);
   try{await loadMon()}catch(e){T.innerHTML='<p class="mut">불러오기 실패: '+E(e.message)+'<br>(work.sql 을 아직 실행하지 않았다면 먼저 실행해야 해요)</p>';return}
   const today=ymd(Date.now()),td=DAYS[today]||{},mine=WHO===ME,[y,m]=MON.split('-').map(Number),last=new Date(y,m,0).getDate();
   let rows='',tot=0,n=0;for(let i=1;i<=last;i++){const d=MON+'-'+String(i).padStart(2,'0'),r=DAYS[d],l=LOGS[d],mm=mins(r),wk=new Date(d+'T12:00:00+09:00').getDay();if(mm!=null){tot+=mm;n++}
@@ -2087,12 +2087,13 @@ $('#refresh').onclick=async()=>{const b=$('#refresh');if(b.disabled)return;b.dis
   const sel=DAYS[SEL]||(new Date(SEL+'T12:00:00+09:00').getDay()===0?{kind:'휴무'}:{}),sl=LOGS[SEL],lock=sl&&sl.status==='승인'||(sl&&sl.status==='상신'&&mine);
   const pend=BOSS&&PEND.length?`<div class="box" style="margin-bottom:10px;border-color:#e8590c"><b>🔔 승인 대기 ${PEND.length}건</b> ${PEND.map(p=>`<button class="b" data-go="${p.email}|${p.work_date}">${NM[p.email]||p.email} ${p.work_date.slice(5)}</button>`).join(' ')}</div>`:'';
   T.innerHTML=`<style>#t-work .wst{padding:1px 7px;border-radius:9px;font-size:12px;background:#eee}#t-work .wst-상신{background:#fff3bf}#t-work .wst-승인{background:#d3f9d8}#t-work .wst-반려{background:#ffe3e3}#t-work tr.wsel{background:#fff7e6}#t-work tr.wsun td:first-child{color:#e03131}#t-work tbody tr,#t-work table tr[data-d]{cursor:pointer}#t-work .wg{display:grid;grid-template-columns:minmax(300px,420px) 1fr;gap:14px;align-items:start}@media(max-width:800px){#t-work .wg{grid-template-columns:1fr}}#t-work textarea{width:100%;min-height:220px;font:inherit;padding:8px;box-sizing:border-box}</style>
-  ${pend}${BOSS?roster(y,m,last,today):''}<div class="box" id="w-clk" style="margin-bottom:10px"><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><b style="font-size:16px">${today.slice(5).replace('-','/')} (${dow(today)}) ${NM[ME]||''}</b>
+  ${pend}<div class="box" id="w-clk" style="margin-bottom:10px"><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><b style="font-size:16px">${today.slice(5).replace('-','/')} (${dow(today)}) ${NM[ME]||''}</b>
    <span>출근 <b>${hm(td.clock_in)||'-'}</b></span><span>퇴근 <b>${hm(td.clock_out)||'-'}</b></span><span id="w-el" class="mut"></span>
    <button class="b p" id="w-in" ${td.clock_in?'disabled':''}>출근하기</button><button class="b p" id="w-out" ${!td.clock_in?'disabled':''}>퇴근하기</button></div>
    <div class="mut" style="font-size:12px;margin-top:4px">앱 기록은 참고용이에요. 공식 출퇴근은 하이웍스에도 꼭 찍어 주세요. (퇴근을 다시 누르면 마지막 시각으로 바뀌어요)</div></div>
+  ${BOSS?roster(y,m,last,today):''}
   <div class="bar" style="gap:8px;margin-bottom:8px"><button class="b" id="w-pm">◀</button><b>${y}년 ${m}월</b><button class="b" id="w-nm">▶</button>
-   ${BOSS?`<select id="w-who">${Object.entries(NM).filter(([e])=>!BOSS||e!==ME).map(([e,n])=>`<option value="${e}" ${e===WHO?'selected':''}>${n}</option>`).join('')}</select>`:''}<span class="mut">출근 ${n}일 · 실근무 합계 <b>${fh(tot)||'0h00m'}</b> (휴게 제외)</span></div>
+   ${BOSS?`<select id="w-who">${Object.entries(NM).filter(([e])=>ADMIN?!/daepyo/i.test(e):e!==ME).map(([e,n])=>`<option value="${e}" ${e===WHO?'selected':''}>${e===ME?'나 ('+n+')':n}</option>`).join('')}</select>`:''}<span class="mut">출근 ${n}일 · 실근무 합계 <b>${fh(tot)||'0h00m'}</b> (휴게 제외)</span></div>
   <div class="wg"><div><table style="width:100%"><tr><th>날짜</th><th>출근</th><th>퇴근</th><th>실근무</th><th>일지</th></tr>${rows}</table></div>
   <div class="box"><b>${SEL.slice(5).replace('-','/')} (${dow(SEL)}) ${NM[WHO]||''} ${sl?`<span class="wst wst-${sl.status}">${sl.status}</span>`:''}</b>
    ${sl&&sl.status==='반려'&&sl.reject_reason?`<div style="color:#e03131;margin:4px 0">반려 사유: ${E(sl.reject_reason)}</div>`:''}
@@ -2106,7 +2107,7 @@ $('#refresh').onclick=async()=>{const b=$('#refresh');if(b.disabled)return;b.dis
   $('#w-in').onclick=()=>go(async()=>{const r=await sb.rpc('work_clock',{p_what:'in'});if(r.error)throw r.error;WHO=ME;toast&&toast('출근 기록했어요 — 하이웍스도 찍어 주세요')});
   $('#w-out').onclick=()=>go(async()=>{const r=await sb.rpc('work_clock',{p_what:'out'});if(r.error)throw r.error;toast&&toast('퇴근 기록했어요 — 하이웍스도 찍어 주세요')});
   $('#w-pm').onclick=()=>{const d=new Date(y,m-2,1);MON=ymd(d).slice(0,7);SEL=MON+'-01';draw()};$('#w-nm').onclick=()=>{const d=new Date(y,m,1);MON=ymd(d).slice(0,7);SEL=MON+'-01';draw()};
-  if(BOSS){const c=$('#w-clk');if(c)c.style.display='none'}
+  if(BOSS&&!ADMIN){const c=$('#w-clk');if(c)c.style.display='none'}
   $('#w-who')?.addEventListener('change',e=>{WHO=e.target.value;draw()});
   T.querySelectorAll('tr[data-d]').forEach(tr=>tr.onclick=()=>{SEL=tr.dataset.d;draw()});
   T.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{const [e,d]=b.dataset.go.split('|');WHO=e;SEL=d;MON=d.slice(0,7);draw()});
@@ -2154,7 +2155,7 @@ async function boot(){const g=$('#gate'),m=$('#gate-msg');
   showLogin();return}
  try{const {data:st}=await sb.rpc('my_status');if(st==='pending'||st==='none'){m.innerHTML='<div style="margin-top:6px;line-height:1.7"><b>'+(st==='pending'?'승인 대기 중이에요 ⏳':'이 계정은 아직 사용 권한이 없어요')+'</b><br>관리자(실장)가 승인하면 쓸 수 있어요.</div><div style="display:flex;gap:8px;margin-top:8px"><button type="button" id="st-rf" class="b" style="padding:10px;font-size:16px">새로고침</button><button type="button" id="st-lo" class="b" style="padding:10px;font-size:16px;background:#fff;color:#14213d;border:1px solid #c9d1de">로그아웃</button></div>';$('#st-rf').onclick=()=>location.reload();$('#st-lo').onclick=async()=>{await sb.auth.signOut();location.reload()};return}}catch(e){}
  try{window.__admin=(await sb.rpc('is_admin')).data===true}catch(e){window.__admin=false}
- try{window.__boss=(await sb.rpc('is_boss')).data===true}catch(e){window.__boss=false}
+ try{window.__boss=(await sb.rpc('is_boss')).data===true}catch(e){window.__boss=false}try{window.__admin=window.__boss&&(await sb.rpc('is_admin')).data===true}catch(e){window.__admin=false}
  const nm=session.user.user_metadata?.name;const full=((nm||'')+' '+(session.user.user_metadata?.role||'')).trim();try{whoShow(full,session.user.email)}catch(e){}if(nm)localStorage.author=full;
  if(!/[?&]pane=/.test(location.search))sb.from('access_log').insert({email:session.user.email,name:nm||'',kind:isNew?'login':'open',ua:navigator.userAgent.slice(0,200)}).then(()=>{});
  g.remove();try{await load()}catch(err){alert('불러오기 실패: '+err.message)}}
