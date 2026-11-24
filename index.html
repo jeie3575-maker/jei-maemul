@@ -229,7 +229,7 @@ body.side2 #drawer{width:min(1200px,calc(100vw - 420px))}body.side2 #drawer2{wid
 @media print{body>*:not(#promo){display:none!important}#promo{position:static!important;background:none!important;display:block!important}#promo .box{box-shadow:none!important;width:100%!important;max-height:none!important;border-radius:0}#promo .ph{display:none!important}#promo .bm{background:none!important;border-bottom:1px solid #999}#promo .bm:empty::before{content:'';}}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.SB_URL="https://ctgaawyuwqihybxrdcgt.supabase.co";window.SB_ANON="sb_publishable_g-3Lbb_ygZL5gTvDvU06OA_HoWDzGaE";window.META={"fields": [["title", "가능여부", "text"], ["danji", "단지", "select"], ["dong", "동", "text"], ["ho", "호", "text"], ["typ", "타입", "text"], ["pyeong", "평형(전용)", "num"], ["direction", "방향", "multi"], ["deal", "거래유형", "multi"], ["sale", "매매가", "num"], ["jeonse", "전세가", "num"], ["deposit", "보증금", "num"], ["rent", "월세", "num"], ["cur_deposit", "보증(현)", "num"], ["cur_rent", "차임(현)", "num"], ["manki", "만기(년)", "date"], ["status", "현상태", "multi"], ["usage", "용도", "multi"], ["ad", "광고", "multi"], ["ad_type", "광고타입", "multi"], ["consult", "상담", "select"], ["owner", "임대인", "text"], ["owner_tel", "임대인연락처", "text"], ["tenant", "임차인", "text"], ["tenant_tel", "임차인연락처", "text"], ["owner_units", "임대인소유물건", "text"], ["coagent", "공동중개부동산", "text"], ["co_office", "공동중개부동산(사무소)", "text"], ["memo", "비고", "text"]], "options": {"danji": ["래미안", "써밋", "호반", "DK", "시티파크", "파크타워", "아스테리움", "에테르나인용산", "트럼프", "한강대우디오빌", "기타"], "deal": ["매매", "급매", "임대전세", "임대월세", "반전세", "단기", "예정", "지분매매", "분양가", "매매완료"], "direction": ["동", "서", "남", "북", "남동", "남서", "북동", "서북"], "status": ["공실", "입주", "전세완", "월세완", "반전세", "단기", "계약완", "매매완"], "usage": ["주거", "겸용", "일반사업자", "간이사업자", "법인사업자", "일반임대사업자", "주택임대사업자", "사업자", "사업자X/전입X", "확인필요"], "ad": ["뱅크", "네이버", "당근", "블로그", "공동", "대기", "공동부동산확인중", "광고가능- 등록하기", "공동부거절", "임대인요청으로 광고X"], "consult": ["시작 전", "진행 중", "완료"], "ad_type": ["신홍보", "전자홍보", "V2", "VR홍보"]}, "danji_naver": {"래미안": ["래미안용산더센트럴"], "써밋": ["용산푸르지오써밋"], "호반": ["용산호반써밋에이디션"], "DK": ["DK밸리뷰용산"], "시티파크": ["용산시티파크1단지", "용산시티파크2단지"], "파크타워": ["파크타워"], "아스테리움": ["아스테리움용산"], "에테르나인용산": ["에테르나인용산"]}};</script>
-<script>async function whoName(){const u=((await sb.auth.getUser()).data.user)||{},em=u.email||'';return em.includes('daepyo')?'대표':(/^jeie3575@/.test(em)||/^silijang@/.test(em))?'박윤진 실장':((u.user_metadata||{}).name||null)}
+<script>async function whoName(){const u=((await sb.auth.getUser()).data.user)||{},em=u.email||'';return em.includes('daepyo')?'대표':(/^jeie3575@/.test(em)||/^(silijang|elfdream)@/.test(em))?'박윤진 실장':((u.user_metadata||{}).name||null)}
 // 클라우드(Supabase) 버전 백엔드: 로컬 server.py 의 /api/* 를 브라우저에서 그대로 흉내낸다.
 // 필요: window.SB_URL, window.SB_ANON, window.META (meta.json), supabase-js v2
 const ME = '용산호반제이';
@@ -1549,7 +1549,7 @@ async function drawCSDetail(phone,fromPop){CSP=phone;const el=$('#cs-detail');if
 const CS_NOEDIT=['check','deal','stage','staff','cat'];
 const csDealOf=L=>{let s=null;for(const x of L)if(x.kind==='deal')s=x.text;try{return s?JSON.parse(s):{}}catch(_){return {}}};
 const csDealTxt=t=>{let v={};try{v=JSON.parse(t)}catch(_){}return [['계약 거래유형','tp'],['계약금액','amt'],['계약금 입금일','dd'],['계약서 작성일','cd'],['중도금일','mid'],['입주일(잔금일)','bal']].map(([l,k])=>l+' '+(v[k]||'-')+((k==='cd'&&v.cdt)||(k==='bal'&&v.balt)?' '+(k==='cd'?v.cdt:v.balt):'')).join(' · ')};
-const csBy=b=>{b=String(b||'');if(b.includes('daepyo'))return '대표';if(/^jeie3575@/.test(b)||/^silijang(@|$)/.test(b))return '박윤진 실장';return b.split('@')[0]};
+const csBy=b=>{b=String(b||'');if(b.includes('daepyo'))return '대표';if(/^jeie3575@/.test(b)||/^(silijang|elfdream)(@|$)/.test(b))return '박윤진 실장';return b.split('@')[0]};
 const csAuthor=()=>{try{return localStorage.csAuthor||''}catch(_){return ''}};
 const csLast=(L,k)=>{let s='';for(const x of L)if(x.kind===k)s=x.text;return s};
 const csStaffOf=L=>{let s='';for(const x of L)if(x.kind==='staff')s=x.text;return s};
@@ -2033,7 +2033,7 @@ $('#refresh').onclick=async()=>{const b=$('#refresh');if(b.disabled)return;b.dis
  const KST='Asia/Seoul',ymd=d=>new Date(d).toLocaleDateString('sv-SE',{timeZone:KST}),hm=t=>t?new Date(t).toLocaleTimeString('ko-KR',{timeZone:KST,hour:'2-digit',minute:'2-digit',hour12:false}):'',
   tm=(v,d)=>v?new Date(d+'T'+v+':00+09:00').toISOString():null,
   YO='일월화수목금토',dow=d=>YO[new Date(d+'T12:00:00+09:00').getDay()],E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
- const NM={'jeie3575+daepyo@gmail.com':'대표','silijang@jei.local':'박윤진 실장','jeie3575@gmail.com':'박윤진 실장'};
+ const NM={'jeie3575+daepyo@gmail.com':'대표','elfdream@jei.local':'박윤진 실장','jeie3575@gmail.com':'박윤진 실장'};
  let ME='',BOSS=false,WHO='',MON=ymd(Date.now()).slice(0,7),SEL=ymd(Date.now()),DAYS={},LOGS={},PEND=[],tick=null;
  const mins=(r)=>r&&r.clock_in&&r.clock_out?Math.max(0,Math.round((new Date(r.clock_out)-new Date(r.clock_in))/60000)-(r.break_min||0)):null,
   fh=m=>m==null?'':Math.floor(m/60)+'h'+String(m%60).padStart(2,'0')+'m';
