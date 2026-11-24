@@ -1707,7 +1707,7 @@ async function openDrawer(id,tpl){if(FORM0!==null&&$('#drawer').classList.contai
   const lab=k=>{const e=$('#d-body').querySelector('[data-k="'+k+'"]');return e?e.closest('label'):null};
   const chips=t=>[...dm.querySelectorAll('.chip')].filter(c=>MAP[t].includes(c.textContent));
   const val=k=>{const e=$('#d-body').querySelector('[data-k="'+k+'"]');return e?e.value:''};
-  const OFF=new Set();const isOn=t=>chips(t).some(c=>c.classList.contains('on'))||(!OFF.has(t)&&FLD[t].some(k=>val(k)!==''));
+  const OFF=(window.__DOFF=new Set());const isOn=t=>chips(t).some(c=>c.classList.contains('on'))||(!OFF.has(t)&&FLD[t].some(k=>val(k)!==''));
   box.className='dptabs';
   const draw=()=>{box.innerHTML=['매매','전세','월세'].map(t=>`<button type="button" class="dpt ${isOn(t)?'on':''}" data-t="${t}">${t}</button>`).join('')+`<span class="dpsum" id="dp-sum"></span>`;
    for(const t of Object.keys(FLD))for(const k of FLD[t]){const l=lab(k);if(l){l.classList.toggle('pv-on',isOn(t));l.classList.toggle('pv-off',!isOn(t))}}
@@ -1770,7 +1770,7 @@ document.addEventListener('keydown',e=>{if(e.target.id==='log-new'&&e.key==='Ent
 window.addEventListener('beforeunload',e=>{if(FORM0!==null&&$('#drawer').classList.contains('on')&&JSON.stringify(collectForm())!==FORM0){e.preventDefault();e.returnValue=''}});
 // 상세 화면: 고친 내용은 [저장] 또는 닫을 때(닫기·Esc·바깥) 자동 저장
 function collectForm(){const d={id:CUR.id,category:CUR.category||CAT};$('#d-body').querySelectorAll('[data-k]').forEach(e=>{d[e.dataset.k]=e.classList.contains('ms')?[...(e.dataset.keep?e.dataset.keep.split(', '):[]),...[...e.querySelectorAll('.chip.on')].map(c=>c.textContent)].filter(Boolean).join(', '):e.value});
- const ex={};$('#d-body').querySelectorAll('.ex-row').forEach(r=>{const k=r.querySelector('.ex-k').value.trim(),v=r.querySelector('.ex-v').value.trim();if(k&&v)ex[k]=isNaN(+v)||v===''?v:+v});for(const k of EX_HIDE){const cur=(CUR.extra||{})[k];if(cur!=null&&cur!=='')ex[k]=cur}$('#d-body').querySelectorAll('.exk-in').forEach(inp=>{const k=inp.dataset.key,v=inp.value.trim();if(v)ex[k]=isNaN(+v)?v:+v;else delete ex[k]});if(/가능/.test(d.title||'')){const have=new Set(String(d.deal||'').split(', ').filter(Boolean)),add=[];if(+d.sale&&!['매매','급매','지분매매'].some(x=>have.has(x)))add.push('매매');if(+d.jeonse&&!have.has('임대전세'))add.push('임대전세');if((+d.deposit||+d.rent)&&!['임대월세','반전세','단기'].some(x=>have.has(x)))add.push('임대월세');if(add.length)d.deal=[...have,...add].join(', ')}
+ const ex={};$('#d-body').querySelectorAll('.ex-row').forEach(r=>{const k=r.querySelector('.ex-k').value.trim(),v=r.querySelector('.ex-v').value.trim();if(k&&v)ex[k]=isNaN(+v)||v===''?v:+v});for(const k of EX_HIDE){const cur=(CUR.extra||{})[k];if(cur!=null&&cur!=='')ex[k]=cur}$('#d-body').querySelectorAll('.exk-in').forEach(inp=>{const k=inp.dataset.key,v=inp.value.trim();if(v)ex[k]=isNaN(+v)?v:+v;else delete ex[k]});if(/가능/.test(d.title||'')){const have=new Set(String(d.deal||'').split(', ').filter(Boolean)),add=[];const OF=window.__DOFF||new Set();if(+d.sale&&!OF.has('매매')&&!['매매','급매','지분매매'].some(x=>have.has(x)))add.push('매매');if(+d.jeonse&&!OF.has('전세')&&!have.has('임대전세'))add.push('임대전세');if((+d.deposit||+d.rent)&&!OF.has('월세')&&!['임대월세','반전세','단기'].some(x=>have.has(x)))add.push('임대월세');if(add.length)d.deal=[...have,...add].join(', ')}
  d.extra=Object.keys(ex).length?ex:null;return d}
 let FORM0=null;const markForm=()=>{FORM0=JSON.stringify(collectForm())};
 async function saveForm(reopen){const d=collectForm();if(JSON.stringify(d)===FORM0&&CUR.id){return null}
