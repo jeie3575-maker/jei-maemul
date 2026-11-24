@@ -1256,19 +1256,38 @@ function paintNews(){const body=document.getElementById('br-body');if(!body)retu
 document.querySelector('#tabs [data-t="brief"]')?.addEventListener('click',renderBrief);
 function homeGuide(){simpleModal('📱 폰 홈 화면에 추가',`<p>앱 설치가 아니라 <b>바로가기 아이콘</b>이에요. 한 번 추가하면 아이콘만 눌러 매물장이 열려요.</p><ul style="line-height:2"><li><b>아이폰 사파리</b> — 아래 공유 ⬆ → <b>홈 화면에 추가</b></li><li><b>크롬</b> — 오른쪽 위 ⋮ → <b>홈 화면에 추가</b> → 추가</li><li><b>삼성 인터넷</b> — 아래 ≡ → <b>현재 페이지 추가</b> → 홈 화면</li></ul><p class="mut" style="font-size:13px">비밀 링크로 한 번 로그인한 뒤에 추가해야 다음부터 바로 열려요.</p>`)}
 
+
+// ---- 회원 관리(관리자=실장만): 가입 승인·거절·비번 재설정·삭제 ----
+async function memOpen(){
+ const esc=x=>String(x==null?'':x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ simpleModal('👤 회원 관리','<div id="mem-b">불러오는 중…</div>');
+ const draw=async()=>{const bx=document.getElementById('mem-b');if(!bx)return;
+  const {data,error}=await sb.rpc('signup_list');if(error){bx.textContent='불러오기 실패: '+error.message;return}
+  const P=data.pending||[],M=data.members||[];
+  bx.innerHTML='<h4 style="margin:0 0 6px">승인 대기 ('+P.length+')</h4>'+(P.length?P.map(r=>'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid #e3e8f0"><span><b>'+esc(r.name)+'</b> · '+esc(r.role||'')+' · <span class="mut">'+esc(r.uname)+' · '+esc((r.at||'').slice(5,16).replace('T',' '))+'</span></span><span style="margin-left:auto;display:flex;gap:6px"><button class="b" data-ap="'+esc(r.email)+'">승인</button><button class="b" data-rj="'+esc(r.email)+'" style="background:#fff;color:#c0392b;border:1px solid #c0392b">거절</button></span></div>').join(''):'<div class="mut">대기 중인 신청이 없어요.</div>')
+  +'<h4 style="margin:16px 0 6px">사용 중인 회원 ('+M.length+')</h4>'+M.map(r=>{const idAcc=/@jei\.local$/i.test(r.email);return '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid #eef1f6"><span><b>'+esc(r.name||'')+'</b> <span class="mut">'+esc(idAcc?r.email.replace(/@jei\.local$/i,''):r.email)+'</span></span>'+(idAcc?'<span style="margin-left:auto;display:flex;gap:6px"><button class="b" data-pw="'+esc(r.email)+'">비번 재설정</button><button class="b" data-rm="'+esc(r.email)+'" style="background:#fff;color:#c0392b;border:1px solid #c0392b">삭제</button></span>':'')+'</div>'}).join('');
+  bx.onclick=async ev=>{const t=ev.target.closest('button');if(!t)return;let r;
+   if(t.dataset.ap){if(!confirm('승인할까요? 승인하면 매물·손님 정보를 볼 수 있어요.'))return;r=await sb.rpc('signup_approve',{p_email:t.dataset.ap})}
+   else if(t.dataset.rj){if(!confirm('거절하고 계정을 지울까요?'))return;r=await sb.rpc('signup_reject',{p_email:t.dataset.rj})}
+   else if(t.dataset.pw){const pw=prompt('새 비밀번호 (8자 이상)');if(!pw)return;r=await sb.rpc('signup_resetpw',{p_email:t.dataset.pw,p_pw:pw});if(!r.error&&r.data==='ok')alert('바꿨어요. 그 사람에게 새 비밀번호를 알려 주세요.')}
+   else if(t.dataset.rm){if(!confirm('이 회원을 삭제할까요? 더 이상 로그인할 수 없어요.'))return;r=await sb.rpc('signup_remove',{p_email:t.dataset.rm})}
+   else return;
+   if(r.error)alert('실패: '+r.error.message);else if(r.data!=='ok')alert('처리되지 않았어요: '+r.data);draw()};
+ };draw()}
+
 // ---- 11/17 상단 메뉴 묶음: 매물장 · 상담일지 · 매물관리▾ · 정보실▾ ----
 (function(){const nav=document.getElementById('tabs');if(!nav)return;
  const B=t=>nav.querySelector(`button[data-t="${t}"]`),cloud=!!window.SB_URL;
- const G=[{n:'매물관리',items:[['@vd','🏢 협력업체'],['call','📞 전화 목록'],['recon','네이버 광고 대조'],['manki','만기 알림']]},{n:'정보실',items:[['brief','📰 정책·뉴스'],['@dir','🧭 라인별 방향표'],['sise','💹 시세'],['io','백업']]},{n:'⚙ 설정',items:[['@man','📖 매물장 사용설명서'],['@rc','🔧 광고 대조 확인 설정'],['@sms','💬 문자 문구 관리'],['@qr','🔳 홈페이지 QR'],['@home','📱 폰 홈 화면에 추가']]}];
+ const G=[{n:'매물관리',items:[['@vd','🏢 협력업체'],['call','📞 전화 목록'],['recon','네이버 광고 대조'],['manki','만기 알림']]},{n:'정보실',items:[['brief','📰 정책·뉴스'],['@dir','🧭 라인별 방향표'],['sise','💹 시세'],['io','백업']]},{n:'⚙ 설정',items:[['@man','📖 매물장 사용설명서'],['@rc','🔧 광고 대조 확인 설정'],['@sms','💬 문자 문구 관리'],['@qr','🔳 홈페이지 QR'],['@mem','👤 회원 관리'],['@home','📱 폰 홈 화면에 추가']]}];
  const grp=new Set();G.forEach(g=>g.items.forEach(([t])=>{if(!t.startsWith('@')){grp.add(t);const b=B(t);if(b)b.dataset.g='1'}}));
  [B('list'),B('cs')].forEach(b=>b&&nav.appendChild(b));
  const dirb=document.getElementById('dir-open');if(dirb)dirb.style.display='none';
  let menu=null;const closeMenu=()=>{menu&&menu.remove();menu=null};
- const go=t=>{closeMenu();if(t==='@man')return manualOpen();if(t==='@rc')return rcSettings();if(t==='@qr')return qrOpen();if(t==='@sms')return smsTplOpen();if(t==='@pl')return phoneLookupOpen();if(t==='@vd')return vendorOpen();if(t==='@home')return homeGuide();if(t==='@dir'){B('list').click();setTimeout(()=>{const P=document.getElementById('dirpanel');if(P&&P.hidden)document.getElementById('dir-open').click()},30);return}B(t)?.click()};
+ const go=t=>{closeMenu();if(t==='@man')return manualOpen();if(t==='@rc')return rcSettings();if(t==='@qr')return qrOpen();if(t==='@sms')return smsTplOpen();if(t==='@pl')return phoneLookupOpen();if(t==='@vd')return vendorOpen();if(t==='@mem')return memOpen();if(t==='@home')return homeGuide();if(t==='@dir'){B('list').click();setTimeout(()=>{const P=document.getElementById('dirpanel');if(P&&P.hidden)document.getElementById('dir-open').click()},30);return}B(t)?.click()};
  const mk=g=>{const w=document.createElement('span');w.className='tgrp';const b=document.createElement('button');b.type='button';b.dataset.grp=g.n;b.innerHTML=`${g.n} ▾<span class="tbadge" hidden></span>`;w.appendChild(b);nav.appendChild(w);
   b.onclick=e=>{e.stopPropagation();if(menu&&menu.dataset.g===g.n){closeMenu();return}closeMenu();const cur=nav.querySelector('button[data-t].on')?.dataset.t;
    menu=document.createElement('div');menu.className='tmenu';menu.dataset.g=g.n;
-   menu.innerHTML=g.items.filter(([t])=>!(cloud&&t==='io')&&(t.startsWith('@')||B(t))).map(([t,l])=>`<button type="button" data-go="${t}" class="${t===cur?'on':''}">${l}${t==='manki'&&window.__mk?`<span class="tbadge">${window.__mk}</span>`:''}</button>`).join('');
+   menu.innerHTML=g.items.filter(([t])=>!(cloud&&t==='io')&&!(t==='@mem'&&!window.__admin)&&(t.startsWith('@')||B(t))).map(([t,l])=>`<button type="button" data-go="${t}" class="${t===cur?'on':''}">${l}${t==='manki'&&window.__mk?`<span class="tbadge">${window.__mk}</span>`:''}</button>`).join('');
    menu.onclick=ev=>{const x=ev.target.closest('[data-go]');if(x){ev.stopPropagation();go(x.dataset.go)}};menu.addEventListener('touchstart',ev=>ev.stopPropagation(),{passive:true});document.body.appendChild(menu);
    const r=b.getBoundingClientRect();menu.style.top=(r.bottom+6)+'px';if(innerWidth<=760){menu.style.left='10px';menu.style.right='10px'}else{menu.style.left=Math.max(8,Math.min(r.left,innerWidth-menu.offsetWidth-8))+'px'}};
   return b};
@@ -2073,8 +2092,21 @@ async function boot(){const g=$('#gate'),m=$('#gate-msg');
    if(error){m.textContent='링크가 만료되었거나 바뀌었습니다. 새 링크를 받아 주세요.';return}}
    try{history.replaceState(null,'',location.pathname+location.search.replace(/([?&])k=[^&]*&?/,'$1').replace(/[?&]$/,''))}catch(x){}}catch(err){m.textContent='잘못된 링크입니다.';return}}
  let session=null;try{session=(await Promise.race([sb.auth.getSession(),new Promise((_,j)=>setTimeout(()=>j(new Error('timeout')),8000))])).data.session}catch(err){try{Object.keys(localStorage).filter(x=>x.startsWith('sb-')).forEach(x=>localStorage.removeItem(x))}catch(e){}}
- if(!session){m.innerHTML='<form id="pwf" style="display:flex;flex-direction:column;gap:8px;margin-top:6px"><input id="pwf-e" type="email" name="username" autocomplete="username" placeholder="이메일" required style="padding:10px;font-size:16px"><input id="pwf-p" type="password" name="password" autocomplete="current-password" placeholder="비밀번호" required style="padding:10px;font-size:16px"><button class="b" style="padding:10px;font-size:16px">들어가기</button><div class="mut" id="pwf-m" style="font-size:13px">또는 텔레그램으로 받은 <b>비밀 링크</b>로 접속해도 돼요.</div></form>';
-  $('#pwf').onsubmit=async ev=>{ev.preventDefault();const pm=$('#pwf-m');pm.textContent='확인 중…';const {error}=await sb.auth.signInWithPassword({email:$('#pwf-e').value.trim(),password:$('#pwf-p').value});if(error){pm.textContent='이메일이나 비밀번호가 맞지 않아요.';return}location.reload()};return}
+ if(!session){const IN='padding:10px;font-size:16px';
+  const showLogin=()=>{m.innerHTML='<form id="pwf" style="display:flex;flex-direction:column;gap:8px;margin-top:6px"><input id="pwf-e" type="text" name="username" autocomplete="username" autocapitalize="none" placeholder="아이디 (또는 이메일)" required style="'+IN+'"><input id="pwf-p" type="password" name="password" autocomplete="current-password" placeholder="비밀번호" required style="'+IN+'"><button class="b" style="'+IN+'">들어가기</button><div class="mut" id="pwf-m" style="font-size:13px">또는 텔레그램으로 받은 <b>비밀 링크</b>로 접속해도 돼요.</div><button type="button" id="pwf-su" class="b" style="padding:8px;font-size:14px;background:#fff;color:#14213d;border:1px solid #c9d1de">회원가입</button></form>';
+   $('#pwf-su').onclick=showSignup;
+   $('#pwf').onsubmit=async ev=>{ev.preventDefault();const pm=$('#pwf-m');pm.textContent='확인 중…';let id=$('#pwf-e').value.trim();if(id.indexOf('@')<0)id=id.toLowerCase()+'@jei.local';const {error}=await sb.auth.signInWithPassword({email:id,password:$('#pwf-p').value});if(error){pm.textContent='아이디나 비밀번호가 맞지 않아요.';return}location.reload()}};
+  const showSignup=async()=>{m.innerHTML='<form id="suf" style="display:flex;flex-direction:column;gap:8px;margin-top:6px"><b>회원가입</b><input id="su-id" autocapitalize="none" autocomplete="username" placeholder="아이디 (영문 소문자·숫자·_ 3~20자)" required style="'+IN+'"><input id="su-nm" placeholder="이름" maxlength="20" required style="'+IN+'"><select id="su-rl" style="'+IN+'"><option>직원</option><option>실장</option><option>중개사</option><option>기타</option></select><input id="su-p1" type="password" autocomplete="new-password" placeholder="비밀번호 (8자 이상)" required style="'+IN+'"><input id="su-p2" type="password" autocomplete="new-password" placeholder="비밀번호 확인" required style="'+IN+'"><div id="su-cap" style="display:flex;gap:8px;align-items:center"><span class="mut" style="font-size:13px">자동등록방지 불러오는 중…</span></div><input id="su-cv" inputmode="numeric" placeholder="그림의 숫자 5자리" required style="'+IN+'"><button class="b" style="'+IN+'">가입 신청</button><div class="mut" id="su-m" style="font-size:13px">신청 후 관리자(실장)가 승인하면 쓸 수 있어요.</div><button type="button" id="su-back" class="b" style="padding:8px;font-size:14px;background:#fff;color:#14213d;border:1px solid #c9d1de">← 로그인으로</button></form>';
+   $('#su-back').onclick=showLogin;let capId=null;
+   const loadCap=async()=>{const bx=$('#su-cap');try{const {data,error}=await sb.rpc('get_captcha');if(error)throw error;capId=data.id;bx.innerHTML=data.svg+'<button type="button" id="su-rf" class="b" style="padding:6px 10px">새로</button>';const sv=bx.querySelector('svg');if(sv){sv.style.maxWidth='160px';sv.style.height='auto'}$('#su-rf').onclick=loadCap}catch(e){bx.textContent='자동등록방지를 불러오지 못했어요'}};loadCap();
+   $('#suf').onsubmit=async ev=>{ev.preventDefault();const sm=$('#su-m');const p1=$('#su-p1').value;if(p1!==$('#su-p2').value){sm.textContent='비밀번호 확인이 달라요.';return}sm.textContent='신청 중…';
+    const {data,error}=await sb.rpc('signup_account',{p_id:$('#su-id').value,p_pw:p1,p_name:$('#su-nm').value,p_role:$('#su-rl').value,p_cap_id:capId,p_cap:$('#su-cv').value});
+    const msg={captcha:'그림 숫자가 맞지 않아요. 새로 받아 다시 입력해 주세요.',invalid_id:'아이디는 영문 소문자·숫자·_ 만, 3~20자로 해 주세요.',weak:'비밀번호는 8자 이상으로 해 주세요.',invalid:'이름을 확인해 주세요.',exists:'이미 있는 아이디예요.',busy:'지금 신청이 많아요. 잠시 후 다시 해 주세요.'};
+    if(error||data!=='ok'){sm.textContent=error?'신청에 실패했어요: '+error.message:(msg[data]||'신청에 실패했어요.');if(!error&&data==='captcha'||data==='exists')loadCap();return}
+    m.innerHTML='<div style="margin-top:6px;line-height:1.7"><b>신청이 완료됐어요 ✅</b><br>관리자가 승인하면 방금 만든 아이디로 들어올 수 있어요.</div><button type="button" id="su-ok" class="b" style="padding:10px;font-size:16px;margin-top:8px">로그인 화면으로</button>';$('#su-ok').onclick=showLogin}};
+  showLogin();return}
+ try{const {data:st}=await sb.rpc('my_status');if(st==='pending'||st==='none'){m.innerHTML='<div style="margin-top:6px;line-height:1.7"><b>'+(st==='pending'?'승인 대기 중이에요 ⏳':'이 계정은 아직 사용 권한이 없어요')+'</b><br>관리자(실장)가 승인하면 쓸 수 있어요.</div><div style="display:flex;gap:8px;margin-top:8px"><button type="button" id="st-rf" class="b" style="padding:10px;font-size:16px">새로고침</button><button type="button" id="st-lo" class="b" style="padding:10px;font-size:16px;background:#fff;color:#14213d;border:1px solid #c9d1de">로그아웃</button></div>';$('#st-rf').onclick=()=>location.reload();$('#st-lo').onclick=async()=>{await sb.auth.signOut();location.reload()};return}}catch(e){}
+ window.__admin=String(session.user.email).toLowerCase()==='jeie3575@gmail.com';
  const nm=session.user.user_metadata?.name;if(nm)localStorage.author=nm;
  if(!/[?&]pane=/.test(location.search))sb.from('access_log').insert({email:session.user.email,name:nm||'',kind:isNew?'login':'open',ua:navigator.userAgent.slice(0,200)}).then(()=>{});
  g.remove();try{await load()}catch(err){alert('불러오기 실패: '+err.message)}}
