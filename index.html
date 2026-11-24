@@ -2244,11 +2244,27 @@ const orl=window.renderList;window.renderList=function(){const r=orl.apply(this,
 const t=setInterval(()=>{if(typeof META!=='undefined'&&META&&typeof ROWS!=='undefined'&&ROWS.length){try{draw()}catch(e){}clearInterval(t)}},500);
 })();
 
-// ---- 일정 탭: 구글 캘린더 임베드 ----
+// ---- 일정 탭: 구글 캘린더 임베드 + 스티커 메모 ----
 (function(){const btn=document.querySelector('#tabs button[data-t="cal"]');if(!btn)return;
- const draw=()=>{const bx=document.getElementById('cal-box');if(!bx||bx.dataset.on)return;bx.dataset.on=1;
-  const src='e3623f5aed2ef4d6314f6135a5b7607fc9962ea23b3df7148b8fb809bfdf979e@group.calendar.google.com';
-  bx.innerHTML='<iframe src="https://calendar.google.com/calendar/embed?src='+encodeURIComponent(src)+'&src='+encodeURIComponent('ko.south_korea#holiday@group.v.calendar.google.com')+'&ctz=Asia%2FSeoul&mode=MONTH&wkst=1&showTitle=0&showPrint=0&showTz=0&hl=ko" style="width:100%;height:calc(100vh - 150px);min-height:480px;border:1px solid #d9dee7;border-radius:10px;background:#fff"></iframe><div class="mut" style="font-size:12.5px;margin-top:6px">일정이 안 보이면 이 브라우저에서 구글에 로그인(호반제이 캘린더를 공유받은 계정)해 주세요.</div>'};
+ const CS={y:'#fff3a3',p:'#ffd1dc',g:'#c9f2c7',b:'#cfe6ff',o:'#ffdcb0'};let N=[],timer=null,live=false;
+ const E=x=>String(x==null?'':x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ const css=document.createElement('style');css.textContent='#cal-wrap{display:flex;gap:12px;align-items:flex-start}#cal-main{flex:1;min-width:0}#stk{width:270px;flex:none;max-height:calc(100vh - 150px);overflow:auto;padding:2px 4px 8px 2px}#stk .sn{position:relative;border-radius:4px;padding:6px 8px 22px;margin:0 0 12px;box-shadow:0 3px 8px rgba(0,0,0,.18);transform:rotate(-.6deg)}#stk .sn:nth-child(even){transform:rotate(.7deg)}#stk .sn textarea{width:100%;box-sizing:border-box;min-height:90px;border:0;background:transparent;resize:vertical;font:inherit;font-size:14px;line-height:1.45;outline:0}#stk .sf{position:absolute;left:8px;right:6px;bottom:3px;display:flex;align-items:center;gap:4px;font-size:11px;color:#6b6b6b}#stk .sf i{width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.25);cursor:pointer;display:inline-block}#stk .sf .sp{flex:1}#stk .sf button{border:0;background:none;cursor:pointer;color:#888;font-size:13px}@media(max-width:900px){#cal-wrap{flex-direction:column}#stk{width:100%;max-height:none}}';document.head.appendChild(css);
+ const me=async()=>{try{const u=(await sb.auth.getUser()).data.user;return /daepyo/i.test((u&&u.email)||'')?'대표':'실장'}catch(_){return ''}};
+ const lst=()=>{const b=document.getElementById('stk-list');if(!b)return;if(document.activeElement&&b.contains(document.activeElement))return;
+  b.innerHTML=N.map(n=>`<div class="sn" data-id="${n.id}" style="background:${CS[n.color]||CS.y}"><textarea placeholder="메모…">${E(n.text)}</textarea><div class="sf">${Object.keys(CS).map(k=>`<i data-c="${k}" style="background:${CS[k]}"></i>`).join('')}<span class="sp"></span><span>${E(n.by_name||'')}</span><button data-del title="삭제">✕</button></div></div>`).join('')||'<div class="mut" style="font-size:13px">메모가 없어요. 위 [+ 메모]를 눌러 보세요.</div>'};
+ const load=async()=>{if(!window.sb)return;const r=await sb.from('sticky').select('*').order('created_at',{ascending:false});if(r.error){const b=document.getElementById('stk-list');if(b&&!N.length)b.innerHTML='<div class="mut" style="font-size:12.5px">메모장 준비 중이에요. (DB 설정이 필요해요)</div>';return}N=r.data||[];lst()};
+ const draw=()=>{const bx=document.getElementById('cal-box');if(!bx)return;
+  if(!bx.dataset.on){bx.dataset.on=1;const src='e3623f5aed2ef4d6314f6135a5b7607fc9962ea23b3df7148b8fb809bfdf979e@group.calendar.google.com';
+   bx.innerHTML='<div id="cal-wrap"><div id="cal-main"><iframe src="https://calendar.google.com/calendar/embed?src='+encodeURIComponent(src)+'&src='+encodeURIComponent('ko.south_korea#holiday@group.v.calendar.google.com')+'&ctz=Asia%2FSeoul&mode=MONTH&wkst=1&showTitle=0&showPrint=0&showTz=0&hl=ko" style="width:100%;height:calc(100vh - 150px);min-height:480px;border:1px solid #d9dee7;border-radius:10px;background:#fff"></iframe><div class="mut" style="font-size:12.5px;margin-top:6px">일정이 안 보이면 이 브라우저에서 구글에 로그인(호반제이 캘린더를 공유받은 계정)해 주세요.</div></div><div id="stk"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><b>📝 메모</b><span class="mut" style="font-size:12px">모두 같이 봐요</span><span style="flex:1"></span><button class="b" id="stk-add">+ 메모</button></div><div id="stk-list"></div></div></div>';
+   const L=document.getElementById('stk-list'),tm={};
+   document.getElementById('stk-add').onclick=async()=>{const r=await sb.from('sticky').insert({text:'',color:'y',by_name:await me()}).select().single();if(r.error)return alert('메모를 만들 수 없어요: '+r.error.message);N.unshift(r.data);const b=document.activeElement;if(b)b.blur();lst();L.querySelector('textarea')?.focus()};
+   L.addEventListener('input',e=>{const sn=e.target.closest('.sn');if(!sn)return;const id=sn.dataset.id;clearTimeout(tm[id]);tm[id]=setTimeout(async()=>{const n=N.find(x=>x.id===id);if(n)n.text=e.target.value;await sb.from('sticky').update({text:e.target.value,updated_at:new Date().toISOString()}).eq('id',id)},600)});
+   L.addEventListener('click',async e=>{const sn=e.target.closest('.sn');if(!sn)return;const id=sn.dataset.id;
+    if(e.target.dataset.c){const n=N.find(x=>x.id===id);n.color=e.target.dataset.c;sn.style.background=CS[n.color];await sb.from('sticky').update({color:n.color}).eq('id',id)}
+    else if(e.target.hasAttribute('data-del')){if(sn.querySelector('textarea').value.trim()&&!confirm('이 메모를 지울까요?'))return;await sb.from('sticky').delete().eq('id',id);N=N.filter(x=>x.id!==id);sn.remove()}});
+   load()}
+  else load();
+  clearInterval(timer);timer=setInterval(()=>{if(document.hidden||document.getElementById('t-cal').hidden)return;load()},8000)};
  btn.addEventListener('click',()=>setTimeout(draw,0))})();
 </script>
 </body></html>
