@@ -573,7 +573,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795582996"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795585111"></head><body>
 <header><b id="home-t" style="cursor:pointer" title="메인(매물장)으로">🏡 제이부동산 매물장</b><span id="who-b" hidden style="margin-left:10px;font-size:12.5px;font-weight:800;background:#fff6d6;color:#14213d;border:1px solid #e0c46a;border-radius:999px;padding:2px 10px;white-space:nowrap"></span><input id="pl-top" placeholder="🔎 통합조회" title="이름·전화번호·단지·메모 등 아무거나 + Enter: 매물장·손님상담일지·문자·협력업체 전체 검색" style="width:120px;min-width:90px;margin:0 8px;padding:3px 8px;border-radius:14px;border:1px solid var(--line);font-size:13px"><nav id="tabs">
 <button data-t="sise">💹 시세</button><button data-t="list" class="on">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 손님상담일지</button><button data-t="cal">📅 달력</button><button data-t="work">🕘 내 근무</button><button data-t="brief">📰 정책·뉴스</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
 <span class="sp"></span><small id="info"></small><button class="fsb" id="fs-" title="글씨 작게">가−</button><button class="fsb" id="fs0" title="글씨 크기 원래대로">원본보기</button><button class="fsb" id="fs+" title="글씨 크게">가+</button><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
@@ -2367,7 +2367,7 @@ const t=setInterval(()=>{if(typeof META!=='undefined'&&META&&typeof ROWS!=='unde
  // ----- 데이터 -----
  const callG=body=>api('/api/gcal',{method:'POST',body:JSON.stringify(body)});
  const loadT=async()=>{if(typeof sb==='undefined')return;const r=await sb.from('cal_tasks').select('*').order('created_at',{ascending:false});if(!r.error){TK=r.data||[];gBack()}};
- const gBack=async()=>{try{if(localStorage.gtk2)return;localStorage.gtk2='1'}catch(_){return}if(!UID)await who();for(const t of TK.filter(x=>x.due&&(x.scope!=='personal'||x.owner===UID)).slice(0,60))await gSync(t)};
+ const gBack=async()=>{try{if(localStorage.gtk3)return;localStorage.gtk3='1'}catch(_){return}if(!UID)await who();for(const t of TK.filter(x=>x.due&&(x.scope!=='personal'||x.owner===UID)).slice(0,60))await gSync(t)};
  const load=async(keep)=>{if(typeof sb==='undefined'||V==='google')return;const [a,b]=range(),v=document.getElementById('cv'),rk=YMD(a)+'~'+YMD(b);if(v)v.classList.add('ld');try{const reqs=[callG({action:'list',from:YMD(a),to:YMD(b)}),(ADM&&LY.jei)?callG({action:'list',cal:'jei',from:YMD(a),to:YMD(b)}).catch(()=>({events:[]})):Promise.resolve({events:[]}),LY.hol?callG({action:'list',cal:'holiday',from:YMD(a),to:YMD(b)}):Promise.resolve({events:[]}),loadT()];const [r,jv,h]=await Promise.all(reqs);if(document.getElementById('evm')||document.getElementById('gc-qc')||document.getElementById('gc-drag'))return;if(r&&r.events){EV=r.events.map(x=>({...x,cal:'main'})).concat(((jv&&jv.events)||[]).map(x=>({...x,cal:'jei'}))).filter(x=>!/\[jei-task:/.test(x.desc||''))}if(h&&h.events)HV=h.events;draw(keep||rk===lastRange);lastRange=rk}catch(x){const v2=document.getElementById('cv');if(v2&&!EV.length)v2.innerHTML='<div class="mut" style="padding:20px">캘린더를 불러오지 못했어요: '+E(x.message)+' <button class="b" id="cal-retry">다시 시도</button></div>'}finally{document.getElementById('cv')?.classList.remove('ld')}};
  const go=(d)=>{cur=d;mini=new Date(d.getFullYear(),d.getMonth(),1);EV=[];HV=[];draw();load()};
  const nav=n=>{go(V==='month'&&!SQ?new Date(cur.getFullYear(),cur.getMonth()+n,1):addD(cur,n*(V==='week'?7:V==='agenda'?30:1)))};
@@ -2421,12 +2421,12 @@ const t=setInterval(()=>{if(typeof META!=='undefined'&&META&&typeof ROWS!=='unde
  const gQget=()=>{try{return JSON.parse(localStorage.gq||'[]')}catch(_){return[]}},gQset=a=>{try{localStorage.gq=JSON.stringify(a)}catch(_){}};
  const gDo=async(t,o)=>{o=o||{};const base=o.old||t.due;if(!base)return;const a=YMD(addD(pd(base),-1)),b=YMD(addD(pd(base),2));
   const found=async cal=>{const r=await callG({action:'list',from:a,to:b,...(cal?{cal}:{})});return((r&&r.events)||[]).find(e=>(e.desc||'').includes(gTM(t)))};
-  const evM=await found(),evJ=await found('jei').catch(()=>null);
-  if(evJ)await callG({action:'delete',id:evJ.id,series:false,cal:'jei'});
-  if(o.del||!t.due){if(evM)await callG({action:'delete',id:evM.id,series:false});return}
+  const evM=await found('work'),evL1=await found().catch(()=>null),evL2=await found('jei').catch(()=>null);
+  if(evL1)await callG({action:'delete',id:evL1.id,series:false});if(evL2)await callG({action:'delete',id:evL2.id,series:false,cal:'jei'});
+  if(o.del||!t.due){if(evM)await callG({action:'delete',id:evM.id,series:false,cal:'work'});return}
   const tm=tkTime(t),tag=(t.by_name||'').replace(/ ?실장$/,'').replace(/^박/,'').trim(),ttl=(tag?'['+tag+'] ':'')+(t.done?'✔ ':'☐ ')+t.title;
   const body=tm?{title:ttl,allDay:false,start:t.due+'T'+tm,end:t.due+'T'+String(Math.min(23,+tm.slice(0,2)+1)).padStart(2,'0')+tm.slice(2),desc:gTM(t)+(tkNote(t)?'\n'+tkNote(t):''),loc:''}:{title:ttl,allDay:true,start:t.due,end:YMD(addD(pd(t.due),1)),desc:gTM(t)+(tkNote(t)?'\n'+tkNote(t):''),loc:''};
-  if(evM)await callG({action:'update',id:evM.id,...body});else await callG({action:'create',...body})};
+  if(evM)await callG({action:'update',id:evM.id,cal:'work',...body});else await callG({action:'create',cal:'work',...body})};
  const gSync=async(t,o)=>{try{await gDo(t,o);const q=gQget().filter(x=>x.t.id!==t.id);gQset(q);if(!q.length)document.getElementById('gerr')?.remove()}catch(e){console.warn('구글 캘린더 할 일 연동 실패',e);const q=gQget().filter(x=>x.t.id!==t.id);q.push({t:{id:t.id,title:t.title,due:t.due,done:t.done,note:t.note,by_name:t.by_name,scope:t.scope},o:o||{},n:1,m:String(e.message||e)});gQset(q);gErr(String(e.message||e).slice(0,60))}};
  const gRetry=async()=>{const q=gQget();for(const x of q){try{await gDo(x.t,x.o);gQset(gQget().filter(y=>y.t.id!==x.t.id))}catch(e){x.n=(x.n||1)+1;x.m=String(e.message||e);gQset(gQget().map(y=>y.t.id===x.t.id?x:y))}}const left=gQget();if(!left.length)document.getElementById('gerr')?.remove();else gErr(String(left[0].m).slice(0,60))};
  setInterval(()=>{if(gQget().length)gRetry()},60000);
