@@ -560,6 +560,7 @@ async function api(u, o = {}) {
       const who = ((await sb.auth.getUser()).data.user || {}).email || null;
       chk(await sb.from('consult_logs').insert({phone: cur.phone, client_name: nm || cur.client_name, kind: 'page', text: '손님 페이지 갱신 · 매물 ' + ids.length + '개 · ' + String(cur.expires).slice(0, 10) + '까지' + (row.note ? ' · 손님에게 보인 메모: ' + row.note : ''), listing_ids: ids, token: d.token, by: who, move_in: row.move_in, want_deal: row.want_deal, want_deposit: row.want_deposit, want_rent: row.want_rent, agent_memo: row.agent_memo}));
       return {ok: true, token: d.token, expires: cur.expires} }
+    case '/api/client_rename': { const d = JSON.parse(o.body); const nm = String(d.name || '').trim(); const ph = String(d.phone || '').replace(/\D/g, ''); if (!nm || ph.length < 8) throw new Error('이름·전화번호가 필요해요'); chk(await sb.from('client_pages').update({client_name: nm, title: nm.slice(0, 1) + '○○ 님께 골라 드린 매물'}).eq('phone', ph)); return {ok: true} }
     case '/api/client_delete': chk(await sb.from('client_pages').delete().eq('token', q.token)); return {ok: true};
     case '/api/layout_band': return (await loadRef('layout_band')).rows;
     case '/api/dirfill': { const d = JSON.parse(o.body); for (let i = 0; i < d.ids.length; i += 200) chk(await sb.from('listings').update({direction: d.direction}).in('id', d.ids.slice(i, i + 200)).is('direction', null)); _cache.listings = null; return {ok: true, n: d.ids.length} }
@@ -1014,7 +1015,7 @@ function phoneLookupOpen(pre){
   if(my!==seq)return;
   const rows=[];for(const r of ROWS){const h=hit(rowF(r),tk);if(h)rows.push([r,h])}
   const G=new Map();for(const x of CSL||[]){if(!x.phone)continue;(G.get(x.phone)||G.set(x.phone,[]).get(x.phone)).push(x)}
-  const gs=[];for(const [ph,L0] of G){const L=L0.slice().sort((a,b)=>String(b.at).localeCompare(String(a.at)));const nm=(L.find(x=>x.client_name)||{}).client_name||'';
+  const gs=[];for(const [ph,L0] of G){const L=L0.slice().sort((a,b)=>String(b.at).localeCompare(String(a.at)));const nm=(L.find(x=>x.client_name&&x.kind!=='view')||{}).client_name||'';
    const f=[['전화',ph],['이름',nm]];for(const x of L){if(['view','check','deal','staff','cat','stage','smstpl','vendor','smsq'].includes(x.kind))continue;const d=String(x.at).slice(5,10);if(x.text)f.push([d+' '+(/^📨/.test(x.text)?'문자':'메모'),x.text]);if(x.cond)f.push([d+' 조건',x.cond]);if(x.agent_memo)f.push([d+' 담당메모',x.agent_memo])}
    const h=hit(f,tk);if(h)gs.push([ph,nm,h,L.length])}
   const vds=[];for(const v of VD){const f=Object.entries(v).filter(([k,x])=>x!=null&&x!==''&&typeof x!=='object'&&!['id','del','at'].includes(k)).map(([k,x])=>[k==='cat'?'분류':k==='name'?'업체':k==='tel'?'연락처':k==='memo'?'메모':k,String(x)]);const h=hit(f,tk);if(h)vds.push([v,h])}
@@ -1050,7 +1051,7 @@ async function mankiSmsOpen(r){if(!r||!r.id)return;let cur={},CH=[{id:'6003',nam
   if(!jobs.length)return alert('보낼 사람을 선택해 주세요');if(!confirm(jobs.map(j=>j[0]+' '+j[1]+'\n'+j[2]).join('\n\n')+'\n\n위 문자를 보낼까요?'))return;e.target.disabled=true;try{const ch=(el.querySelector('#sm-ch')||{}).value||'';try{localStorage.smch=ch}catch(_){}for(const j of jobs)await api('/api/sms_send',{method:'POST',body:JSON.stringify({phone:j[1],to:j[1],text:j[2],ch})});toast('발송 요청했어요 — 잠시 뒤 상담일지에 결과가 남아요');el.remove()}catch(x){alert('요청 실패: '+x.message);e.target.disabled=false}}}
 async function smsSendOpen(phone){let cur={},VDL=[],CH=[{id:'6003',name:'6003'}];try{CH=((await api('/api/sms_channels'))||{}).ch||CH}catch(_){}try{cur=((await api('/api/sms_tpl_get'))||{}).tpl||{}}catch(_){}try{VDL=(await api('/api/vendor_list'))||[]}catch(_){}
  const L=(CSL||[]).filter(x=>x.phone===phone);let dv={};for(const x of L)if(x.kind==='deal'){try{dv=JSON.parse(x.text)}catch(_){}}
- const name=($('#cs-name')&&$('#cs-name').value.trim())||(L.find(x=>x.client_name)||{}).client_name||'',lid=(CST[phone]||{}).listing_id,r0=lid?ROWS.find(r=>r.id===lid):null,unit=r0?cpUnit(r0)||'':'';
+ const name=($('#cs-name')&&$('#cs-name').value.trim())||(L.find(x=>x.client_name&&x.kind!=='view')||{}).client_name||'',lid=(CST[phone]||{}).listing_id,r0=lid?ROWS.find(r=>r.id===lid):null,unit=r0?cpUnit(r0)||'':'';
  const onm=((r0&&r0.owner)||'').match(/[가-힣]{2,4}/),oname=onm?onm[0]:'',onums=[...new Set([...(((r0&&r0.owner_tel)||'').replace(/(\d)[\s-]+(?=\d)/g,'$1').matchAll(/01[016789]\d{7,8}/g))].map(m=>m[0]))];
  const T0=new Date();T0.setHours(0,0,0,0);const dd=d=>d?Math.round((new Date(d+'T00:00:00')-T0)/864e5):'',md=d=>{if(!d)return '';const t=new Date(d+'T00:00:00');return (t.getMonth()+1)+'월 '+t.getDate()+'일'};
  const KD={cd3:'cd',cd1:'cd',mid3:'mid',bal3:'bal',mv1:'bal'},TM={cd:'cdt',bal:'balt'};
@@ -1480,7 +1481,7 @@ async function renderCS(){const P=$('#cspanel');
  $('#cs-q').value='';$('#cs-q').oninput=drawCSList;$('#cs-qx').onclick=()=>{$('#cs-q').value='';drawCSList()};$('#cs-new').onclick=()=>drawCSDetail('');
  try{CSL=await api('/api/consult_list');CST={};for(const x of await api('/api/consult_stage'))CST[x.phone]=x}catch(e){$('#cs-list').textContent='못 불러왔어요: '+e.message;return}drawCSList();if(CSP)drawCSDetail(CSP)}
 const csStage=ph=>(CST[ph]&&CST[ph].stage)||'상담중',csAuto=ph=>CST[ph]&&CST[ph].auto_listing_id&&!CST[ph].auto_seen;
-function csGroups(){const g={};for(const x of CSL||[]){const k=x.phone;if(!k)continue;(g[k]||={phone:k,name:'',last:x.at,n:0,views:0});const o=g[k];o.n++;if(x.kind==='view')o.views++;if(x.text&&!['view','check','deal','staff','cat','stage'].includes(x.kind))o.mt=(o.mt||'')+'\n'+x.text;for(const i of (x.listing_ids||[])){const r=ROWS.find(r=>r.id===i);if(r){const c=(r.category||'오피스텔');(o.lc||={})[c]=(o.lc[c]||0)+1}}if(x.kind==='cat'&&(!o.catAt||String(x.at)>o.catAt)){o.cat=x.text;o.catAt=String(x.at)}if(x.want_deal&&(!o.dealAt||String(x.at)>o.dealAt)){o.deal=x.want_deal;o.dealAt=String(x.at)}if(x.kind==='staff'&&(!o.staffAt||String(x.at)>o.staffAt)){o.staff=x.text;o.staffAt=String(x.at)}if(x.kind==='deal'&&(!o.dlAt||String(x.at)>o.dlAt)){try{o.dl=JSON.parse(x.text)}catch(_){}o.dlAt=String(x.at)}if(x.kind==='check'&&(!o.chkAt||String(x.at)>o.chkAt)){o.chk=csChkSum(x.text);o.chkAt=String(x.at)}if(String(x.at)>String(o.last))o.last=x.at;if(!o.name&&x.client_name)o.name=x.client_name}
+function csGroups(){const g={};for(const x of CSL||[]){const k=x.phone;if(!k)continue;(g[k]||={phone:k,name:'',last:x.at,n:0,views:0});const o=g[k];o.n++;if(x.kind==='view')o.views++;if(x.text&&!['view','check','deal','staff','cat','stage'].includes(x.kind))o.mt=(o.mt||'')+'\n'+x.text;for(const i of (x.listing_ids||[])){const r=ROWS.find(r=>r.id===i);if(r){const c=(r.category||'오피스텔');(o.lc||={})[c]=(o.lc[c]||0)+1}}if(x.kind==='cat'&&(!o.catAt||String(x.at)>o.catAt)){o.cat=x.text;o.catAt=String(x.at)}if(x.want_deal&&(!o.dealAt||String(x.at)>o.dealAt)){o.deal=x.want_deal;o.dealAt=String(x.at)}if(x.kind==='staff'&&(!o.staffAt||String(x.at)>o.staffAt)){o.staff=x.text;o.staffAt=String(x.at)}if(x.kind==='deal'&&(!o.dlAt||String(x.at)>o.dlAt)){try{o.dl=JSON.parse(x.text)}catch(_){}o.dlAt=String(x.at)}if(x.kind==='check'&&(!o.chkAt||String(x.at)>o.chkAt)){o.chk=csChkSum(x.text);o.chkAt=String(x.at)}if(String(x.at)>String(o.last))o.last=x.at;if(!o.name&&x.client_name&&x.kind!=='view')o.name=x.client_name}
  for(const o of Object.values(g))if(!o.cat&&o.lc){const c=Object.entries(o.lc).sort((a,b)=>b[1]-a[1])[0][0];if(CS_CATS.includes(c))o.catGuess=c}
  return Object.values(g).sort((a,b)=>String(b.last).localeCompare(String(a.last)))}
 const csMemoN=t=>String(t||'').replace(/(\d)[-.](?=\d)/g,'$1').replace(/(\d{3,4})\s(?=\d{3,4}(?!\d))/g,'$1');
@@ -1512,7 +1513,7 @@ function csPagesBind(el,phone){const re=()=>drawCSDetail(phone);
 let CSB=null;   // 지금 손님 화면에서 '보여줄 매물' (담기 바구니와 합침)
 async function drawCSDetail(phone,fromPop){CSP=phone;const el=$('#cs-detail');if(phone&&!fromPop&&!window.__inPop&&(history.state||{}).p!==phone){try{history.pushState({jv:'cs',p:phone,t:'cs'},'')}catch(_){}}let L=[],P=[];
  if(phone){try{[L,P]=await Promise.all([api('/api/consult_get?phone='+encodeURIComponent(phone)),api('/api/client_list')]);P=P.filter(p=>p.phone===phone)}catch(e){el.textContent='못 불러왔어요: '+e.message;return}}
- const name=(L.slice().reverse().find(x=>x.client_name)||{}).client_name||'';
+ const name=(L.slice().reverse().find(x=>x.client_name&&x.kind!=='view')||{}).client_name||'';
  const last=k=>{for(let i=L.length-1;i>=0;i--)if(L[i][k])return L[i][k];return ''};
  const live=P.find(p=>new Date(p.expires)>new Date()&&!p.locked)||P.find(p=>new Date(p.expires)>new Date())||null;
  CSB=[...new Set([...(live?live.listing_ids||[]:[]),...cpGet()])];
@@ -1596,7 +1597,8 @@ async function drawCSDetail(phone,fromPop){CSP=phone;const el=$('#cs-detail');if
    else if(CSB.length){const r=await api('/api/client_create',{method:'POST',body:JSON.stringify({name:nm,phone:ph,pw,ids:CSB,note,...f,days:30})});
      if(text)await api('/api/consult_add',{method:'POST',body:JSON.stringify({phone:ph,name:nm,text})});
      txt=`[호반제이부동산] ${r.title}\n${CP_SITE}${r.token}\n비밀번호: ${r.pw}\n(홈페이지 [내 매물 보기]에서 전화번호+비밀번호로도 열려요 · ${String(r.expires).slice(0,10)}까지)`}
-   else if(text||fCh)await api('/api/consult_add',{method:'POST',body:JSON.stringify({phone:ph,name:nm,text,...f})});
+   else if(text||fCh)await api('/api/consult_add',{method:'POST',body:JSON.stringify({phone:ph,name:nm,text:(!text&&Object.values(f).every(v=>!v)&&nm!==F0.nm)?`손님 이름 변경: ${F0.nm||'-'} → ${nm}`:text,...f})});
+   if(nm&&phone&&nm!==F0.nm){try{await api('/api/client_rename',{method:'POST',body:JSON.stringify({phone:ph,name:nm})})}catch(_){}}
    if(CSB.length){cpSet([]);cpBtn()}
    const ct=$('#cs-cat').value;if(ct&&ct!==csLast(L,'cat'))await api('/api/consult_cat_set',{method:'POST',body:JSON.stringify({phone:ph,cat:ct})});
    const fs=$('#cs-first').value.trim();if(fs&&fs!==csLast(L,'first'))await api('/api/consult_first_set',{method:'POST',body:JSON.stringify({phone:ph,text:fs})});
