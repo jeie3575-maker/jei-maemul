@@ -573,7 +573,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795595797"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795596375"></head><body>
 <header><b id="home-t" style="cursor:pointer" title="메인(매물장)으로">🏡 제이부동산 매물장</b><span id="who-b" hidden style="margin-left:10px;font-size:12.5px;font-weight:800;background:#fff6d6;color:#14213d;border:1px solid #e0c46a;border-radius:999px;padding:2px 10px;white-space:nowrap"></span><input id="pl-top" placeholder="🔎 통합조회" title="이름·전화번호·단지·메모 등 아무거나 + Enter: 매물장·손님상담일지·문자·협력업체 전체 검색" style="width:120px;min-width:90px;margin:0 8px;padding:3px 8px;border-radius:14px;border:1px solid var(--line);font-size:13px"><nav id="tabs">
 <button data-t="sise">💹 시세</button><button data-t="list" class="on">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 손님상담일지</button><button data-t="cal">📅 달력</button><button data-t="work">🕘 내 근무</button><button data-t="brief">📰 정책·뉴스</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
 <span class="sp"></span><small id="info"></small><button class="fsb" id="fs-" title="글씨 작게">가−</button><button class="fsb" id="fs0" title="글씨 크기 원래대로">원본보기</button><button class="fsb" id="fs+" title="글씨 크게">가+</button><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
@@ -2342,7 +2342,7 @@ const t=setInterval(()=>{if(typeof META!=='undefined'&&META&&typeof ROWS!=='unde
   for(let w=0;w<6;w++){const days=Array.from({length:7},(_,i)=>YMD(addD(s,w*7+i))),bars=[],dots=days.map(()=>[]);
    if(LY.hol)HV.forEach(e=>{const p=spanOf(days,e);if(p)bars.push({...p,e,h:1})});
    evw.forEach(e=>{const p=spanOf(days,e);if(!p)return;if(multi(e))bars.push({...p,e});else dots[p.a].push(eChip(e))});
-   if(LY.task)days.forEach((ds,i)=>{const a=tks(ds);dots[i].unshift(...a.filter(t=>!t.done).map(tChip));dots[i].push(...a.filter(t=>t.done).map(tChip))});
+   if(LY.task)days.forEach((ds,i)=>{const a=tks(ds);dots[i].push(...a.filter(t=>!t.done).map(tChip),...a.filter(t=>t.done).map(tChip))});
    lanesOf(bars);const vis=bars.filter(b=>b.k<MAXL),hid=days.map(()=>0);bars.filter(b=>b.k>=MAXL).forEach(b=>{for(let c=b.a;c<=b.b;c++)hid[c]++});const L=vis.length?Math.max(...vis.map(b=>b.k))+1:0,cap=Math.max(1,Math.floor((ROWH-32)/20)-L);
    h+=`<div class="gc-wk"><div class="gc-bg">${days.map(ds=>`<div class="gc-cell ${pd(ds).getMonth()!==m?'o':''}" data-d="${ds}"></div>`).join('')}</div><div class="gc-fg" style="grid-template-rows:26px repeat(${L},20px) minmax(0,1fr)">`+days.map((ds,i)=>{const d=pd(ds);return `<div class="dn ${d.getMonth()!==m?'o':''} ${ds===td?'t':''} ${d.getDay()===0?'su':''} ${isHol(ds)?'hd':''}" style="grid-column:${i+1};grid-row:1"><b data-dn="${ds}">${d.getDate()===1?(d.getMonth()+1)+'월 ':''}${d.getDate()}${d.getDate()===1?'일':''}</b></div>`}).join('')+vis.map(b=>barH(b,2,1)).join('')+days.map((ds,i)=>{const dl=dots[i],show=dl.length,more=hid[i],mi=Math.max(-1,...vis.filter(b=>b.a<=i&&i<=b.b).map(b=>b.k));return `<div class="gc-dots" style="grid-column:${i+1};grid-row:${mi+3} / ${L+3}">${dl.slice(0,show).join('')}${more>0?`<div class="gc-more" data-day="${ds}">+${more}개 더보기</div>`:''}</div>`}).join('')+'</div></div>'}
   return h+'</div>'};
