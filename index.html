@@ -300,7 +300,8 @@ async function listingsAll() {
   for (const l of lg) { const x = g[l.listing_id] ||= {n: 0, last: '', t: []}; x.n++; const a = kst(l.at); if (a > x.last) x.last = a; x.t.push(l.text) }
   for (const r of ls) { const x = g[r.id]; r.log_n = x?.n || 0; r.log_last = x?.last || ''; r.log_txt = x ? x.t.join(' / ') : '' }
   _sync.upd = ls.reduce((m, r) => r.updated > m ? r.updated : m, ''); _sync.log = lg.reduce((m, l) => l.id > m ? l.id : m, 0);
-  return _cache.listings = ls;
+  window.TRASH = ls.filter(r => r.category === '휴지통');   // 휴지통 = category '휴지통' (삭제 전 분류는 extra.삭제전분류)
+  return _cache.listings = ls.filter(r => r.category !== '휴지통');
 }
 
 // ---- 실시간 동기화: 다른 사람이 고친 매물·상담일지를 몇 초마다 가져옴 ----
@@ -534,7 +535,14 @@ async function api(u, o = {}) {
         if (d.id) { chk(await sb.from('listings').update(row).eq('id', d.id)); _cache.listings = null; return {id: d.id} }
         const r = chk(await sb.from('listings').insert({...row, source: 'app', category: row.category || '오피스텔'}).select('id').single()); _cache.listings = null; return {id: r.id} }
       return await listingsAll();
-    case '/api/delete': { const r = chk(await sb.from('listings').delete().eq('id', +q.id).select('id')); if (!(r || []).length) throw new Error('삭제 권한이 없어요 (대표·박윤진 실장만 삭제할 수 있어요)'); _cache.listings = null; return {ok: true} }
+    case '/api/delete': { if ((await sb.rpc('is_boss')).data !== true) throw new Error('삭제 권한이 없어요 (대표·박윤진 실장만 삭제할 수 있어요)');
+      const id = +q.id, cur = chk(await sb.from('listings').select('category,extra').eq('id', id).single()); if (cur.category === '휴지통') return {ok: true};
+      const who = ((await sb.auth.getUser()).data.user || {}).email || '', ex = {...(cur.extra || {}), '삭제전분류': cur.category || '오피스텔', '삭제자': who, '삭제일': new Date().toISOString().slice(0, 10)};
+      const r = chk(await sb.from('listings').update({category: '휴지통', extra: ex}).eq('id', id).select('id')); if (!(r || []).length) throw new Error('삭제 권한이 없어요'); _cache.listings = null; return {ok: true} }
+    case '/api/trash': return chk(await sb.from('listings').select('*').eq('category', '휴지통').order('updated', {ascending: false}));
+    case '/api/restore': { const id = +q.id, cur = chk(await sb.from('listings').select('category,extra').eq('id', id).single()); const ex = {...(cur.extra || {})}, cat = ex['삭제전분류'] || '오피스텔'; delete ex['삭제전분류']; delete ex['삭제자']; delete ex['삭제일'];
+      const r = chk(await sb.from('listings').update({category: cat, extra: Object.keys(ex).length ? ex : null}).eq('id', id).select('id')); if (!(r || []).length) throw new Error('복원 권한이 없어요'); _cache.listings = null; return {ok: true, category: cat} }
+    case '/api/purge': { const r = chk(await sb.from('listings').delete().eq('id', +q.id).eq('category', '휴지통').select('id')); if (!(r || []).length) throw new Error('완전 삭제 권한이 없어요 (대표·박윤진 실장만 가능해요)'); _cache.listings = null; return {ok: true} }
     case '/api/log': { const d = JSON.parse(o.body); const r = chk(await sb.from('logs').insert({listing_id: d.listing_id, text: d.text, author: d.author, source: 'app'}).select('id').single()); _cache.listings = null; return {id: r.id} }
     case '/api/log_delete': { const r = chk(await sb.from('logs').delete().eq('id', +q.id).select('id')); if (!(r || []).length) throw new Error('삭제 권한이 없어요 (대표·박윤진 실장만 삭제할 수 있어요)'); _cache.listings = null; return {ok: true} }
     case '/api/log_update': { const d = JSON.parse(o.body); chk(await sb.from('logs').update({text: d.text}).eq('id', d.id)); _cache.listings = null; return {ok: true} }
@@ -599,7 +607,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795686064"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795690052"></head><body>
 <header><b id="home-t" style="cursor:pointer" title="메인(매물장)으로">🏡 제이부동산 매물장</b><span id="who-b" hidden style="margin-left:10px;font-size:12.5px;font-weight:800;background:#fff6d6;color:#14213d;border:1px solid #e0c46a;border-radius:999px;padding:2px 10px;white-space:nowrap"></span><input id="pl-top" placeholder="🔎 통합조회" title="이름·전화번호·단지·메모 등 아무거나 + Enter: 매물장·손님상담일지·문자·협력업체 전체 검색" style="width:120px;min-width:90px;margin:0 8px;padding:3px 8px;border-radius:14px;border:1px solid var(--line);font-size:13px"><nav id="tabs">
 <button data-t="sise">💹 시세</button><button data-t="today" class="on">🏠 오늘</button><button data-t="list">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 손님상담일지</button><button data-t="fee">💰 수수료</button><button data-t="cal">📅 달력</button><button data-t="work">🕘 내 근무</button><button data-t="brief">📰 정책·뉴스</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
 <span class="sp"></span><small id="info"></small><button class="fsb" id="fs-" title="글씨 작게">가−</button><button class="fsb" id="fs0" title="글씨 크기 원래대로">원본보기</button><button class="fsb" id="fs+" title="글씨 크게">가+</button><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
@@ -771,8 +779,15 @@ const INLINE=['danji','dong','ho','typ','pyeong','direction','usage','deal','cur
 const COLS=[['_mk','처리'],['_reg','수정일'],['_avail','가능여부'],['_chk','확인일'],['co_office','공동중개부동산'],['danji','단지'],['_addr','주소'],['dong','동'],['ho','호'],['typ','타입'],['pyeong','전용평','n'],['_jibun','지분/평단가'],['_yeon','연면적평'],['_daeji','대지지분(평)'],['direction','방향'],['usage','용도'],['deal','거래유형'],['_ask','희망가'],
  ['cur_deposit','현 보증','n'],['cur_rent','현 차임','n'],['manki','만기'],['_early','중도퇴실'],['status','현상태'],['owner','임대인'],['owner_tel','임대인연락처'],['_log','상담일지'],['_rtx','추정호실 실거래'],['_rta','같은평형 시세(1년)'],['memo','비고'],['_extra','추가정보'],['_lease','임대차 신고(현 임차·만기)'],['ad','광고'],['ad_type','광고타입']];
 function renderCats(){const n={};ROWS.forEach(r=>{const c=r.category||'오피스텔';n[c]=(n[c]||0)+1});
- $('#catbar').innerHTML=`<button class="cat ${CAT==='전체'?'on':''}" data-c="전체" title="분류 상관없이 한 목록으로">전체 ${ROWS.length.toLocaleString()}</button>`+CATS.map(c=>`<button class="cat ${c===CAT?'on':''}" data-c="${c}" ${n[c]?'':'disabled title="아직 옮기지 않음"'}>${c} ${n[c]?n[c].toLocaleString():'—'}</button>`).join('')+`<button id="qa-open" type="button" title="건물명·동·호·가격만 넣고 바로 등록">+ 매물등록</button>`;document.getElementById('qa-open').onclick=qaOpen;
+ $('#catbar').innerHTML=`<button class="cat ${CAT==='전체'?'on':''}" data-c="전체" title="분류 상관없이 한 목록으로">전체 ${ROWS.length.toLocaleString()}</button>`+CATS.map(c=>`<button class="cat ${c===CAT?'on':''}" data-c="${c}" ${n[c]?'':'disabled title="아직 옮기지 않음"'}>${c} ${n[c]?n[c].toLocaleString():'—'}</button>`).join('')+`<button id="qa-open" type="button" title="건물명·동·호·가격만 넣고 바로 등록">+ 매물등록</button><button id="tr-open" type="button" title="삭제한 매물 복원">🗑 휴지통${(window.TRASH||[]).length?' '+window.TRASH.length:''}</button>`;document.getElementById('qa-open').onclick=qaOpen;document.getElementById('tr-open').onclick=trashOpen;
  $('#catbar').querySelectorAll('.cat').forEach(b=>b.onclick=()=>{if(b.dataset.c!==CAT){for(const k in F)F[k].clear();for(const k in FX){FX[k]='';const e=$('#'+k);if(e)e.value=''}$('#dirpanel').hidden=true}CAT=localStorage.cat=b.dataset.c;fltLoad();renderList()})}
+async function trashOpen(){let o=document.getElementById('tr-modal');if(o)o.remove();o=document.createElement('div');o.id='tr-modal';o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center;padding:12px';
+ o.innerHTML='<div style="background:#fff;border-radius:12px;max-width:760px;width:100%;max-height:85vh;overflow:auto;padding:14px 16px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>🗑 휴지통 <span class="mut" style="font-weight:400;font-size:12px">삭제한 매물을 복원하거나 완전히 지워요</span></b><button class="b" id="tr-x">닫기</button></div><div id="tr-b" class="mut">불러오는 중…</div></div>';document.body.appendChild(o);
+ o.onclick=e=>{if(e.target===o)o.remove()};o.querySelector('#tr-x').onclick=()=>o.remove();
+ const draw=async()=>{let T;try{T=await api('/api/trash')}catch(e){o.querySelector('#tr-b').textContent='불러오기 실패: '+e.message;return}window.TRASH=T;const b=o.querySelector('#tr-b');
+  b.innerHTML=T.length?T.map(r=>`<div style="display:flex;gap:8px;align-items:center;border-top:1px solid #eee;padding:7px 0;flex-wrap:wrap"><div style="flex:1;min-width:180px"><b>${esc(r.danji||'')} ${esc(r.dong||'')} ${esc(r.ho||'')}</b> <span class="mut">${esc((r.extra&&r.extra['삭제전분류'])||'')} · ${esc(r.deal||'')} ${esc(r.title||'')}</span><div class="mut" style="font-size:12px">삭제 ${esc((r.extra&&r.extra['삭제일'])||'')} · ${esc(((r.extra&&r.extra['삭제자'])||'').split('@')[0])}</div></div><button class="b p" data-rs="${r.id}">복원</button><button class="b d" data-pg="${r.id}">완전 삭제</button></div>`).join(''):'<div class="mut">휴지통이 비어 있어요</div>';
+  b.querySelectorAll('[data-rs]').forEach(x=>x.onclick=async()=>{try{const r=await api('/api/restore?id='+x.dataset.rs,{method:'POST'});ROWS=await api('/api/listings');renderList();toast('복원했어요 ('+r.category+')');draw()}catch(e){alert(e.message)}});
+  b.querySelectorAll('[data-pg]').forEach(x=>x.onclick=async()=>{if(!confirm('완전히 지울까요? 되돌릴 수 없어요'))return;try{await api('/api/purge?id='+x.dataset.pg,{method:'POST'});toast('완전 삭제했어요');draw();renderCats()}catch(e){alert(e.message)}})};draw()}
 function clearFilters(){NEW30=false;STALE=false;const sb_=$('#f-stale');if(sb_){sb_.style.background=sb_.style.color=''}const nb=$('#f-new');if(nb){nb.classList.remove('on');nb.style.background=nb.style.color='';$('#nw-box').hidden=true}for(const k in F)F[k].clear();for(const k in FX){FX[k]='';const e=$('#'+k);if(e)e.value=''}$('#q').value='';$('#qf').value='';if($('#f-our'))$('#f-our').checked=false;if($('#f-ad'))$('#f-ad').checked=false;if($('#f-active'))$('#f-active').checked=false;renderList()}
 {const cb=document.getElementById('f-clear');if(cb)cb.onclick=()=>{clearFilters();toast('필터를 모두 풀었어요')}}
 function renderList(){if(!META)return;ROWS.forEach(derive);renderCats();const base=ROWS.filter(r=>(CAT==='전체'||(r.category||'오피스텔')===CAT)&&(!$('#f-active').checked||active(r)));const cnt={};base.forEach(r=>cnt[r.danji]=(cnt[r.danji]||0)+1);
@@ -1865,7 +1880,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
 $('#d-save').onclick=()=>saveForm(true);
 $('#d-copy').onclick=async()=>{if(FORM0!==null&&JSON.stringify(collectForm())!==FORM0){try{await saveForm(false)}catch(e){}}
  const t=collectForm();delete t.id;FORM0=null;await openDrawer(null,t);toast('복사본을 만들었습니다. 고칠 곳을 고치고 [저장]을 누르세요')};
-$('#d-del').onclick=async()=>{if(!confirm('이 매물을 삭제할까요? (이력에는 남습니다)'))return;await api('/api/delete?id='+CUR.id,{method:'POST'});ROWS=await api('/api/listings');renderList();$('#drawer').classList.remove('on');toast('삭제했습니다')};
+$('#d-del').onclick=async()=>{if(!confirm('이 매물을 휴지통으로 옮길까요? (휴지통에서 복원할 수 있어요)'))return;try{await api('/api/delete?id='+CUR.id,{method:'POST'})}catch(e){alert(e.message);return}ROWS=await api('/api/listings');renderList();$('#drawer').classList.remove('on');toast('휴지통으로 옮겼어요')};
 
 // ---------- 공동중개 ----------
 const coKey=s=>(s||'').replace(/\s*(공인중개사사무소|공인중개사|부동산중개|부동산)\s*$/,'').trim();
@@ -2160,7 +2175,7 @@ $('#rotate').onclick=async()=>{if(!confirm('비밀 링크를 바꿀까요? 지�
 let SYNCING=false;
 async function liveSync(){if(SYNCING||document.hidden||typeof pollChanges!=='function'||!ROWS)return;SYNCING=true;try{
  const ch=await pollChanges();if(!ch)return;let n=0;
- for(const r of ch.ls){const i=ROWS.findIndex(x=>x.id===r.id);const o=i>=0?ROWS[i]:null;r.log_n=o?.log_n||0;r.log_last=o?.log_last||'';r.log_txt=o?.log_txt||'';if(i>=0)ROWS[i]=r;else ROWS.unshift(r);n++}
+ for(const r of ch.ls){const i=ROWS.findIndex(x=>x.id===r.id);if(r.category==='휴지통'){if(i>=0){ROWS.splice(i,1);n++}window.TRASH=(window.TRASH||[]).filter(x=>x.id!==r.id).concat([r]);continue}if(window.TRASH)window.TRASH=window.TRASH.filter(x=>x.id!==r.id);const o=i>=0?ROWS[i]:null;r.log_n=o?.log_n||0;r.log_last=o?.log_last||'';r.log_txt=o?.log_txt||'';if(i>=0)ROWS[i]=r;else ROWS.unshift(r);n++}
  for(const l of ch.lg){const r=ROWS.find(x=>x.id===l.listing_id);if(!r)continue;r.log_n=(r.log_n||0)+1;const a=kst(l.at);if(a>(r.log_last||''))r.log_last=a;r.log_txt=(r.log_txt?r.log_txt+' / ':'')+l.text;n++}
  if(ch.count!=null&&ch.count<ROWS.length){_cache.listings=null;ROWS=await api('/api/listings');n++}
  if(!n)return;if(!(window.__rcSkip&&Date.now()-window.__rcSkip<20000))RECON=null;if(!$('#drawer').classList.contains('on')&&!$('#t-list').hidden)renderList();
