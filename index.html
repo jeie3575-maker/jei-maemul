@@ -586,7 +586,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795667913"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795671132"></head><body>
 <header><b id="home-t" style="cursor:pointer" title="메인(매물장)으로">🏡 제이부동산 매물장</b><span id="who-b" hidden style="margin-left:10px;font-size:12.5px;font-weight:800;background:#fff6d6;color:#14213d;border:1px solid #e0c46a;border-radius:999px;padding:2px 10px;white-space:nowrap"></span><input id="pl-top" placeholder="🔎 통합조회" title="이름·전화번호·단지·메모 등 아무거나 + Enter: 매물장·손님상담일지·문자·협력업체 전체 검색" style="width:120px;min-width:90px;margin:0 8px;padding:3px 8px;border-radius:14px;border:1px solid var(--line);font-size:13px"><nav id="tabs">
 <button data-t="sise">💹 시세</button><button data-t="today" class="on">🏠 오늘</button><button data-t="list">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 손님상담일지</button><button data-t="fee">💰 수수료</button><button data-t="cal">📅 달력</button><button data-t="work">🕘 내 근무</button><button data-t="brief">📰 정책·뉴스</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
 <span class="sp"></span><small id="info"></small><button class="fsb" id="fs-" title="글씨 작게">가−</button><button class="fsb" id="fs0" title="글씨 크기 원래대로">원본보기</button><button class="fsb" id="fs+" title="글씨 크게">가+</button><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
@@ -2132,7 +2132,7 @@ $('#refresh').onclick=async()=>{const b=$('#refresh');if(b.disabled)return;b.dis
   if(BOSS){const p=await sb.from('work_logs').select('email,work_date,status').eq('status','상신').order('work_date');PEND=p.data||[];
   const [ad,al]=await Promise.all([sb.from('work_days').select('email,work_date,kind,clock_in,clock_out,break_min').gte('work_date',a).lt('work_date',b),sb.from('work_logs').select('email,work_date,status').gte('work_date',a).lt('work_date',b)]);ALLD=ad.data||[];ALLL=al.data||[]}}
 
- function roster(y,m,last,today){const staff=Object.keys(NM).filter(e=>e!==ME&&!(ADMIN&&/daepyo/i.test(e)));if(!staff.length)return'';const R={};ALLD.forEach(r=>R[r.email+'|'+r.work_date]=r);const L={};ALLL.forEach(r=>L[r.email+'|'+r.work_date]=r);
+ function roster(y,m,last,today){const staff=Object.keys(NM).filter(e=>(ADMIN||e!==ME)&&!(ADMIN&&/daepyo/i.test(e)));if(!staff.length)return'';const R={};ALLD.forEach(r=>R[r.email+'|'+r.work_date]=r);const L={};ALLL.forEach(r=>L[r.email+'|'+r.work_date]=r);
   const tot={};staff.forEach(e=>tot[e]={t:0,c:0});
   let h='<tr><th>날짜</th>'+staff.map(e=>`<th>${E(NM[e])}</th>`).join('')+'</tr>',rows='';
   for(let i=1;i<=last;i++){const d=y+'-'+String(m).padStart(2,'0')+'-'+String(i).padStart(2,'0'),wk=new Date(y,m-1,i).getDay();
@@ -2143,7 +2143,7 @@ $('#refresh').onclick=async()=>{const b=$('#refresh');if(b.disabled)return;b.dis
    rows+=(d===today?'<tr style="outline:2px solid #e8590c">':'<tr>')+row+'</tr>'}
   const sum='<tr style="font-weight:800;background:#f7f9fc"><td>합계</td>'+staff.map(e=>`<td style="text-align:center">${tot[e].c}일 · ${fh(tot[e].t)||'0h00m'}</td>`).join('')+'</tr>';
   return `<div class="box" style="margin-bottom:10px"><b>👥 직원 근무표 ${y}년 ${m}월</b><div class="mut" style="font-size:12px;margin:3px 0 6px">시간 = 출근~퇴근 · 실근무 | 색: 노랑=상신, 초록=승인, 빨강=반려, 파랑=일지 없음/임시저장 | 칸을 누르면 그날 일지가 열려요</div><table style="width:100%;border-collapse:collapse;font-size:13px">${h}${sum}${rows}</table></div>`}
- async function draw(){const u=(await sb.auth.getUser()).data.user;ME=(u.email||'').toLowerCase();{const md=u.user_metadata||{},fn=((md.name||'')+' '+(md.role||'')).trim();if(fn)NM[ME]=fn}try{BOSS=(await sb.rpc('is_boss')).data===true}catch(x){BOSS=false}try{ADMIN=BOSS&&(await sb.rpc('is_admin')).data===true}catch(x){ADMIN=false}BOSSMAIL=BOSS?ME:BOSSMAIL;if(BOSS){NM[ME]=NM[ME]||'대표';try{const au=await sb.from('allowed_users').select('email,name');(au.data||[]).forEach(r=>{const k=String(r.email).toLowerCase();if(!NM[k]||k!==ME&&NM[k]===k)NM[k]=(k===ME?'대표':(r.name||k.split('@')[0]))})}catch(x){}}SV=BOSS&&(!ADMIN||window.__wstaff===true);{const stf=Object.keys(NM).find(e=>e!==ME&&!(ADMIN&&/daepyo/i.test(e)))||ME;if(ADMIN&&!SV)WHO=ME;else if(SV&&(!WHO||WHO===ME))WHO=stf}
+ async function draw(){const u=(await sb.auth.getUser()).data.user;ME=(u.email||'').toLowerCase();{const md=u.user_metadata||{},fn=((md.name||'')+' '+(md.role||'')).trim();if(fn)NM[ME]=fn}try{BOSS=(await sb.rpc('is_boss')).data===true}catch(x){BOSS=false}try{ADMIN=BOSS&&(await sb.rpc('is_admin')).data===true}catch(x){ADMIN=false}BOSSMAIL=BOSS?ME:BOSSMAIL;if(BOSS){NM[ME]=NM[ME]||(ADMIN?'박윤진 실장':'대표');try{const au=await sb.from('allowed_users').select('email,name');(au.data||[]).forEach(r=>{const k=String(r.email).toLowerCase();if(!NM[k]||k!==ME&&NM[k]===k)NM[k]=(k===ME?'대표':(r.name||k.split('@')[0]))})}catch(x){}}SV=BOSS&&(!ADMIN||window.__wstaff===true);{const stf=Object.keys(NM).find(e=>(ADMIN||e!==ME)&&!(ADMIN&&/daepyo/i.test(e)))||ME;if(ADMIN&&!SV)WHO=ME;else if(SV&&(!WHO||WHO===ME&&!ADMIN))WHO=ADMIN?ME:stf}
   try{await loadMon()}catch(e){T.innerHTML='<p class="mut">불러오기 실패: '+E(e.message)+'<br>(work.sql 을 아직 실행하지 않았다면 먼저 실행해야 해요)</p>';return}
   const today=ymd(Date.now()),td=DAYS[today]||{},mine=WHO===ME,[y,m]=MON.split('-').map(Number),last=new Date(y,m,0).getDate();
   let rows='',tot=0,n=0;for(let i=1;i<=last;i++){const d=MON+'-'+String(i).padStart(2,'0'),r=DAYS[d],l=LOGS[d],mm=mins(r),wk=new Date(d+'T12:00:00+09:00').getDay();if(mm!=null){tot+=mm;n++}
@@ -2158,7 +2158,7 @@ $('#refresh').onclick=async()=>{const b=$('#refresh');if(b.disabled)return;b.dis
    <div class="mut" style="font-size:12px;margin-top:4px">앱 기록은 참고용이에요. 공식 출퇴근은 하이웍스에도 꼭 찍어 주세요. (퇴근을 다시 누르면 마지막 시각으로 바뀌어요)</div></div>
   ${SV?roster(y,m,last,today):''}
   <div class="bar" style="gap:8px;margin-bottom:8px"><button class="b" id="w-pm">◀</button><b>${y}년 ${m}월</b><button class="b" id="w-nm">▶</button>
-   ${SV?`<select id="w-who">${Object.entries(NM).filter(([e])=>e!==ME&&!(ADMIN&&/daepyo/i.test(e))).map(([e,n])=>`<option value="${e}" ${e===WHO?'selected':''}>${n}</option>`).join('')}</select>`:''}<span class="mut">출근 ${n}일 · 실근무 합계 <b>${fh(tot)||'0h00m'}</b> (휴게 제외)</span></div>
+   ${SV?`<select id="w-who">${Object.entries(NM).filter(([e])=>(ADMIN||e!==ME)&&!(ADMIN&&/daepyo/i.test(e))).map(([e,n])=>`<option value="${e}" ${e===WHO?'selected':''}>${n}</option>`).join('')}</select>`:''}<span class="mut">출근 ${n}일 · 실근무 합계 <b>${fh(tot)||'0h00m'}</b> (휴게 제외)</span></div>
   <div class="wg"><div><table style="width:100%"><tr><th>날짜</th><th>출근</th><th>퇴근</th><th>실근무</th><th>일지</th></tr>${rows}</table></div>
   <div class="box"><b>${SEL.slice(5).replace('-','/')} (${dow(SEL)}) ${NM[WHO]||''} ${sl?`<span class="wst wst-${sl.status}">${sl.status}</span>`:''}</b>
    ${sl&&sl.status==='반려'&&sl.reject_reason?`<div style="color:#e03131;margin:4px 0">반려 사유: ${E(sl.reject_reason)}</div>`:''}
