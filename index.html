@@ -11,6 +11,7 @@ main{padding:14px 18px}.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:cent
 input,select,textarea{font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:#fff}
 button.b{font:inherit;padding:5px 12px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer}
 button.p{background:var(--acc);color:#fff;border-color:var(--acc)}button.d{color:var(--red)}
+.sold{display:inline-block;margin-left:4px;padding:0 6px;border-radius:999px;background:#fff0f0;color:#c92a2a;border:1px solid #ffc9c9;font-size:11px;font-weight:600;white-space:nowrap}.own-ok{display:inline-block;margin-left:4px;padding:0 6px;border-radius:999px;background:#ebfbee;color:#2b8a3e;border:1px solid #b2f2bb;font-size:11px;font-weight:600;white-space:nowrap}
 .cat{font:inherit;font-size:14px;padding:6px 14px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer}.cat.on{background:#14213d;color:#fff;border-color:#14213d}.cat:disabled{opacity:.45;cursor:default}
 .chips{display:flex;gap:4px;flex-wrap:wrap}.chip{padding:3px 9px;border:1px solid var(--line);border-radius:14px;background:#fff;cursor:pointer;user-select:none}
 .chip.on{background:var(--acc);color:#fff;border-color:var(--acc)}.chip i{font-style:normal;opacity:.7;margin-left:3px}
@@ -607,7 +608,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795690052"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795690987"></head><body>
 <header><b id="home-t" style="cursor:pointer" title="메인(매물장)으로">🏡 제이부동산 매물장</b><span id="who-b" hidden style="margin-left:10px;font-size:12.5px;font-weight:800;background:#fff6d6;color:#14213d;border:1px solid #e0c46a;border-radius:999px;padding:2px 10px;white-space:nowrap"></span><input id="pl-top" placeholder="🔎 통합조회" title="이름·전화번호·단지·메모 등 아무거나 + Enter: 매물장·손님상담일지·문자·협력업체 전체 검색" style="width:120px;min-width:90px;margin:0 8px;padding:3px 8px;border-radius:14px;border:1px solid var(--line);font-size:13px"><nav id="tabs">
 <button data-t="sise">💹 시세</button><button data-t="today" class="on">🏠 오늘</button><button data-t="list">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 손님상담일지</button><button data-t="fee">💰 수수료</button><button data-t="cal">📅 달력</button><button data-t="work">🕘 내 근무</button><button data-t="brief">📰 정책·뉴스</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
 <span class="sp"></span><small id="info"></small><button class="fsb" id="fs-" title="글씨 작게">가−</button><button class="fsb" id="fs0" title="글씨 크기 원래대로">원본보기</button><button class="fsb" id="fs+" title="글씨 크게">가+</button><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
@@ -657,7 +658,7 @@ async function api(u, o = {}) {
   <p class="mut">비밀 링크를 한 번 열면 그 기기는 180일 동안 기억됩니다. 링크는 텔레그램으로만 받고 다른 사람에게 보내지 마세요.</p></div>
 </section>
 </main>
-<div id="drawer"><div class="hd"><b id="d-title"></b><button class="b" id="d-promo" title="노션 단지 소개 양식으로 홍보글(블로그·네이버·카톡) 자동 작성">✨ 홍보글</button><button class="b" id="d-bld" title="건축물대장 정보 · 확인·설명서 초안">🏛 대장·확인서</button><button class="b" id="d-mk" title="이 매물 임차인·임대인에게 만기 안내 문자">📩 만기 문자</button><button class="b" id="d-copy">복사해서 새로 작성</button><button class="b" id="d-cp" title="손님 페이지에 넣을 매물로 담아 둡니다">손님 페이지에 담기</button><button class="b d" id="d-del">삭제</button><button class="b p" id="d-save">저장</button><button class="b" id="d-close">닫기(자동 저장)</button></div><div class="bd" id="d-body"></div></div>
+<div id="drawer"><div class="hd"><b id="d-title"></b><button class="b" id="d-promo" title="노션 단지 소개 양식으로 홍보글(블로그·네이버·카톡) 자동 작성">✨ 홍보글</button><button class="b" id="d-bld" title="건축물대장 정보 · 확인·설명서 초안">🏛 대장·확인서</button><button class="b" id="d-own" title="소유자·소유권이전 확인 (정부24 무료)">🪪 소유자 확인</button><button class="b" id="d-mk" title="이 매물 임차인·임대인에게 만기 안내 문자">📩 만기 문자</button><button class="b" id="d-copy">복사해서 새로 작성</button><button class="b" id="d-cp" title="손님 페이지에 넣을 매물로 담아 둡니다">손님 페이지에 담기</button><button class="b d" id="d-del">삭제</button><button class="b p" id="d-save">저장</button><button class="b" id="d-close">닫기(자동 저장)</button></div><div class="bd" id="d-body"></div></div>
 <div id="toast"></div>
 <div id="gate" style="position:fixed;inset:0;background:#f6f7f9;z-index:50;display:flex;align-items:center;justify-content:center">
  <div class="box" style="text-align:center"><h3>🏡 제이부동산 매물장</h3><p id="gate-msg" class="mut">접속 확인 중…</p></div></div>
@@ -700,7 +701,7 @@ function rtFor(r){if(r._rt)return r._rt;const names=DNM[r.danji]||[];let pool=[]
  const sum=[ms?'매 '+won(ms):'',js?'전 '+won(js):'',ws.length?'월 '+won(wd)+'/'+wr:''].filter(Boolean).join(' · ');
  return r._rt={exact,same,area,sum,n1:y1.length,last:exact[0]?`${exact[0]['계약일'].slice(2,7).replace('-','.')} ${rtPrice(exact[0])}`:''}}
 const exRow=(a,b)=>`<div class="ex-row" style="display:flex;gap:6px;margin:4px 0"><input class="ex-k" value="${esc(a)}" placeholder="항목" style="width:180px"><input class="ex-v" value="${esc(b)}" placeholder="내용" style="flex:1"><button class="b d ex-del" type="button">삭제</button></div>`;
-const EXCOL={'전자상가':['주소','지분/평단가'],'주택·빌딩·토지':['주소','연면적평','대지지분(평)']};const EX_HIDE=[...new Set([...Object.values(EXCOL).flat(),'중도퇴실','퇴실일','퇴실협의','임대인메모','전속','전속만료','우리계약','챙김확인','광고확인','전화제외','광고내려감'])];const EARLY=['만기 퇴실','중도퇴실 예정','중도퇴실 완료','계약 연장'];const exShown=e=>Object.entries(e||{}).filter(([a])=>!EX_HIDE.includes(a));
+const EXCOL={'전자상가':['주소','지분/평단가'],'주택·빌딩·토지':['주소','연면적평','대지지분(평)']};const EX_HIDE=[...new Set([...Object.values(EXCOL).flat(),'중도퇴실','퇴실일','퇴실협의','임대인메모','전속','전속만료','우리계약','소유자(대장)','소유변동일','소유확인일','챙김확인','광고확인','전화제외','광고내려감'])];const EARLY=['만기 퇴실','중도퇴실 예정','중도퇴실 완료','계약 연장'];const exShown=e=>Object.entries(e||{}).filter(([a])=>!EX_HIDE.includes(a));
 const AVAIL=['가능','공동','공동가능','연락안됨','보류','급매','전속','계약완료','급매가능','공실','퇴거예정','가능?','가계약','홀딩','모집보류','계약','표시없음'];const AVW=['가능','가능?','공동','연락안됨','보류','확인중'];
 // 가능 판정 한 곳: '가능'(단 '가능?' 제외) 또는 '공동' 포함. '공동가능'·'급매가능'도 가능. 연락안됨·보류·가능?는 가능 아님
 const avParts=t=>{t=String(t||'').trim();const m=/^\d{4}\s*\.?\s*(.*)$/.exec(t);return (m?m[1]:t).replace(/공동가능/g,'공동·가능').split('·').map(s=>s.replace(/\s*\(\d+\)\s*$/,'').trim()).filter(Boolean)};
@@ -804,7 +805,7 @@ function drawTable(el,rs,cat,srt,rerender,setSort){const hasEx=rs.some(r=>exShow
  
  if(!cat||cat==='전체')COLS2.unshift(['category','분류']);el.innerHTML=`<table><thead><tr>${COLS2.map(([k,l,t])=>`<th data-k="${k}" class="${t||''}">${k==='pyeong'&&cat==='아파트'?'공급평':l}${srt.k===k?(srt.d>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>${rs.slice(0,1500).map(r=>`<tr data-id="${r.id}" class="g-${esc((r._avs||[r._avail])[0])}${r._skel?' skel':''}">${COLS2.map(([k,,t])=>{if(k==='_early'){const e=r.extra||{};const v=e['중도퇴실']||'';return `<td data-exk="중도퇴실" class="${/중도퇴실/.test(v)?'':'mut'}" title="더블클릭해서 수정">${v?(/중도퇴실/.test(v)?'<b style="color:#c0392b">'+esc(v)+'</b>':esc(v)):''}${(()=>{const d=e['퇴실일']&&e['퇴실일']!=='협의'?String(e['퇴실일']).slice(2).replace(/-/g,'.'):'',h=e['퇴실협의']||e['퇴실일']==='협의';return d||h?' · '+esc((d+(h?' 협의':'')).trim()):''})()}</td>`}if(['_jibun','_yeon','_daeji','_addr'].includes(k)){const ek={_jibun:'지분/평단가',_yeon:'연면적평',_daeji:'대지지분(평)',_addr:'주소'}[k];const v=(r.extra||{})[ek]??'';return `<td data-exk="${ek}">${esc(v)}</td>`}if(k==='_extra'){const e=exShown(r.extra).map(([a,b])=>`${a}: ${b}`).join(' · ');return `<td class="memo mut" title="${esc(e)}">${esc(e)}</td>`}if(k==='_avail')return `<td>${avHtml(r._avail)}${/급매/.test((r.deal||'')+(r._avail||''))?'<span class="gm">급매</span>':''}${(r.extra||{})['전속']?'<span class="jsk">전속</span>':''}</td>`;if(k==='_lease'){const t=leaseFor(r);return t?`<td class="${t.old?'mut':''}" title="${esc(t.tip)}">${t.html}</td>`:'<td></td>'}if(k==='_rtx'){const t=RTIDX?rtFor(r):{};return `<td title="${t.exact?.length||0}건">${esc(t.last||'')}</td>`}if(k==='_rta'){const t=RTIDX?rtFor(r):{};return `<td class="mut" title="최근 1년 ${t.n1||0}건 중간값">${esc(t.sum||'')}</td>`}if(k==='_mk')return `<td><button type="button" class="b mk-act" data-mk="${r.id}">처리</button></td>`;if(k==='category')return `<td><b>${esc(r.category||'오피스텔')}</b></td>`;if(k==='_chk'){const a=r._age,c=a==null?'':a>30?'age3':a>14?'age2':a>7?'age1':'';return `<td class="mut ${c}">${r._chk?r._chk.slice(2).replace(/-/g,'.'):''}${a!=null&&a>7?` <small>${a}일</small>`:''}${a!=null&&a>=14?` <button type="button" class="ok-btn" data-ok="${r.id}" title="지금도 가능한 것 확인함 → 오늘 날짜로 갱신">✔</button>`:''}</td>`}
   if(k==='_log')return `<td class="mut" title="${esc((r.log_txt||'').slice(0,300))}">${r.log_n?`💬${r.log_n} ${String(r.log_last||'').slice(2,10)}`:''}</td>`;let v=k==='_ask'?askPrice(r):r[k];if(['cur_deposit'].includes(k))v=won(v);if(k==='manki')v=r.manki?`${r.manki} ${ddHtml(r.manki)}`:'';else v=k==='_ask'?esc(v):esc(v);
-  return `<td ${INLINE.includes(k)?`data-ek="${k}"`:''} class="${t||''} ${k==='memo'?'memo':''}" ${k==='memo'?`title="${esc(r.memo)}"`:''}>${v??''}${k==='ho'?ourHtml(r):''}</td>`}).join('')}</tr>`).join('')}</tbody></table>${rs.length>1500?'<p class="mut">1,500건까지만 표시합니다. 검색으로 좁혀 주세요.</p>':''}`;
+  return `<td ${INLINE.includes(k)?`data-ek="${k}"`:''} class="${t||''} ${k==='memo'?'memo':''}" ${k==='memo'?`title="${esc(r.memo)}"`:''}>${v??''}${k==='ho'?ourHtml(r)+ownHtml(r):''}</td>`}).join('')}</tr>`).join('')}</tbody></table>${rs.length>1500?'<p class="mut">1,500건까지만 표시합니다. 검색으로 좁혀 주세요.</p>':''}`;
  el.querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.k==='_ask'?'sale':th.dataset.k;setSort({k,d:srt.k===k?-srt.d:1});rerender()});
  el.querySelectorAll('tbody tr').forEach(tr=>tr.onclick=e=>{if(e.target.closest('.ie'))return;clearTimeout(window.__ct);window.__ct=setTimeout(()=>openDrawer(+tr.dataset.id),260)});
  el.querySelectorAll('td[data-ek]').forEach(td=>td.ondblclick=e=>{e.stopPropagation();clearTimeout(window.__ct);inlineEdit(td)})
@@ -894,6 +895,29 @@ function bldFind(c,r){const hn=String(r.ho||'').replace(/\D/g,'');if(!hn)return 
  if(cs.length>1){const want=(r.category==='아파트')?'아파트':'오피스텔';const f=cs.filter(u=>String(u.purps||u.etc).includes(want));if(f.length)cs=f}
  return cs}
 const PY=3.3058,fmtD=s=>{s=String(s||'');return s.length===8?`${s.slice(0,4)}.${s.slice(4,6)}.${s.slice(6)}`:s};
+const _ownSold=r=>{if(!RTIDX)return null;const x=rtFor(r).exact.find(e=>e['거래']==='매매'&&!e['해제']&&(e['후보수']||1)<=2);return x||null};
+const ownHtml=r=>{const ex=r.extra||{},o=ex['소유자(대장)'];if(o){const d=ex['소유확인일']||'';return `<span class="own-ok" title="건축물대장 소유자 ${esc(o)} · 소유변동 ${esc(ex['소유변동일']||'?')} · 확인 ${esc(d)}">소유확인${d?' '+esc(String(d).slice(2,7).replace('-','.')):''}</span>`}
+ const x=_ownSold(r);if(!x)return '';const yr=new Date();yr.setFullYear(yr.getFullYear()-1);if(x['계약일']<yr.toISOString().slice(0,10))return '';return `<span class="sold" title="${esc(x['계약일'])} 매매 실거래(추정 호실) — 소유자가 바뀌었을 수 있어요. 🪪 소유자 확인으로 확인하세요">매매 ${esc(x['계약일'].slice(2,7).replace('-','.'))}</span>`};
+async function ownerOpen(){if(!CUR||!CUR.id)return;const r=CUR;const A=await bldAll(),key=bldKey(r.danji,r.dong),c=key?A[key]:null,B=c&&c.bld&&c.bld[0]?c.bld[0]:{},R=c&&c.recap||{};
+ const pl=B.newPlatPlc||B.platPlc||R.newPlatPlc||R.platPlc||'',addr=[pl,r.dong?(/동$/.test(r.dong)?r.dong:r.dong+'동'):'',r.ho?(/호$/.test(r.ho)?r.ho:r.ho+'호'):''].filter(Boolean).join(' ').replace(/\s+/g,' ');
+ const ex=r.extra||{};const sales=RTIDX?rtFor(r).exact.filter(e=>e['거래']==='매매'&&!e['해제']):[];
+ document.getElementById('own-m')?.remove();const o=document.createElement('div');o.id='own-m';o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center;padding:12px';
+ o.innerHTML=`<div style="background:#fff;border-radius:12px;max-width:560px;width:100%;max-height:88vh;overflow:auto;padding:14px 16px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>🪪 소유자 확인 · ${esc([r.danji,r.dong,r.ho].filter(Boolean).join(' '))}</b><button class="b" id="own-x">닫기</button></div>
+ <h5 style="margin:8px 0 4px">① 실거래로 본 소유권 변동 (자동·무료)</h5>
+ <div style="font-size:13px">${sales.length?sales.slice(0,5).map(e=>`<div>${esc(e['계약일'])} 매매 ${won(e['매매가(만)'])} <span class="mut">(후보 ${e['후보수']||1}호)</span></div>`).join('')+'<div class="mut" style="margin-top:3px">최근 매매가 있으면 그 무렵 소유권이전등기가 됐을 가능성이 커요(추정 호실 기준).</div>':'<div class="mut">이 호실로 추정되는 매매 실거래가 없어요.</div>'}</div>
+ <h5 style="margin:12px 0 4px">② 정부24 건축물대장 열람 (무료)</h5>
+ <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><input id="own-addr" value="${esc(addr)}" style="flex:1;min-width:200px"><button class="b" id="own-cp">📋 주소 복사</button><a class="b" id="own-go" target="_blank" rel="noopener" href="https://www.gov.kr/mw/AA020InfoCappView.do?CappBizCD=15000000098" style="text-decoration:none">정부24 열기 ↗</a></div>
+ <ol class="mut" style="font-size:12px;margin:6px 0 0 16px;padding:0"><li>정부24가 열리면 주소를 붙여넣어 찾기 → 집합건축물대장 열람</li><li>소유자 현황이 보이는 화면을 PDF나 캡처로 저장</li><li>텔레그램 업무봇에 보내고 “소유자 PDF 처리해줘”라고 하면 아래 칸이 자동으로 채워져요 (직접 입력해도 돼요)</li></ol>
+ <h5 style="margin:12px 0 4px">③ 확인 결과</h5>
+ <div style="display:grid;gap:6px;grid-template-columns:1fr 1fr"><label>소유자 <input id="own-n" value="${esc(ex['소유자(대장)']||'')}" style="width:100%"></label><label>소유권 변동일 <input id="own-d" value="${esc(ex['소유변동일']||'')}" placeholder="2024-05-20" style="width:100%"></label></div>
+ <div style="margin-top:10px;display:flex;gap:6px"><button class="b p" id="own-save">저장</button>${ex['소유자(대장)']?'<button class="b d" id="own-clear">확인 표시 지우기</button>':''}</div></div>`;
+ document.body.appendChild(o);o.onclick=e=>{if(e.target===o)o.remove()};o.querySelector('#own-x').onclick=()=>o.remove();
+ o.querySelector('#own-cp').onclick=async()=>{const v=o.querySelector('#own-addr').value;try{await navigator.clipboard.writeText(v);toast('주소를 복사했어요')}catch(e){o.querySelector('#own-addr').select();document.execCommand('copy');toast('주소를 복사했어요')}};
+ o.querySelector('#own-go').onclick=()=>{try{navigator.clipboard.writeText(o.querySelector('#own-addr').value)}catch(e){}};
+ const save=async(clear)=>{const e2={...(CUR.extra||{})};const n=o.querySelector('#own-n').value.trim(),d=o.querySelector('#own-d').value.trim();
+  if(clear||!n){delete e2['소유자(대장)'];delete e2['소유변동일'];delete e2['소유확인일']}else{e2['소유자(대장)']=n;if(d)e2['소유변동일']=d;else delete e2['소유변동일'];e2['소유확인일']=new Date().toISOString().slice(0,10)}
+  const ext=Object.keys(e2).length?e2:null;try{await api('/api/listings',{method:'POST',body:JSON.stringify({id:CUR.id,category:CUR.category,extra:ext})});CUR.extra=ext;const rr=ROWS.find(x=>x.id===CUR.id);if(rr)rr.extra=ext;o.remove();renderList();toast('저장했어요')}catch(er){alert('저장 실패: '+er.message)}};
+ o.querySelector('#own-save').onclick=()=>save(false);const cl=o.querySelector('#own-clear');if(cl)cl.onclick=()=>save(true)}
 async function bldOpen(draft){if(!CUR||!CUR.id)return;const r=CUR;const A=await bldAll(),key=bldKey(r.danji,r.dong),c=key?A[key]:null;
  document.getElementById('promo')?.remove();const el=document.createElement('div');el.id='promo';el.className='bldm';
  const B=c&&c.bld&&c.bld[0]?c.bld[0]:{},R=c&&c.recap||{},cs=c?bldFind(c,r):[],u=cs.length===1?cs[0]:null;
@@ -943,7 +967,7 @@ function feeCalc(r,u){const kd=kinds(r.deal);let src=kd.includes('매매')?'매�
  let fee=Math.round(amt*rate/100);if(cap&&fee>cap)fee=cap;
  return `거래금액 기준 ${amt.toLocaleString()}만원${src==='임대'&&(kd.includes('월세'))?' (보증금+월세×100 환산)':''} · 상한요율 ${rate}%${cap?' (한도 '+cap+'만원)':''}${note} → <b>중개보수 약 ${fee.toLocaleString()}만원 이내</b> (부가세 별도, 쌍방 각각 · 협의로 낮출 수 있어요)`}
 
-$('#d-promo').onclick=promoOpen;$('#d-mk').onclick=()=>mankiSmsOpen(CUR);$('#d-bld').onclick=()=>bldOpen(false);
+$('#d-promo').onclick=promoOpen;$('#d-mk').onclick=()=>mankiSmsOpen(CUR);$('#d-bld').onclick=()=>bldOpen(false);$('#d-own').onclick=ownerOpen;
 // ================= 11/17 리얼맵 설명서 반영 =================
 const moneyP=s=>{s=String(s||'').replace(/[,\s]/g,'');let m=/(\d+(?:\.\d+)?)억(\d+)?/.exec(s);if(m)return Math.round(+m[1]*10000+(+m[2]||0));m=/(\d+(?:\.\d+)?)/.exec(s);return m?Math.round(+m[1]):null};
 const pyRange=t=>{const m=/(\d+(?:\.\d+)?)\s*평\s*(이상|이하|대)?/.exec(String(t||''));if(!m)return null;const v=+m[1];return m[2]==='이상'?[v,1e9]:m[2]==='이하'?[0,v]:m[2]==='대'?[Math.floor(v/10)*10,Math.floor(v/10)*10+9.99]:[v-3,v+5]};
@@ -1749,7 +1773,7 @@ $('#dir-open').onclick=()=>{const P=$('#dirpanel');P.hidden=!P.hidden;if(!P.hidd
 // ---------- 상세/편집 ----------
 const WIDE={owner_tel:'w3',tenant_tel:'w3',ad_type:'w2',memo:'w4',owner_units:'w2',deal:'w2',ad:'w4',usage:'w2',status:'w2',direction:'w2',title:'w2',coagent:'w2'};
 async function openDrawer(id,tpl){if(FORM0!==null&&$('#drawer').classList.contains('on')&&JSON.stringify(collectForm())!==FORM0){try{await saveForm(false)}catch(e){}}CUR=id?{...ROWS.find(r=>r.id===id)}:(tpl?{...tpl}:{danji:'',deal:'',category:CAT});
- $('#d-title').textContent=id?`${CUR.danji||''} ${CUR.dong||''} ${CUR.ho||''}`:(tpl?'새 매물 (복사본 — 호수 등을 고치고 저장하세요)':'새 매물');$('#d-del').hidden=!id;$('#d-copy').hidden=!id;$('#d-cp').hidden=!id;$('#d-promo').hidden=!id;$('#d-mk').hidden=!id;$('#d-bld').hidden=!id;cpBtn();
+ $('#d-title').textContent=id?`${CUR.danji||''} ${CUR.dong||''} ${CUR.ho||''}`:(tpl?'새 매물 (복사본 — 호수 등을 고치고 저장하세요)':'새 매물');$('#d-del').hidden=!id;$('#d-copy').hidden=!id;$('#d-cp').hidden=!id;$('#d-promo').hidden=!id;$('#d-mk').hidden=!id;$('#d-bld').hidden=!id;$('#d-own').hidden=!id;cpBtn();
  const fm=Object.fromEntries(META.fields.map(f=>[f[0],f]));const cat=CUR.category||(CAT==='전체'?'오피스텔':CAT);
  derive(CUR);const avNow=CUR._avail&&CUR._avail!=='표시없음'?CUR._avail:'';const E=CUR.extra||{};
  const hide=k=>k==='usage'&&['아파트','상가','오피스'].includes(cat);  // 용도는 아파트·상가·오피스에선 안 씀(값은 보존)
