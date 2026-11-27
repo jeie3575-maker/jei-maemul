@@ -267,7 +267,11 @@ tr.skel td{color:#999!important}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.SB_URL="https://ctgaawyuwqihybxrdcgt.supabase.co";window.SB_ANON="sb_publishable_g-3Lbb_ygZL5gTvDvU06OA_HoWDzGaE";window.META={"fields": [["title", "가능여부", "text"], ["danji", "단지", "select"], ["dong", "동", "text"], ["ho", "호", "text"], ["typ", "타입", "text"], ["pyeong", "평형(전용)", "num"], ["direction", "방향", "multi"], ["deal", "거래유형", "multi"], ["sale", "매매가", "num"], ["jeonse", "전세가", "num"], ["deposit", "보증금", "num"], ["rent", "월세", "num"], ["cur_deposit", "보증(현)", "num"], ["cur_rent", "차임(현)", "num"], ["manki", "만기(년)", "date"], ["status", "현상태", "multi"], ["usage", "용도", "multi"], ["ad", "광고", "multi"], ["ad_type", "광고타입", "multi"], ["consult", "상담", "select"], ["owner", "임대인", "text"], ["owner_tel", "임대인연락처", "text"], ["tenant", "임차인", "text"], ["tenant_tel", "임차인연락처", "text"], ["owner_units", "임대인소유물건", "text"], ["coagent", "공동중개부동산", "text"], ["co_office", "공동중개부동산(사무소)", "text"], ["memo", "비고", "text"]], "options": {"danji": ["래미안", "써밋", "호반", "DK", "시티파크", "파크타워", "센트럴파크", "아스테리움", "에테르나인용산", "트럼프", "한강대우디오빌", "기타"], "deal": ["매매", "급매", "임대전세", "임대월세", "반전세", "단기", "예정", "지분매매", "분양가", "매매완료"], "direction": ["동", "서", "남", "북", "남동", "남서", "북동", "서북"], "status": ["공실", "입주", "전세완", "월세완", "반전세", "단기", "계약완", "매매완"], "usage": ["주거", "겸용", "일반사업자", "간이사업자", "법인사업자", "일반임대사업자", "주택임대사업자", "사업자", "사업자X/전입X", "확인필요"], "ad": ["뱅크", "네이버", "당근", "블로그", "공동", "대기", "공동부동산확인중", "광고가능- 등록하기", "공동부거절", "임대인요청으로 광고X"], "consult": ["시작 전", "진행 중", "완료"], "ad_type": ["신홍보", "전자홍보", "V2", "VR홍보"]}, "danji_naver": {"래미안": ["래미안용산더센트럴"], "써밋": ["용산푸르지오써밋"], "호반": ["용산호반써밋에이디션"], "DK": ["DK밸리뷰용산"], "시티파크": ["용산시티파크1단지", "용산시티파크2단지"], "파크타워": ["파크타워"], "아스테리움": ["아스테리움용산"], "에테르나인용산": ["에테르나인용산"]}};</script>
-<script>async function whoName(){const u=((await sb.auth.getUser()).data.user)||{},em=u.email||'';const md=u.user_metadata||{};return md.name?(md.name+' '+(md.role||'')).trim():(em.includes('daepyo')?'대표':null)}
+<script>async function whoName(){const u=((await sb.auth.getUser()).data.user)||{},em=u.email||'';const md=u.user_metadata||{};if(md.name)return (md.name+' '+(md.role||'')).trim();await loadNames();return uname(em)||null}
+// 로그인 아이디 → 화면에 보일 실제 사용자 이름 (allowed_users 명단 기준)
+const _names = {};
+async function loadNames() { try { const {data} = await sb.from('allowed_users').select('email,name'); for (const r of data || []) { const e = String(r.email || '').toLowerCase(); if (e && r.name) _names[e] = _names[e.split('@')[0]] = r.name } } catch (e) {} }
+function uname(x) { const s = String(x || ''), k = s.toLowerCase(); if (!s) return ''; return _names[k] || _names[k.split('@')[0]] || (k.includes('daepyo') ? '대표' : /^(jeie3575|silijang|elfdream)(@|$)/.test(k) ? '박윤진 실장' : s.split('@')[0]) }
 // 클라우드(Supabase) 버전 백엔드: 로컬 server.py 의 /api/* 를 브라우저에서 그대로 흉내낸다.
 // 필요: window.SB_URL, window.SB_ANON, window.META (meta.json), supabase-js v2
 const ME = '용산호반제이';
@@ -294,6 +298,7 @@ async function loadRef(name) {
 }
 
 async function listingsAll() {
+  await loadNames();
   const [ls, lg] = await Promise.all([
     all(() => sb.from('listings').select('*').order('notion_created', {ascending: false, nullsFirst: true}).order('id', {ascending: false})),
     all(() => sb.from('logs').select('id,listing_id,at,text').order('id'))]);
@@ -508,7 +513,7 @@ async function unitInfo(id) {
     sb.from('logs').select('id,at,author,text,source').eq('listing_id', id).order('at', {ascending: false}),
     sb.from('history').select('at,who,action,diff').eq('listing_id', id).order('id', {ascending: false}).limit(30)]);
   return {logs: (logs || []).map(l => ({...l, at: kst(l.at)})), exact: exact.slice(0, 40), same_floor: sameFloor.slice(0, 40), ads: ads.slice(0, 60), naver_time: time,
-    history: (hist || []).map(h => ({at: kst(h.at) + ' ' + (h.who || '').split('@')[0], action: h.action, diff: JSON.stringify(h.diff || {})}))};
+    history: (hist || []).map(h => ({at: kst(h.at) + ' ' + uname(h.who), action: h.action, diff: JSON.stringify(h.diff || {})}))};
 }
 
 function mankiText(months = 3) {
@@ -608,7 +613,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795692766"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795744311"></head><body>
 <header><b id="home-t" style="cursor:pointer" title="메인(매물장)으로">🏡 제이부동산 매물장</b><span id="who-b" hidden style="margin-left:10px;font-size:12.5px;font-weight:800;background:#fff6d6;color:#14213d;border:1px solid #e0c46a;border-radius:999px;padding:2px 10px;white-space:nowrap"></span><input id="pl-top" placeholder="🔎 통합조회" title="이름·전화번호·단지·메모 등 아무거나 + Enter: 매물장·손님상담일지·문자·협력업체 전체 검색" style="width:120px;min-width:90px;margin:0 8px;padding:3px 8px;border-radius:14px;border:1px solid var(--line);font-size:13px"><nav id="tabs">
 <button data-t="sise">💹 시세</button><button data-t="today" class="on">🏠 오늘</button><button data-t="list">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 손님상담일지</button><button data-t="fee">💰 수수료</button><button data-t="cal">📅 달력</button><button data-t="work">🕘 내 근무</button><button data-t="brief">📰 정책·뉴스</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
 <span class="sp"></span><small id="info"></small><button class="fsb" id="fs-" title="글씨 작게">가−</button><button class="fsb" id="fs0" title="글씨 크기 원래대로">원본보기</button><button class="fsb" id="fs+" title="글씨 크게">가+</button><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
@@ -786,7 +791,7 @@ async function trashOpen(){let o=document.getElementById('tr-modal');if(o)o.remo
  o.innerHTML='<div style="background:#fff;border-radius:12px;max-width:760px;width:100%;max-height:85vh;overflow:auto;padding:14px 16px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>🗑 휴지통 <span class="mut" style="font-weight:400;font-size:12px">삭제한 매물을 복원하거나 완전히 지워요</span></b><button class="b" id="tr-x">닫기</button></div><div id="tr-b" class="mut">불러오는 중…</div></div>';document.body.appendChild(o);
  o.onclick=e=>{if(e.target===o)o.remove()};o.querySelector('#tr-x').onclick=()=>o.remove();
  const draw=async()=>{let T;try{T=await api('/api/trash')}catch(e){o.querySelector('#tr-b').textContent='불러오기 실패: '+e.message;return}window.TRASH=T;const b=o.querySelector('#tr-b');
-  b.innerHTML=T.length?T.map(r=>`<div style="display:flex;gap:8px;align-items:center;border-top:1px solid #eee;padding:7px 0;flex-wrap:wrap"><div style="flex:1;min-width:180px"><b>${esc(r.danji||'')} ${esc(r.dong||'')} ${esc(r.ho||'')}</b> <span class="mut">${esc((r.extra&&r.extra['삭제전분류'])||'')} · ${esc(r.deal||'')} ${esc(r.title||'')}</span><div class="mut" style="font-size:12px">삭제 ${esc((r.extra&&r.extra['삭제일'])||'')} · ${esc(((r.extra&&r.extra['삭제자'])||'').split('@')[0])}</div></div><button class="b p" data-rs="${r.id}">복원</button><button class="b d" data-pg="${r.id}">완전 삭제</button></div>`).join(''):'<div class="mut">휴지통이 비어 있어요</div>';
+  b.innerHTML=T.length?T.map(r=>`<div style="display:flex;gap:8px;align-items:center;border-top:1px solid #eee;padding:7px 0;flex-wrap:wrap"><div style="flex:1;min-width:180px"><b>${esc(r.danji||'')} ${esc(r.dong||'')} ${esc(r.ho||'')}</b> <span class="mut">${esc((r.extra&&r.extra['삭제전분류'])||'')} · ${esc(r.deal||'')} ${esc(r.title||'')}</span><div class="mut" style="font-size:12px">삭제 ${esc((r.extra&&r.extra['삭제일'])||'')} · ${esc((v=>typeof uname==='function'?uname(v):v.split('@')[0])((r.extra&&r.extra['삭제자'])||''))}</div></div><button class="b p" data-rs="${r.id}">복원</button><button class="b d" data-pg="${r.id}">완전 삭제</button></div>`).join(''):'<div class="mut">휴지통이 비어 있어요</div>';
   b.querySelectorAll('[data-rs]').forEach(x=>x.onclick=async()=>{try{const r=await api('/api/restore?id='+x.dataset.rs,{method:'POST'});ROWS=await api('/api/listings');renderList();toast('복원했어요 ('+r.category+')');draw()}catch(e){alert(e.message)}});
   b.querySelectorAll('[data-pg]').forEach(x=>x.onclick=async()=>{if(!confirm('완전히 지울까요? 되돌릴 수 없어요'))return;try{await api('/api/purge?id='+x.dataset.pg,{method:'POST'});toast('완전 삭제했어요');draw();renderCats()}catch(e){alert(e.message)}})};draw()}
 function clearFilters(){NEW30=false;STALE=false;const sb_=$('#f-stale');if(sb_){sb_.style.background=sb_.style.color=''}const nb=$('#f-new');if(nb){nb.classList.remove('on');nb.style.background=nb.style.color='';$('#nw-box').hidden=true}for(const k in F)F[k].clear();for(const k in FX){FX[k]='';const e=$('#'+k);if(e)e.value=''}$('#q').value='';$('#qf').value='';if($('#f-our'))$('#f-our').checked=false;if($('#f-tel'))$('#f-tel').checked=false;if($('#f-ad'))$('#f-ad').checked=false;if($('#f-active'))$('#f-active').checked=false;renderList()}
@@ -1400,7 +1405,7 @@ async function myInfoOpen(){
 }
 
 // ---- 회원 관리(관리자=실장만): 가입 승인·거절·비번 재설정·삭제 ----
-function whoShow(name,email){const b=document.getElementById('who-b');if(!b)return;b.textContent='👤 '+(name||String(email||'').split('@')[0])+' ▾';try{document.title='제이매물장/'+(name||String(email||'').split('@')[0].replace(/@.*/,''))}catch(_){}b.title=email||'';b.hidden=false;b.style.cursor='pointer';
+function whoShow(name,email){const b=document.getElementById('who-b');if(!b)return;b.textContent='👤 '+(name||(typeof uname==='function'?uname(email):String(email||'').split('@')[0]))+' ▾';try{document.title='제이매물장/'+(name||(typeof uname==='function'?uname(email):String(email||'').split('@')[0]))}catch(_){}b.title=email||'';b.hidden=false;b.style.cursor='pointer';
  b.onclick=e=>{e.stopPropagation();const old=document.getElementById('who-m');if(old){old.remove();return}
   const m=document.createElement('div');m.id='who-m';m.style.cssText='position:fixed;z-index:9999;background:#fff;border:1px solid #c9d1de;border-radius:12px;box-shadow:0 6px 24px #14213d33;padding:8px;min-width:180px';
   m.innerHTML='<div style="padding:6px 10px;font-size:13px;color:#6b7480">'+(name||'')+'<br><span style="font-size:11.5px">'+String(email||'').replace(/@jei\.local$/i,'').replace(/</g,'')+'</span></div><button type="button" class="b" data-a="work" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px">'+(window.__boss&&!window.__admin?'👥 직원근무':'🕘 내 근무')+'</button>'+(window.__admin?'<button type="button" class="b" data-a="admin" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px">🛠 관리자 페이지</button>':'')+'<button type="button" class="b" data-a="info" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px">🪪 내 정보 · 비밀번호 바꾸기</button><button type="button" class="b" data-a="out" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px;color:#c0392b">로그아웃</button>';
@@ -1700,7 +1705,7 @@ async function drawCSDetail(phone,fromPop){CSP=phone;const el=$('#cs-detail');if
 const CS_NOEDIT=['check','deal','stage','staff','cat','next'];
 const csDealOf=L=>{let s=null;for(const x of L)if(x.kind==='deal')s=x.text;try{return s?JSON.parse(s):{}}catch(_){return {}}};
 const csDealTxt=t=>{let v={};try{v=JSON.parse(t)}catch(_){}return [['계약 거래유형','tp'],['계약금액','amt'],['계약금 입금일','dd'],['계약서 작성일','cd'],['중도금일','mid'],['입주일(잔금일)','bal']].map(([l,k])=>l+' '+(v[k]||'-')+((k==='cd'&&v.cdt)||(k==='bal'&&v.balt)?' '+(k==='cd'?v.cdt:v.balt):'')).join(' · ')};
-const csBy=b=>{b=String(b||'');if(b.includes('daepyo'))return '대표';if(/^jeie3575@/.test(b)||/^(silijang|elfdream)(@|$)/.test(b))return '박윤진 실장';return b.split('@')[0]};
+const csBy=b=>{b=String(b||'');if(typeof uname==='function')return uname(b);if(b.includes('daepyo'))return '대표';if(/^jeie3575@/.test(b)||/^(silijang|elfdream)(@|$)/.test(b))return '박윤진 실장';return b.split('@')[0]};
 const csAuthor=()=>{try{return localStorage.csAuthor||''}catch(_){return ''}};
 const csLast=(L,k)=>{let s='';for(const x of L)if(x.kind===k)s=x.text;return s};
 const csNextHtml=L=>{const v=csLast(L,'next'),ok=/^\d{4}-\d\d-\d\d$/.test(v);return `<div style="margin:8px 0;padding:8px 10px;border:1px solid var(--line);border-radius:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>📅 다음 연락일</b>${dtBox('id="cs-next"',ok?v:'','','width:auto')}<button class="b" data-nx="3">3일 뒤</button><button class="b" data-nx="7">1주 뒤</button><button class="b" data-nx="30">한 달 뒤</button><button class="b" data-nx="0">지우기</button><span class="mut" style="font-size:12px">그날 오늘 탭에 '연락할 손님'으로 떠요 (바로 저장돼요)</span></div>`};
