@@ -682,10 +682,28 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795750487"></head><body>
-<header><b id="home-t" style="cursor:pointer" title="메인(매물장)으로">🏡 제이부동산 매물장</b><span id="who-b" hidden style="margin-left:10px;font-size:12.5px;font-weight:800;background:#fff6d6;color:#14213d;border:1px solid #e0c46a;border-radius:999px;padding:2px 10px;white-space:nowrap"></span><input id="pl-top" placeholder="🔎 통합조회" title="이름·전화번호·단지·메모 등 아무거나 + Enter: 매물장·손님상담일지·문자·협력업체 전체 검색" style="width:120px;min-width:90px;margin:0 8px;padding:3px 8px;border-radius:14px;border:1px solid var(--line);font-size:13px"><nav id="tabs">
-<button data-t="sise">💹 시세</button><button data-t="today" class="on">🏠 오늘</button><button data-t="list">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 손님상담일지</button><button data-t="fee">💰 수수료</button><button data-t="cal">📅 달력</button><button data-t="work">🕘 내 근무</button><button data-t="brief">📰 정책·뉴스</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
-<span class="sp"></span><small id="info"></small><button class="fsb" id="fs-" title="글씨 작게">가−</button><button class="fsb" id="fs0" title="글씨 크기 원래대로">원본보기</button><button class="fsb" id="fs+" title="글씨 크게">가+</button><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795751145"></head><body>
+<style>
+/* 11/27 머리글 3안: 밝은 두 줄 (윗줄 이름·검색·내 설정 / 아랫줄 메뉴) */
+header{background:#fff!important;color:var(--navy);border-bottom:1px solid var(--line);box-shadow:none!important;padding:8px 18px 0!important;gap:6px 10px!important}
+header #home-t{font-size:16px;color:var(--navy);margin:0 6px 0 0!important}
+header #pl-top{order:1;flex:0 1 420px!important;max-width:420px!important;background:#f1f4f7;border:1px solid transparent;border-radius:9px;padding:6px 12px;font-size:13.5px;color:var(--navy)}
+header #pl-top:focus{background:#fff;border-color:var(--navy)}
+header .sp{order:2;display:block!important;flex:1 1 0!important}
+header #info{order:3;color:#7b8794}
+header #refresh,header .fsb,header #who-b{order:4;font:inherit;font-size:13px;font-weight:600;background:none;border:0;border-radius:8px;color:#52606d;padding:5px 9px;cursor:pointer;white-space:nowrap}
+header #refresh:hover,header .fsb:hover,header #who-b:hover{background:#f1f4f7;color:var(--navy)}
+header #who-b{color:var(--navy);font-weight:800}header #who-b[hidden]{display:none}
+header.has-who .fsb{display:none}
+header nav#tabs{order:5!important;flex:1 1 100%!important;width:100%;background:none;padding:0;border-radius:0;gap:2px;border-top:1px solid #eef1f4;margin:0 -6px}
+header nav#tabs button,header .tgrp>button{color:#66727f;background:none;border:0;border-bottom:3px solid transparent;border-radius:0;padding:9px 12px 7px;font-weight:600}
+header nav#tabs button:hover{background:none;color:var(--navy)}
+header nav#tabs button.on{background:none;color:var(--navy);font-weight:800;border-bottom-color:var(--navy)}
+@media(max-width:760px){header{padding:6px 10px 0!important}header #pl-top{flex:1 1 90px!important}header .sp,header #info{display:none!important}header nav#tabs{margin:0;flex-wrap:nowrap;overflow-x:auto}header nav#tabs button,header .tgrp>button{padding:8px 9px 6px}}
+</style>
+<header><b id="home-t" style="cursor:pointer" title="메인(매물장)으로">제이부동산 매물장</b><input id="pl-top" placeholder="이름·전화·단지·메모 통합조회" title="이름·전화번호·단지·메모 등 아무거나 + Enter: 매물장·손님상담일지·문자·협력업체 전체 검색"><nav id="tabs">
+<button data-t="sise">시세</button><button data-t="today" class="on">오늘</button><button data-t="list">매물장</button><button data-t="call">전화 목록</button><button data-t="cs">손님상담일지</button><button data-t="fee">수수료</button><button data-t="cal">달력</button><button data-t="work">내 근무</button><button data-t="brief">정책·뉴스</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
+<span class="sp"></span><small id="info"></small><button class="fsb" id="fs-" title="글씨 작게">가−</button><button class="fsb" id="fs0" title="글씨 크기 원래대로">원본보기</button><button class="fsb" id="fs+" title="글씨 크게">가+</button><button id="refresh" title="최신 내용 다시 불러오기">새로고침</button><span id="who-b" hidden></span></header>
 <main>
 <section id="t-today"></section>
 <section id="t-list" hidden>
@@ -1494,12 +1512,12 @@ async function myInfoOpen(){
 }
 
 // ---- 회원 관리(관리자=실장만): 가입 승인·거절·비번 재설정·삭제 ----
-function whoShow(name,email){const b=document.getElementById('who-b');if(!b)return;b.textContent='👤 '+(name||(typeof uname==='function'?uname(email):String(email||'').split('@')[0]))+' ▾';try{document.title='제이매물장/'+(name||(typeof uname==='function'?uname(email):String(email||'').split('@')[0]))}catch(_){}b.title=email||'';b.hidden=false;b.style.cursor='pointer';
+function whoShow(name,email){const b=document.getElementById('who-b');if(!b)return;b.textContent=(name||(typeof uname==='function'?uname(email):String(email||'').split('@')[0]))+' ▾';try{document.title='제이매물장/'+(name||(typeof uname==='function'?uname(email):String(email||'').split('@')[0]))}catch(_){}b.title=email||'';b.hidden=false;b.closest('header')?.classList.add('has-who');b.style.cursor='pointer';
  b.onclick=e=>{e.stopPropagation();const old=document.getElementById('who-m');if(old){old.remove();return}
   const m=document.createElement('div');m.id='who-m';m.style.cssText='position:fixed;z-index:9999;background:#fff;border:1px solid #c9d1de;border-radius:12px;box-shadow:0 6px 24px #14213d33;padding:8px;min-width:180px';
-  m.innerHTML='<div style="padding:6px 10px;font-size:13px;color:#6b7480">'+(name||'')+'<br><span style="font-size:11.5px">'+String(email||'').replace(/@jei\.local$/i,'').replace(/</g,'')+'</span></div><button type="button" class="b" data-a="work" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px">'+(window.__boss&&!window.__admin?'👥 직원근무':'🕘 내 근무')+'</button>'+(window.__admin?'<button type="button" class="b" data-a="admin" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px">🛠 관리자 페이지</button>':'')+'<button type="button" class="b" data-a="info" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px">🪪 내 정보 · 비밀번호 바꾸기</button><button type="button" class="b" data-a="out" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px;color:#c0392b">로그아웃</button>';
+  m.innerHTML='<div style="padding:6px 10px;font-size:13px;color:#6b7480">'+(name||'')+'<br><span style="font-size:11.5px">'+String(email||'').replace(/@jei\.local$/i,'').replace(/</g,'')+'</span></div><button type="button" class="b" data-a="work" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px">'+(window.__boss&&!window.__admin?'👥 직원근무':'🕘 내 근무')+'</button>'+(window.__admin?'<button type="button" class="b" data-a="admin" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px">🛠 관리자 페이지</button>':'')+'<div style="display:flex;gap:4px;align-items:center;padding:6px 10px"><span style="font-size:13px;flex:1">글씨 크기</span><button type="button" class="b" data-a="fs-">가−</button><button type="button" class="b" data-a="fs0">원래</button><button type="button" class="b" data-a="fs+">가+</button></div><button type="button" class="b" data-a="info" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px">🪪 내 정보 · 비밀번호 바꾸기</button><button type="button" class="b" data-a="out" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px;color:#c0392b">로그아웃</button>';
   document.body.appendChild(m);const r=b.getBoundingClientRect();m.style.top=(r.bottom+6)+'px';m.style.left=Math.max(8,Math.min(r.left,innerWidth-m.offsetWidth-8))+'px';
-  m.onclick=async ev=>{const t=ev.target.closest('[data-a]');if(!t)return;ev.stopPropagation();if(t.dataset.a==='work'){m.remove();window.__wstaff=false;document.querySelector('#tabs button[data-t="work"]')?.click()}else if(t.dataset.a==='admin'){m.remove();adminOpen()}else if(t.dataset.a==='info'){m.remove();myInfoOpen()}else if(confirm('로그아웃할까요?')){try{await window.jeiCacheClear?.()}catch(x){}try{await sb.auth.signOut()}catch(x){}try{localStorage.removeItem('author')}catch(x){}location.reload()}};
+  m.onclick=async ev=>{const t=ev.target.closest('[data-a]');if(!t)return;ev.stopPropagation();if(t.dataset.a.startsWith('fs')){document.getElementById(t.dataset.a)?.click();return}if(t.dataset.a==='work'){m.remove();window.__wstaff=false;document.querySelector('#tabs button[data-t="work"]')?.click()}else if(t.dataset.a==='admin'){m.remove();adminOpen()}else if(t.dataset.a==='info'){m.remove();myInfoOpen()}else if(confirm('로그아웃할까요?')){try{await window.jeiCacheClear?.()}catch(x){}try{await sb.auth.signOut()}catch(x){}try{localStorage.removeItem('author')}catch(x){}location.reload()}};
   setTimeout(()=>document.addEventListener('click',function f(){m.remove();document.removeEventListener('click',f)}),0)}}
 function adminOpen(){const el=simpleModal('🛠 관리자 페이지','<div style="display:flex;flex-direction:column;gap:10px;min-width:260px"><button class="b p" id="ad-mem" style="padding:12px;text-align:left">👤 회원 관리 <span class="mut" style="font-size:12px">가입 승인·거절·비번 재설정·삭제</span></button><button class="b p" id="ad-staff" style="padding:12px;text-align:left">👥 직원근무 <span class="mut" style="font-size:12px">직원 근무표·업무일지 승인</span></button></div>');
  const cl=()=>{try{el.remove()}catch(_){}};
@@ -1525,7 +1543,7 @@ async function memOpen(){
 // ---- 11/17 상단 메뉴 묶음: 매물장 · 상담일지 · 매물관리▾ · 정보실▾ ----
 (function(){const nav=document.getElementById('tabs');if(!nav)return;
  const B=t=>nav.querySelector(`button[data-t="${t}"]`),cloud=!!window.SB_URL;
- const G=[{n:'매물관리',items:[['@vd','🏢 협력업체'],['call','📞 전화 목록'],['recon','네이버 광고 대조'],['manki','만기 알림']]},{n:'정보실',items:[['brief','📰 정책·뉴스'],['@dir','🧭 라인별 방향표'],['sise','💹 시세'],['io','백업']]},{n:'⚙ 설정',items:[['@man','📖 매물장 사용설명서'],['@rc','🔧 광고 대조 확인 설정'],['@sms','💬 문자 문구 관리'],['@qr','🔳 홈페이지 QR'],['@home','📱 폰 홈 화면에 추가']]}];
+ const G=[{n:'매물관리',items:[['@vd','협력업체'],['call','전화 목록'],['recon','네이버 광고 대조'],['manki','만기 알림']]},{n:'정보실',items:[['brief','정책·뉴스'],['@dir','라인별 방향표'],['sise','시세'],['io','백업']]},{n:'설정',items:[['@man','매물장 사용설명서'],['@rc','광고 대조 확인 설정'],['@sms','문자 문구 관리'],['@qr','홈페이지 QR'],['@home','폰 홈 화면에 추가']]}];
  const grp=new Set();G.forEach(g=>g.items.forEach(([t])=>{if(!t.startsWith('@')){grp.add(t);const b=B(t);if(b)b.dataset.g='1'}}));
  [B('list'),B('cs'),B('fee'),B('cal')].forEach(b=>b&&nav.appendChild(b));
  const dirb=document.getElementById('dir-open');if(dirb)dirb.style.display='none';
@@ -2308,7 +2326,7 @@ $('#refresh').onclick=async()=>{const b=$('#refresh');if(b.disabled)return;b.dis
   ROWS=await api('/api/listings');try{RT=await api('/api/rt');rtIndex()}catch(e){}RECON=null;
   $('#info').textContent=`매물 ${ROWS.length.toLocaleString()}건 · ${new Date().toTimeString().slice(0,5)} 새로고침`;
   const t=document.querySelector('#tabs button.on')?.dataset.t;RTA=null;RTAIDX=null;({today:renderToday,recon:loadRecon,manki:renderManki,list:renderList,co:renderCo,rta:renderRta,call:renderCall})[t]?.();toast('최신 내용으로 새로고침했습니다')}
- catch(err){alert('새로고침 실패: '+err.message)}finally{b.disabled=false;b.textContent='🔄 새로고침'}};
+ catch(err){alert('새로고침 실패: '+err.message)}finally{b.disabled=false;b.textContent='새로고침'}};
 // ---- 11/19 근무관리·업무일지 (클라우드 전용) ----
 (function(){if(!window.SB_URL||typeof sb==='undefined'){document.querySelector('#tabs [data-t="work"]')?.remove();return}
  const T=document.getElementById('t-work');if(!T)return;
@@ -2500,7 +2518,7 @@ const t=setInterval(()=>{if(typeof META!=='undefined'&&META&&typeof ROWS!=='unde
 })();
 
 // ---- 달력 탭: 구글 캘린더와 같은 구성(미니달력·내 캘린더·할 일·공휴일·월/주/일/일정·끌어서 옮기기·반복) + 메모(공동/개인) ----
-(function(){const btn=document.querySelector('#tabs button[data-t="cal"]');if(!btn)return;btn.textContent='📅 달력';
+(function(){const btn=document.querySelector('#tabs button[data-t="cal"]');if(!btn)return;btn.textContent='달력';
  const CS={y:'#fff3a3',p:'#ffd1dc',g:'#c9f2c7',b:'#cfe6ff',o:'#ffdcb0'};
  const GC={'':'#039be5','1':'#7986cb','2':'#33b679','3':'#8e24aa','4':'#e67c73','5':'#f6bf26','6':'#f4511e','7':'#039be5','8':'#616161','9':'#3f51b5','10':'#0b8043','11':'#d50000'};
  const GN={'':'기본','1':'라벤더','2':'세이지','3':'포도','4':'플라밍고','5':'바나나','6':'귤','7':'공작','8':'그래파이트','9':'블루베리','10':'바질','11':'토마토'};
@@ -2929,7 +2947,7 @@ function vtable(){const K=['세금계산서','현금영수증','현금','미표�
  return `<details class="mt" open><summary>🧾 부가세 신고기간별 합계 (원) — 공급일(잔금일) 기준</summary><div class="sw"><table class="pt mt2"><tr><th>기간</th><th>확정신고<br>기한</th><th>계약<br>건수</th><th class="bl2">공급가액</th><th>부가세</th><th>합계</th><th class="bl2">세금<br>계산서</th><th>현금<br>영수증</th><th>현금</th><th>미표시</th><th class="bl2">아직 안 받음</th><th>합계 중<br>상한 추정</th></tr>${keys.map(key=>{const a=P[key];return `<tr><td><b>${a.y}년 ${a.h}기</b><br><small class="mut">${a.h===1?'1~6월':'7~12월'}</small></td><td>${a.h===1?a.y+'.7.25':(a.y+1)+'.1.25'}</td><td>${a.ids.size}</td><td class="bl2"><b>${w(a.fee)}</b></td><td><b>${w(a.vat)}</b></td><td>${w(a.tot)}</td>${K.map((k,i)=>`<td${i?'':' class="bl2"'}>${w(a.k[k])}</td>`).join('')}<td class="bl2">${w(a.no)}</td><td class="mut">${w(a.est)}</td></tr>`}).join('')||'<tr><td colspan="12">계약이 없어요</td></tr>'}</table></div><div class="mut" style="font-size:12px;margin:6px 0 0">· 공급일은 잔금일로 보고, 잔금일이 없으면 계약일을 써요. 실제 신고 금액은 세무사가 홈택스 자료로 확정해요. 기한이 휴일이면 다음 영업일이에요.</div></details>`}
 // ---- 📈 순매출 (대표·실장만, 간편장부 '제이' 줄: biz_book) ----
 let BOOK=null,BERR='',NY=0,NOPEN=new Set();
-const INC=['매출','매출(증빙 못 찾음)'],OPEX=['임차료','관리비','광고·인쇄','통신','세무·법무·우편','협회·공과금','비품·소모품','복리·식대','경조·접대','지급수수료','교통','구독','기타'];
+const INC=['매출','매출(현금 확인)','매출(증빙 못 찾음)'],OPEX=['임차료','관리비','광고·인쇄','통신','세무·법무·우편','협회·공과금','비품·소모품','복리·식대','경조·접대','지급수수료','교통','구독','기타'];
 const NCATS=[...INC,'인건비',...OPEX,'제외·매출 아님','제외·부가세','제외·보증금'];
 async function loadBook(){BERR='';const out=[];for(let i=0;;i+=1000){const r=await sb.from('biz_book').select('*').order('d').order('key').range(i,i+999);if(r.error){BERR=r.error.message;break}out.push(...(r.data||[]));if((r.data||[]).length<1000)break}BOOK=out;if(VIEW==='net')render()}
 function netView(){if(BOOK===null){loadBook();return '<div class="mut" style="padding:20px">불러오는 중…</div>'}if(BERR)return '<div class="mut" style="padding:20px">불러오지 못했어요: '+E(BERR)+'</div>';
