@@ -185,6 +185,7 @@ header .sp{flex:1 1 0;min-width:0}
 #cs-detail:empty{display:none}
 #cspanel div:has(>#cs-detail:not(:empty)) #cs-list th:nth-child(n+7),#cspanel div:has(>#cs-detail:not(:empty)) #cs-list td:nth-child(n+7){display:none}
 #cs-list{max-width:100%}#cs-list table{width:100%}#cs-list td,#cs-list th{white-space:nowrap}
+@media(min-width:761px){#cspanel div:has(>#cs-detail:not(:empty))>#cs-list{flex:1.15 1 480px!important}#cspanel div:has(>#cs-detail:not(:empty))>#cs-detail{flex:1 1 400px!important}#cs-detail input,#cs-detail select{max-width:100%;box-sizing:border-box}#cspanel div:has(>#cs-detail:not(:empty)) #cs-list td,#cspanel div:has(>#cs-detail:not(:empty)) #cs-list th{padding:7px 4px;font-size:12.5px}#cspanel div:has(>#cs-detail:not(:empty)) #cs-list td:nth-child(3){white-space:normal;word-break:keep-all}}
 .pkr:hover{background:#fff8dc}
 
 /* 11/17 리얼맵 설명서 반영 */
@@ -737,7 +738,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795766347"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795767633"></head><body>
 <style>
 /* 11/27 디자인 5번(주황) — 아래는 주간모드, 야간모드는 맨 끝 theme 스크립트가 이 색들을 어둡게 바꿔 줌 */
 :root{--navy:#231916;--gold:#E4742C;--gold2:#B4541A;--acc:#B4541A;--bg:#f8f5f3;--line:#e9e0da}
