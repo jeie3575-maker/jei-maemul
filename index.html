@@ -682,7 +682,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795753162"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795753859"></head><body>
 <style>
 /* 11/27 머리글 3안: 밝은 두 줄 (윗줄 이름·검색·내 설정 / 아랫줄 메뉴) */
 header{background:#fff!important;color:var(--navy);border-bottom:1px solid var(--line);box-shadow:none!important;padding:8px 18px 0!important;gap:6px 10px!important}
@@ -708,9 +708,9 @@ header nav#tabs button.on{background:none;color:var(--navy);font-weight:800;bord
 <section id="t-today"></section>
 <section id="t-list" hidden>
  <div class="bar" id="catbar"></div>
- <div class="bar"><select id="qf" title="검색 대상"><option value="">전체</option><option value="dong">동</option><option value="ho">호수</option><option value="typ">타입</option><option value="owner">임대인</option><option value="tel">연락처</option><option value="memo">메모</option></select><span style="position:relative;display:inline-block"><input id="q" placeholder="검색 (여러 조건: 센트럴파크 104동 24층 142타입)" title="띄어쓰기로 조건을 여러 개 쓰면 모두 맞는 것만 보여요. 동·층·타입은 끝에 붙여 쓰기" style="width:240px;padding-right:26px"><button type="button" id="q-x" title="검색 지우기" hidden style="position:absolute;right:2px;top:50%;transform:translateY(-50%);border:0;background:none;font-size:18px;line-height:1;cursor:pointer;color:#888;padding:2px 6px">×</button></span>
+ <div class="bar"><select id="qf" title="검색 대상"><option value="">전체</option><option value="dong">동</option><option value="ho">호수</option><option value="typ">타입</option><option value="owner">임대인</option><option value="tel">연락처</option><option value="memo">메모</option></select><span style="position:relative;display:inline-block"><input id="q" placeholder="검색 (띄어쓰기=모두, 쉼표=각각)" title="띄어쓰기로 조건을 여러 개 쓰면 모두 맞는 것만 보여요. 동·층·타입은 끝에 붙여 쓰기" style="width:240px;padding-right:26px"><button type="button" id="q-x" title="검색 지우기" hidden style="position:absolute;right:2px;top:50%;transform:translateY(-50%);border:0;background:none;font-size:18px;line-height:1;cursor:pointer;color:#888;padding:2px 6px">×</button></span>
   <div class="chips" id="f-danji"></div></div>
- <div id="q-help" style="font-size:11px;color:#888;margin:-4px 0 6px 2px">💡 여러 조건은 띄어쓰기로 이어 쓰기 (검색 대상 '전체'일 때) — 예: <b>센트럴파크 104동 24층 142타입</b> · 동·층·타입은 끝에 붙여 쓰기 · 순서 상관없음</div>
+ <div id="q-help" style="font-size:11px;color:#888;margin:-4px 0 6px 2px">💡 여러 조건은 띄어쓰기로 이어 쓰기 (검색 대상 '전체'일 때) — 예: <b>센트럴파크 104동 24층 142타입</b> · 동·층·타입은 끝에 붙여 쓰기 · 순서 상관없음 · <b>쉼표(,)</b>로 나누면 각각의 결과를 함께 — 예: <b>호반 아파트 101동 30층, 호반 오피스텔 101동 14층</b> (분류는 '전체' 선택)</div>
  <div class="bar"><div class="chips" id="f-kind"></div><span class="mut">|</span>
   <label><input type="checkbox" id="f-active"> 진행 중인 매물만</label>
   <label title="우리 부동산에서 계약한 호실만 (진행 중 조건은 무시)"><input type="checkbox" id="f-our"> 우리 계약만</label><label title="임대인 번호가 메모의 번호와 달라 확인이 필요한 호실만"><input type="checkbox" id="f-tel"> 번호 확인 필요</label>
@@ -859,7 +859,8 @@ function fltLoad(){try{setTimeout(()=>F.adt&&F.adt.clear(),0);const s=JSON.parse
 function fxPass(r,tm){if(F.typ.size)F.typ.clear();if(F.dong.size)F.dong.clear();if(F.dir.size)F.dir.clear();FX.fl1=FX.fl2=FX.py1=FX.py2='';if(F.typ.size&&!F.typ.has(tkeyOf(r,tm)))return false;if(F.dong.size&&!F.dong.has(nDongLbl(r)))return false;if(F.dir.size&&!F.dir.has(r.direction||'(미입력)'))return false;
  const fl=flOf(r);if((FX.fl1!==''||FX.fl2!=='')&&(fl==null||(FX.fl1!==''&&fl<+FX.fl1)||(FX.fl2!==''&&fl>+FX.fl2)))return false;
  const py=r.pyeong==null||r.pyeong===''?null:+r.pyeong;if((FX.py1!==''||FX.py2!=='')&&(py==null||(FX.py1!==''&&py<+FX.py1)||(FX.py2!==''&&py>+FX.py2)))return false;return true}
-function qPass(r,q){if(!q)return true;const f=$('#qf').value;if(f)return qPass1(r,q,f);const low=v=>String(v??'').toLowerCase();return q.split(/\s+/).filter(Boolean).every(t=>{if(/^\d+층$/.test(t))return flOf(r)===+t.slice(0,-1);if(/.+타입$/.test(t))return low(r.typ).includes(t.slice(0,-2));if(/^([a-z]|\d+)동$/i.test(t))return qPass1(r,t,'dong');if(/.+동$/.test(t))return qPass1(r,t,'dong')||qPass1(r,t,'');return qPass1(r,t,'')})}
+function qPass(r,q){const p=String(q||'').split(/[,，]/).map(x=>x.trim()).filter(Boolean);return !p.length||p.some(x=>qPass0(r,x))}
+function qPass0(r,q){const f=$('#qf').value;if(f)return qPass1(r,q,f);const low=v=>String(v??'').toLowerCase();return q.split(/\s+/).filter(Boolean).every(t=>{if(/^\d+층$/.test(t))return flOf(r)===+t.slice(0,-1)||String(r.ho||'').trim()===t;if(/^[a-z]?\d+호$/i.test(t))return String(r.ho||'').replace(/호$/,'').trim().toLowerCase()===t.slice(0,-1);if(/.+타입$/.test(t))return low(r.typ).includes(t.slice(0,-2));if(/^([a-z]|\d+)동$/i.test(t))return qPass1(r,t,'dong');if(/.+동$/.test(t))return qPass1(r,t,'dong')||qPass1(r,t,'');if(t==='아파트'||t==='오피스텔')return (r.category||'오피스텔')===t||qPass1(r,t,'');return qPass1(r,t,'')})}
 function qPass1(r,q,f){const low=v=>String(v??'').toLowerCase();
  if(f==='dong'){const qq=q.replace(/동$/,'').trim();return /^([a-z]|\d+)$/i.test(qq)?nDong(r.dong)===qq.toUpperCase():low(r.dong).includes(qq)}if(f==='ho')return low(r.ho).includes(q);if(f==='typ')return low(r.typ).includes(q);if(f==='owner')return low(r.owner).includes(q);
  if(f==='tel')return low(r.owner_tel).replace(/\D/g,'').includes(q.replace(/\D/g,''))&&q.replace(/\D/g,'')!=='';if(f==='memo')return low(r.memo).includes(q)||low(r.log_txt).includes(q);
