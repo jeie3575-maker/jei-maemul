@@ -760,7 +760,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795770615"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795775753"></head><body>
 <style>
 /* 11/27 디자인 5번(주황) — 아래는 주간모드, 야간모드는 맨 끝 theme 스크립트가 이 색들을 어둡게 바꿔 줌 */
 :root{--navy:#231916;--gold:#E4742C;--gold2:#B4541A;--acc:#B4541A;--bg:#f8f5f3;--line:#e9e0da}
@@ -1649,12 +1649,12 @@ async function memOpen(){
 // ---- 11/17 상단 메뉴 묶음: 매물장 · 상담일지 · 매물관리▾ · 정보실▾ ----
 (function(){const nav=document.getElementById('tabs');if(!nav)return;
  const B=t=>nav.querySelector(`button[data-t="${t}"]`),cloud=!!window.SB_URL;
- const G=[{n:'매물관리',items:[['@box','📨 문자함'],['@ct','계약 안내·특약'],['@vd','협력업체'],['call','전화 목록'],['recon','네이버 광고 대조'],['manki','만기 알림']]},{n:'정보실',items:[['brief','정책·뉴스'],['@dir','라인별 방향표'],['sise','시세'],['io','백업']]},{n:'설정',items:[['@man','매물장 사용설명서'],['@rc','광고 대조 확인 설정'],['@sms','문자 문구 관리'],['@qr','홈페이지 QR'],['@home','폰 홈 화면에 추가']]}];
+ const G=[{n:'매물관리',items:[['@box','📨 문자함'],['@ct','계약 안내·특약'],['@vd','협력업체'],['@bd','🏢 동·호 배치표'],['call','전화 목록'],['recon','네이버 광고 대조'],['manki','만기 알림']]},{n:'정보실',items:[['brief','정책·뉴스'],['@dir','라인별 방향표'],['sise','시세'],['io','백업']]},{n:'설정',items:[['@man','매물장 사용설명서'],['@rc','광고 대조 확인 설정'],['@sms','문자 문구 관리'],['@qr','홈페이지 QR'],['@home','폰 홈 화면에 추가']]}];
  const grp=new Set();G.forEach(g=>g.items.forEach(([t])=>{if(!t.startsWith('@')){grp.add(t);const b=B(t);if(b)b.dataset.g='1'}}));
  [B('list'),B('cs'),B('fee'),B('cal')].forEach(b=>b&&nav.appendChild(b));
  const dirb=document.getElementById('dir-open');if(dirb)dirb.style.display='none';
  let menu=null;const closeMenu=()=>{menu&&menu.remove();menu=null};
- const go=t=>{closeMenu();if(t==='@man')return manualOpen();if(t==='@rc')return rcSettings();if(t==='@qr')return qrOpen();if(t==='@sms')return smsTplOpen();if(t==='@pl')return phoneLookupOpen();if(t==='@vd')return vendorOpen();if(t==='@ct')return contractOpen('');if(t==='@box')return smsBoxOpen();if(t==='@mem')return memOpen();if(t==='@home')return homeGuide();if(t==='@dir'){B('list').click();setTimeout(()=>{const P=document.getElementById('dirpanel');if(P&&P.hidden)document.getElementById('dir-open').click()},30);return}B(t)?.click()};
+ const go=t=>{closeMenu();if(t==='@man')return manualOpen();if(t==='@rc')return rcSettings();if(t==='@qr')return qrOpen();if(t==='@sms')return smsTplOpen();if(t==='@pl')return phoneLookupOpen();if(t==='@vd')return vendorOpen();if(t==='@bd')return boardOpen();if(t==='@ct')return contractOpen('');if(t==='@box')return smsBoxOpen();if(t==='@mem')return memOpen();if(t==='@home')return homeGuide();if(t==='@dir'){B('list').click();setTimeout(()=>{const P=document.getElementById('dirpanel');if(P&&P.hidden)document.getElementById('dir-open').click()},30);return}B(t)?.click()};
  const mk=g=>{const w=document.createElement('span');w.className='tgrp';const b=document.createElement('button');b.type='button';b.dataset.grp=g.n;b.innerHTML=`${g.n} ▾<span class="tbadge" hidden></span>`;w.appendChild(b);nav.appendChild(w);
   b.onclick=e=>{e.stopPropagation();if(menu&&menu.dataset.g===g.n){closeMenu();return}closeMenu();const cur=nav.querySelector('button[data-t].on')?.dataset.t;
    menu=document.createElement('div');menu.className='tmenu';menu.dataset.g=g.n;
@@ -3425,6 +3425,30 @@ window.smsBoxOpen=async function(){const el=simpleModal('📨 문자함','<div i
   q('[data-one]').forEach(b=>b.onclick=()=>go([all[+b.dataset.one]],b));const sb=B.querySelector('#sb-send');if(sb)sb.onclick=()=>go(all.filter(x=>sel.has(x.key)),sb);
   q('[data-skip]').forEach(b=>b.onclick=async()=>{const x=all[+b.dataset.skip];try{await api('/api/smsmark_set',{method:'POST',body:JSON.stringify({key:x.key,st:'skip'})});marks[x.key]={st:'skip',at:new Date().toISOString()};sel.delete(x.key);draw()}catch(e){alert(e.message)}});
   const mo=B.querySelector('#sb-more');if(mo)mo.onclick=()=>{n+=20;draw()};B.querySelector('#sb-tpl').onclick=()=>smsTplOpen()};
+ draw()};
+})();
+</script>
+<script>/*JEI_BOARD 11/27 동·호 배치표(보기 전용 체험판)*/
+(function(){
+const ST=[['av','가능','#E4742C','#fff'],['due','만기 90일 안','#f6c1b8','#7a1f10'],['js','전세 거주','#cfe0fa','#173f73'],['ws','월세 거주','#d5edd2','#1f5a22'],['in','입주(자가 등)','#e6d9f5','#4b2a73'],['em','공실','#fbe9a6','#6a5200'],['no','정보 없음','#eee8e3','#8a8078']];
+const SM=Object.fromEntries(ST.map(x=>[x[0],x]));
+const days=s=>/^\d{4}-\d\d-\d\d/.test(s||'')?Math.round((new Date(s.slice(0,10)+'T00:00:00')-new Date(new Date().toDateString()))/864e5):null;
+function stOf(r){if(isAvail(r.title))return'av';const d=days(r.manki);if(d!=null&&d>=0&&d<=90)return'due';const s=String(r.status||'');if(/전세/.test(s))return'js';if(/월세/.test(s))return'ws';if(/입주/.test(s))return'in';if(/공실/.test(s)&&!/없음/.test(s))return'em';return'no'}
+const num=r=>{const m=/^\s*(\d{3,4})\s*호?/.exec(String(r.ho||''));return m?+m[1]:null};
+const gkey=r=>r.danji==='기타'?String(r.dong||'기타'):String(r.danji||'');
+window.boardOpen=function(){let cat=localStorage.bdCat||'오피스텔',dj=localStorage.bdDj||'',only='';
+ const el=simpleModal('🏢 동·호 배치표','<div id="bd-b"></div>'),box=el.querySelector('.box'),B=el.querySelector('#bd-b');box.classList.add('bd-box');
+ if(!document.getElementById('bd-css')){const st=document.createElement('style');st.id='bd-css';st.textContent='#promo .box.bd-box{width:min(1280px,98vw);max-height:96vh;max-height:96dvh}.bd-wrap{overflow:auto;max-height:62vh;max-height:62dvh;border:1px solid #e9e0da;border-radius:10px;padding:10px}.bd-dong{display:inline-block;vertical-align:bottom;margin-right:22px}.bd-fl{display:flex;gap:3px;margin-bottom:3px;align-items:center}.bd-fl>i{font-style:normal;width:30px;font-size:11px;color:#8a8078;text-align:right;padding-right:3px;flex:none}.bd-c{width:46px;height:28px;border:0;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer;padding:0;position:relative;flex:none}.bd-c.x{visibility:hidden}.bd-c.dim{opacity:.16}.bd-c.nt:after{content:"";position:absolute;right:3px;top:3px;width:5px;height:5px;border-radius:50%;background:#c92a2a}';document.head.appendChild(st)}
+ const draw=()=>{const R=ROWS.filter(r=>(r.category||'오피스텔')===cat&&num(r)!=null),cnt={};R.forEach(r=>cnt[gkey(r)]=(cnt[gkey(r)]||0)+1);const list=Object.keys(cnt).filter(k=>k&&cnt[k]>=8).sort((a,b)=>cnt[b]-cnt[a]);if(!list.includes(dj))dj=list[0]||'';
+  const mine=R.filter(r=>gkey(r)===dj),D={};mine.forEach(r=>{derive(r);const d=r.danji==='기타'?'':String(r.dong||''),n=num(r),m=D[d]||(D[d]={}),old=m[n],sc=x=>(stOf(x)!=='no'?4:0)+(x.owner_tel?2:0)+(x.owner?1:0);if(!old||sc(r)>sc(old))m[n]=r});
+  const all=Object.values(D).flatMap(m=>Object.values(m)),tot={};all.forEach(r=>tot[stOf(r)]=(tot[stOf(r)]||0)+1);const noTel=all.filter(r=>!/\d{7,}/.test(String(r.owner_tel||'').replace(/[\s-]/g,''))).length;
+  const grid=Object.keys(D).sort((a,b)=>a.localeCompare(b,'ko',{numeric:true})).map(d=>{const m=D[d],ns=Object.keys(m).map(Number),fls=[...new Set(ns.map(n=>Math.floor(n/100)))].sort((a,b)=>b-a),lines=[...new Set(ns.map(n=>n%100))].sort((a,b)=>a-b);
+   return `<div class="bd-dong">${fls.map(f=>`<div class="bd-fl"><i>${f}층</i>${lines.map(l=>{const r=m[f*100+l];if(!r)return'<button class="bd-c x" tabindex="-1"></button>';const k=stOf(r),s=SM[k],t=/\d{7,}/.test(String(r.owner_tel||'').replace(/[\s-]/g,''));return `<button type="button" class="bd-c${t?'':' nt'}${only&&only!==k&&!(only==='nt'&&!t)?' dim':''}" data-id="${r.id}" style="background:${s[2]};color:${s[3]}" title="${esc([r.dong,r.ho+'호',s[1],r.manki?'만기 '+String(r.manki).slice(0,10):'',r.owner||'',t?'':'임대인 번호 없음'].filter(Boolean).join(' · '))}">${f*100+l}</button>`}).join('')}</div>`).join('')}<div style="text-align:center;font-weight:800;margin-top:4px">${esc(d?(/동|관/.test(d)?d:d+'동'):dj)}</div></div>`}).join('');
+  const chip=(k,l,bg,fg,n)=>`<button type="button" class="b" data-only="${k}" style="background:${bg};color:${fg};margin:0 5px 5px 0;${only===k?'outline:3px solid #231916':''}">${l} ${n}</button>`;
+  B.innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><select id="bd-cat">${CATS.map(c=>`<option ${c===cat?'selected':''}>${c}</option>`).join('')}</select><select id="bd-dj" style="min-width:150px">${list.map(k=>`<option value="${esc(k)}" ${k===dj?'selected':''}>${esc(k)} (${cnt[k]})</option>`).join('')}</select><span class="mut" style="align-self:center;font-size:12.5px">색을 누르면 그 호실만 밝게 · 빨간 점 = 임대인 번호 없음 · 호실을 누르면 상세</span></div><div>${ST.map(x=>chip(x[0],x[1],x[2],x[3],tot[x[0]]||0)).join('')}${chip('nt','🔴 번호 없음','#fcf9f5','#c92a2a',noTel)}</div>${grid?`<div class="bd-wrap"><div style="white-space:nowrap">${grid}</div></div>`:'<div class="mut">배치표를 만들 호실이 없어요.</div>'}`;
+  B.querySelector('#bd-cat').onchange=e=>{cat=localStorage.bdCat=e.target.value;only='';draw()};B.querySelector('#bd-dj').onchange=e=>{dj=localStorage.bdDj=e.target.value;only='';draw()};
+  B.querySelectorAll('[data-only]').forEach(b=>b.onclick=()=>{only=only===b.dataset.only?'':b.dataset.only;const w=B.querySelector('.bd-wrap'),p=w?[w.scrollLeft,w.scrollTop]:null;draw();const n=B.querySelector('.bd-wrap');if(n&&p){n.scrollLeft=p[0];n.scrollTop=p[1]}});
+  B.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{el.remove();openDrawer(+b.dataset.id)})};
  draw()};
 })();
 </script>
