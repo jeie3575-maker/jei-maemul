@@ -644,6 +644,19 @@ async function feeFind(p) {
     title: l ? [l.danji, suf(l.dong, '동'), suf(l.ho, '호')].filter(Boolean).join(' ') : (nmr.client_name || ''), danji: l ? l.danji : null, dong: l ? l.dong : null, ho: l ? l.ho : null};
   return {row, lid, base, owner: st.owner || dl.owner || null, tname: nmr.client_name || '', lname: (String((l && l.owner) || '').match(/[가-힣]{2,4}/) || [''])[0]}
 }
+// 저장할 때 전화번호 표기 통일: 010 0000 0000 / 02 000(0) 0000 (telfmt.py와 같은 규칙)
+const TEL_MOB = /(?:(010)(?:\s?[-.)]\s?|\s)?(\d{4})(?:\s?[-.]\s?|\s)?(\d{4})|(01[16789])(?:\s?[-.)]\s?|\s)?(\d{3,4})(?:\s?[-.]\s?|\s)?(\d{4}))(?![-.]?\d)/g;
+const TEL_LAND = /(?:(02|0[3-6][1-5]|070)(?:\s?[-.)]\s?)(\d{3,4})(?:\s?[-.]\s?|\s)(\d{4})|(02|0[3-6][1-5]|070)\s(\d{3,4})\s?[-.]\s?(\d{4}))(?![-.]?\d)/g;
+const TEL_BARE = /^\s*(02|0[3-6][1-5]|070)[-.)\s]?(\d{3,4})[-.\s]?(\d{4})\s*$/;
+function telFmt(v, telcol) {
+  if (Array.isArray(v)) return v.map(x => telFmt(x));
+  if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, telFmt(x)]));
+  if (typeof v !== 'string' || v.includes('://')) return v;
+  const f = (m, ...a) => { const s = a[a.length - 1], off = a[a.length - 2]; return /\d[-.]?$/.test(s.slice(0, off)) ? m : a.slice(0, -2).filter(Boolean).join(' ') };
+  let s = v.replace(TEL_MOB, f).replace(TEL_LAND, f);
+  const b = telcol && s.match(TEL_BARE);
+  return b ? b.slice(1).join(' ') : s;
+}
 async function api(u, o = {}) {
   const url = new URL(u, location.href), p = url.pathname.replace(/^.*\/api\//, '/api/'), q = Object.fromEntries(url.searchParams);
   const chk = ({data, error}) => { if (error) throw new Error(error.message); return data };
@@ -651,7 +664,8 @@ async function api(u, o = {}) {
     case '/api/meta': return {fields: window.META.fields, options: window.META.options, notion_token: false, cloud: true};
     case '/api/listings':
       if (o.method === 'POST') { const d = JSON.parse(o.body); const row = cleanRow(d);
-        if (d.category) row.category = d.category; if ('extra' in d) row.extra = d.extra && Object.keys(d.extra).length ? d.extra : null;
+        for (const k in row) row[k] = telFmt(row[k], k === 'owner_tel' || k === 'tenant_tel');
+        if (d.category) row.category = d.category; if ('extra' in d) row.extra = d.extra && Object.keys(d.extra).length ? telFmt(d.extra) : null;
         if (d.id) { chk(await sb.from('listings').update(row).eq('id', d.id).neq('category', '휴지통')); _cache.listings = null; return {id: d.id} }
         const r = chk(await sb.from('listings').insert({...row, source: 'app', category: row.category || '오피스텔'}).select('id').single()); _cache.listings = null; return {id: r.id} }
       return await listingsAll();
@@ -746,7 +760,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795768252"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795768612"></head><body>
 <style>
 /* 11/27 디자인 5번(주황) — 아래는 주간모드, 야간모드는 맨 끝 theme 스크립트가 이 색들을 어둡게 바꿔 줌 */
 :root{--navy:#231916;--gold:#E4742C;--gold2:#B4541A;--acc:#B4541A;--bg:#f8f5f3;--line:#e9e0da}
