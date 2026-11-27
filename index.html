@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko"><head><meta charset="utf-8"><script>try{if(localStorage.theme!=="light")document.documentElement.classList.add("dark")}catch(e){document.documentElement.classList.add("dark")}</script><style>:root.dark{color-scheme:dark}:root.dark body{background:#17110f}</style><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=0.5,maximum-scale=5"><style>html{-webkit-text-size-adjust:100%}@media(max-width:760px){#refresh,.fsb{display:none!important}input,select,textarea{font-size:16px!important}#t-cs{overflow:visible!important}#cs-list{max-height:none!important;overflow-x:auto!important;overflow-y:visible!important}#cspanel div:has(>#cs-detail:not(:empty)) #cs-list{display:none}#cs-detail .cshd{top:46px}.cs-back{display:inline-block!important}}.cs-back{display:none}#ftclr{display:none}@media(max-width:760px){#ftclr{display:inline-block;font:inherit;font-weight:800;padding:9px 16px;border:1.5px solid #d9b3b3;border-radius:999px;background:#fff;color:#b42318;margin:0 0 8px 6px}}</style>
+<html lang="ko"><head><meta charset="utf-8"><script>try{if(localStorage.theme==="dark")document.documentElement.classList.add("dark")}catch(e){}</script><style>:root.dark{color-scheme:dark}:root.dark body{background:#212225}</style><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=0.5,maximum-scale=5"><style>html{-webkit-text-size-adjust:100%}@media(max-width:760px){#refresh,.fsb{display:none!important}input,select,textarea{font-size:16px!important}#t-cs{overflow:visible!important}#cs-list{max-height:none!important;overflow-x:auto!important;overflow-y:visible!important}#cspanel div:has(>#cs-detail:not(:empty)) #cs-list{display:none}#cs-detail .cshd{top:46px}.cs-back{display:inline-block!important}}.cs-back{display:none}#ftclr{display:none}@media(max-width:760px){#ftclr{display:inline-block;font:inherit;font-weight:800;padding:9px 16px;border:1.5px solid #d9b3b3;border-radius:999px;background:#fff;color:#b42318;margin:0 0 8px 6px}}</style>
 <title>제이부동산 매물장</title><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="매물장"><meta name="mobile-web-app-capable" content="yes">
 <style>
 :root{--bg:#f6f7f9;--card:#fff;--line:#e3e6ea;--text:#1d2430;--mut:#6b7480;--acc:#1f6feb;--red:#d1242f;--org:#bc4c00;--grn:#1a7f37;--yel:#fff8c5}
@@ -682,7 +682,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795754436"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795756079"></head><body>
 <style>
 /* 11/27 디자인 5번(주황) — 아래는 주간모드, 야간모드는 맨 끝 theme 스크립트가 이 색들을 어둡게 바꿔 줌 */
 :root{--navy:#231916;--gold:#EB6100;--gold2:#C24C08;--acc:#C24C08;--bg:#f8f5f3;--line:#e9e0da}
@@ -3174,9 +3174,10 @@ if(location.hash==='#smoke'){const errs=[];addEventListener('error',e=>errs.push
  const info=c=>{const[r,g,b]=c.map(v=>v/255),M=Math.max(r,g,b),m=Math.min(r,g,b),d=M-m;let h=0;if(d)h=M===r?((g-b)/d+6)%6:M===g?(b-r)/d+2:(r-g)/d+4;const l=(M+m)/2;return{h:h*60,s:d?d/(1-Math.abs(2*l-1)):0,l,c:d,a:c[3]}};
  const hsl=(h,s,l,a)=>`hsla(${Math.round(h)},${Math.round(s*100)}%,${Math.round(l*1000)/10}%,${a})`;
  const map=(role,t)=>{const v=resolve(t),c=rgb(v);if(!c)return t;const{h,s,l,c:ch,a}=info(c);if(a===0)return v;
-  if(role==='bg'){if(a<.6&&l<.35)return v;if(l>=.8){if(ch>.045)return hsl(h>38&&h<66?24:h,.36,.17,a);return l>=.985?hsl(14,.21,.115,a):l>=.955?hsl(15,.21,.082,a):hsl(18,.22,.165,a)}if(l<=.3&&ch<.2)return hsl(18,.25,.2,a);if(ch<.12)return hsl(18,.12,.34,a);return v}
-  if(role==='text'){if(l>=.58)return v;if(ch<.25)return hsl(24,.2,.93-l*.52,a);return hsl(h,Math.min(s,.85),.68,a)}
-  if(l>=.6)return ch>.12?hsl(h,.45,.34,a):hsl(18,.22,.22,a);if(l<.3&&ch<.2)return hsl(20,.16,.42,a);return v};
+  const soft=()=>hsl(h,s*.68,l*.96,a);
+  if(role==='bg'){if(a<.6&&l<.35)return v;if(l>=.8){if(ch>.045)return hsl(h>38&&h<66?28:h,.2,.23,a);return l>=.985?hsl(225,.045,.175,a):l>=.955?hsl(225,.045,.14,a):hsl(225,.045,.23,a)}if(l<=.3&&ch<.2)return hsl(225,.05,.25,a);if(ch<.12)return hsl(225,.04,.38,a);return soft()}
+  if(role==='text'){if(l>=.58)return l>.9?hsl(40,.1,.92,a):v;if(ch<.25)return hsl(35,.07,.86-l*.42,a);return hsl(h,Math.min(s,.6),.72,a)}
+  if(l>=.6)return ch>.12?hsl(h,.28,.36,a):hsl(225,.045,.27,a);if(l<.3&&ch<.2)return hsl(225,.04,.45,a);return soft()};
  const roleOf=p=>p==='color'?'text':p.startsWith('background')?'bg':'line';
  const conv=(p,val)=>val.replace(TOK,t=>map(roleOf(p),t));
  const decls=css=>{const out=[];let d=0,cur='';for(const ch of css){if(ch==='(')d++;if(ch===')')d--;if(ch===';'&&!d){out.push(cur);cur=''}else cur+=ch}out.push(cur);return out.map(x=>{const i=x.indexOf(':');if(i<0)return null;const p=x.slice(0,i).trim().toLowerCase();let v=x.slice(i+1).trim();const imp=/!important\s*$/.test(v);v=v.replace(/\s*!important\s*$/,'');return v?{p,v,imp}:null}).filter(Boolean)};
@@ -3184,7 +3185,7 @@ if(location.hash==='#smoke'){const errs=[];addEventListener('error',e=>errs.push
  const sels=s=>{const out=[];let d=0,cur='';for(const ch of s){if(ch==='('||ch==='[')d++;if(ch===')'||ch===']')d--;if(ch===','&&!d){out.push(cur);cur=''}else cur+=ch}out.push(cur);return out.map(x=>{x=x.trim();return /^:root/.test(x)?x.replace(':root',':root.dark'):/^html(?![\w-])/.test(x)?x.replace(/^html/,'html:root.dark'):':root.dark '+x}).join(',')};
  const walk=rules=>{let o='';for(const r of rules){if(r.selectorText&&r.style){if(r.selectorText.includes('.dark'))continue;const ds=decls(r.style.cssText),keep=brightKept(ds),body=ds.filter(x=>PROP.test(x.p)).map(x=>`${x.p}:${keep&&x.p==='color'?x.v:conv(x.p,x.v)}${x.imp?'!important':''}`).join(';');if(body)o+=sels(r.selectorText)+'{'+body+'}\n'}else if(r.media&&r.cssRules){if(!/print/.test(r.media.mediaText))o+='@media '+r.media.mediaText+'{'+walk(r.cssRules)+'}\n'}}return o};
  let gen=null;const build=()=>{vars={};let o='';for(const sh of document.styleSheets){if(sh.ownerNode&&(sh.ownerNode.id==='jei-dark'||sh.ownerNode.id==='jei-dark-x'))continue;try{o+=walk(sh.cssRules)}catch(e){}}
-  if(!gen){gen=document.createElement('style');gen.id='jei-dark';const x=document.createElement('style');x.id='jei-dark-x';x.textContent=':root.dark button:not([class]){background-color:#231a17;color:#e8ddd6;border:1px solid #44342c;border-radius:6px}:root.dark body{background:#17110f}:root.dark #drawer .bd,:root.dark #cs-detail{background:#17110f!important}:root.dark #cal-box iframe{filter:invert(.9) hue-rotate(180deg)}:root.dark header #home-t{color:#ff7a1f}:root.dark th{color:#ff9a52}:root.dark tr.g-가능,:root.dark tr.g-급매가능,:root.dark tr.g-공실,:root.dark tr.g-퇴거예정{background:#33221a}:root.dark tr.g-공동가능,:root.dark tr.g-공동{background:#2a1d17}:root.dark tbody tr:hover{background:#43291a}';R.append(gen,x)}gen.textContent=o};
+  if(!gen){gen=document.createElement('style');gen.id='jei-dark';const x=document.createElement('style');x.id='jei-dark-x';x.textContent=':root.dark button:not([class]){background-color:#2b2c30;color:#d8d5d0;border:1px solid #44454a;border-radius:6px}:root.dark body{background:#212225}:root.dark #drawer .bd,:root.dark #cs-detail{background:#212225!important}:root.dark #cal-box iframe{filter:invert(.9) hue-rotate(180deg)}:root.dark header #home-t{color:#e59560}:root.dark th{color:#dca27c}:root.dark tr.g-가능,:root.dark tr.g-급매가능,:root.dark tr.g-공실,:root.dark tr.g-퇴거예정{background:#38322e}:root.dark tr.g-공동가능,:root.dark tr.g-공동{background:#312e2d}:root.dark tbody tr:hover{background:#43382f}';R.append(gen,x)}gen.textContent=o};
  const SEL='[style],svg text[fill]';
  const one=el=>{if(el.nodeType!==1)return;if(el.hasAttribute('style')){const st=el.style,ds=decls(st.cssText),keep=brightKept(ds);for(const x of ds){if(!PROP.test(x.p))continue;const m=el.__m||(el.__m={});if(m[x.p]===x.v||(keep&&x.p==='color'))continue;const n=conv(x.p,x.v);if(n===x.v)continue;(el.__o||(el.__o={}))[x.p]=[x.v,x.imp];st.setProperty(x.p,n,x.imp?'important':'');m[x.p]=st.getPropertyValue(x.p)}}
   if(el.tagName==='text'&&el.hasAttribute('fill')&&!el.__f){const f=el.getAttribute('fill'),n=conv('color',f);if(n!==f){el.__f=f;el.setAttribute('fill',n)}}};
@@ -3192,13 +3193,13 @@ if(location.hash==='#smoke'){const errs=[];addEventListener('error',e=>errs.push
  const all=(n,f)=>{if(n.nodeType!==1)return;if(n.matches(SEL))f(n);n.querySelectorAll(SEL).forEach(f)};
  let on=false,tm=null;
  const mo=new MutationObserver(L=>{if(!on)return;let css=false;for(const m of L){const t=m.target;if(m.type==='attributes')one(t);else{if(t.nodeName==='STYLE'&&!/^jei-dark/.test(t.id))css=true;m.addedNodes.forEach(n=>{if((n.nodeName==='STYLE'&&!/^jei-dark/.test(n.id))||n.nodeName==='LINK')css=true;else all(n,one)})}}if(css){clearTimeout(tm);tm=setTimeout(()=>{if(on)build()},30)}});
- const label=()=>{const b=document.getElementById('theme-b');if(b)b.textContent=on?'☀️ 주간':'🌙 야간';let m=document.querySelector('meta[name=theme-color]');if(!m){m=document.createElement('meta');m.name='theme-color';document.head.appendChild(m)}m.content=on?'#17110f':'#ffffff'};
+ const label=()=>{const b=document.getElementById('theme-b');if(b)b.textContent=on?'☀️ 주간':'🌙 야간';let m=document.querySelector('meta[name=theme-color]');if(!m){m=document.createElement('meta');m.name='theme-color';document.head.appendChild(m)}m.content=on?'#212225':'#ffffff'};
  const set=v=>{on=v;R.classList.toggle('dark',v);if(v){build();gen.disabled=false;all(document.body,one)}else{if(gen)gen.disabled=true;document.body.querySelectorAll('*').forEach(back)}label()};
  mo.observe(R,{subtree:true,childList:true,attributes:true,attributeFilter:['style']});
- let want=true;try{want=localStorage.theme!=='light'}catch(e){}set(want);
+ let want=false;try{want=localStorage.theme==='dark'}catch(e){}set(want);
  addEventListener('load',()=>{if(on){build();all(document.body,one)}});
  document.addEventListener('click',e=>{if(!e.target.closest('#theme-b'))return;want=!on;try{localStorage.theme=want?'dark':'light'}catch(_){}set(want)});
- addEventListener('storage',e=>{if(e.key==='theme'){want=e.newValue!=='light';set(want)}});
+ addEventListener('storage',e=>{if(e.key==='theme'){want=e.newValue==='dark';set(want)}});
  addEventListener('beforeprint',()=>{if(on)set(false)});addEventListener('afterprint',()=>{if(want&&!on)set(true)});
 })();
 </script>
