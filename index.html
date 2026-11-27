@@ -695,7 +695,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795758565"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795759710"></head><body>
 <style>
 /* 11/27 디자인 5번(주황) — 아래는 주간모드, 야간모드는 맨 끝 theme 스크립트가 이 색들을 어둡게 바꿔 줌 */
 :root{--navy:#231916;--gold:#E4742C;--gold2:#B4541A;--acc:#B4541A;--bg:#f8f5f3;--line:#e9e0da}
@@ -2490,18 +2490,26 @@ function init(){IDS.forEach(setup)}init();setInterval(init,1500)})();
 </script>
 <script>
 (function(){const D=document,G=id=>D.getElementById(id);
-const st=D.createElement('style');st.textContent='#nf{display:inline-flex;gap:8px;flex-wrap:wrap;align-items:center;position:relative}#nf .nc{display:inline-flex;align-items:center;gap:4px;border:1px solid #d9dee7;border-radius:10px;padding:3px 4px 3px 9px;background:#fcf9f5;font-size:14px}#nf .nc.on{border-color:#e8a900;background:#fff8e1}#nf .nc span{color:#7b8190;white-space:nowrap}#nf .nc select,#nf .nc input{font:inherit;font-size:14px;border:0;background:transparent;padding:5px 2px;max-width:150px}#nf .nc input{width:52px;border-bottom:1px solid #d9dee7}#nf .nc button{border:0;background:none;color:#999;font-size:14px;cursor:pointer;padding:4px 6px}#nf .fa{font:inherit;font-size:14px;border:1px dashed #b8bfcc;background:#fcf9f5;border-radius:10px;padding:7px 11px;cursor:pointer;color:#1f6fd1}#nfm{position:absolute;left:0;top:100%;margin-top:4px;background:#fcf9f5;border:1px solid #d9dee7;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:4px 0;z-index:30;min-width:200px}#nfm button{display:block;width:100%;text-align:left;font:inherit;font-size:15px;border:0;background:none;padding:11px 14px;cursor:pointer}#nfm button:hover{background:#f3f5f9}#nfm hr{border:0;border-top:1px solid #e3e6ec;margin:4px 0}#nfm small{display:block;color:#7b8190;padding:4px 14px 0;font-size:12px}@media(max-width:760px){#q-help{display:none}}';D.head.appendChild(st);
-const KEYS={avail:'가능여부',danji:'단지',dong:'동',ho:'호',typ:'타입',py:'평수',use:'용도',status:'현상태',ad:'광고',adt:'광고타입'};
+const st=D.createElement('style');st.textContent='#nf{display:inline-flex;gap:8px;flex-wrap:wrap;align-items:center;position:relative}#nf .nc{display:inline-flex;align-items:center;gap:4px;border:1px solid #d9dee7;border-radius:10px;padding:3px 4px 3px 9px;background:#fcf9f5;font-size:14px}#nf .nc.on{border-color:#e8a900;background:#fff8e1}#nf .nc span{color:#7b8190;white-space:nowrap}#nf .nc select,#nf .nc input{font:inherit;font-size:14px;border:0;background:transparent;padding:5px 2px;max-width:150px}#nf .nc input{width:52px;border-bottom:1px solid #d9dee7}#nf .nc input.pr{width:78px}#nf .nc .prh{font-size:12px;padding-right:2px}#nf .nc button{border:0;background:none;color:#999;font-size:14px;cursor:pointer;padding:4px 6px}#nf .fa{font:inherit;font-size:14px;border:1px dashed #b8bfcc;background:#fcf9f5;border-radius:10px;padding:7px 11px;cursor:pointer;color:#1f6fd1}#nfm{position:absolute;left:0;top:100%;margin-top:4px;background:#fcf9f5;border:1px solid #d9dee7;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:4px 0;z-index:30;min-width:200px}#nfm button{display:block;width:100%;text-align:left;font:inherit;font-size:15px;border:0;background:none;padding:11px 14px;cursor:pointer}#nfm button:hover{background:#f3f5f9}#nfm hr{border:0;border-top:1px solid #e3e6ec;margin:4px 0}#nfm small{display:block;color:#7b8190;padding:4px 14px 0;font-size:12px}@media(max-width:760px){#q-help{display:none}}';D.head.appendChild(st);
+const KEYS={avail:'가능여부',danji:'단지',price:'희망가',dong:'동',ho:'호',typ:'타입',py:'평수',use:'용도',status:'현상태',ad:'광고',adt:'광고타입'};
 const SETK={avail:'avail',danji:'danji',use:'use',adt:'adt'};
 const Q=[['f-active','진행 중인 매물만'],['f-our','우리 계약만'],['f-ad','광고 표시된 것만'],['f-new','최근 수정']];
-let NF={dong:'',ho:'',typ:'',status:'',ad:'',py1:'',py2:'',cat:null},NFA;
+let NF={dong:'',ho:'',typ:'',status:'',ad:'',py1:'',py2:'',pk:'sale',pr1:'',pr2:'',cat:null},NFA;
 try{NFA=JSON.parse(localStorage.nfa||'null')}catch(e){}if(!Array.isArray(NFA))NFA=['avail','danji'];
 const save=()=>{try{localStorage.nfa=JSON.stringify(NFA)}catch(e){}};
+try{if(!localStorage.nfaPrice){if(!NFA.includes('price'))NFA.push('price');save();localStorage.nfaPrice='1'}}catch(e){}
+// 희망가 필터(11/27): 금액은 만원 단위. '10억' '9억5천' 가능, 매매·전세·보증금은 100 미만 숫자를 억으로 읽음
+const PK=[['sale','매매가'],['jeonse','전세가'],['deposit','월세 보증금'],['rent','월세']];
+function priceNum(t,k){t=String(t).replace(/[,\s원]/g,'');if(!t)return null;if(/^\d+(\.\d+)?$/.test(t)){const n=+t;return k!=='rent'&&n<100?Math.round(n*10000):n}
+ const m=t.match(/^(?:(\d+(?:\.\d+)?)억)?(?:(\d+(?:\.\d+)?)천)?(?:(\d+))?만?$/);if(!m||(!m[1]&&!m[2]&&!m[3]))return null;let r=+(m[3]||0);if(m[1]&&!m[2]&&m[3]&&r<10)r*=1000;return Math.round((+(m[1]||0))*10000+(+(m[2]||0))*1000+r)}
+function priceVal(r,k){const kd=kinds(r.deal);const v=k==='sale'?(kd.includes('매매')?r.sale:null):k==='jeonse'?(kd.includes('전세')?(r.jeonse||r.deposit):null):(kd.includes('월세')?(k==='rent'?r.rent:r.deposit):null);return v===''||v==null?null:+v}
+const priceOn=()=>priceNum(NF.pr1,NF.pk)!=null||priceNum(NF.pr2,NF.pk)!=null;
 const val=k=>SETK[k]?([...F[SETK[k]]][0]||''):(NF[k]||'');
 function setVal(k,v){if(SETK[k]){F[SETK[k]].clear();if(v)F[SETK[k]].add(v)}else NF[k]=v;if(k==='danji'){NF.dong=NF.ho=NF.typ=''}renderList()}
 const hasAd=r=>/네이버|뱅크/.test(r.ad||'');
 window.nfPass=function(r,tm){if(NF.dong&&nDongLbl(r)!==NF.dong)return false;if(NF.ho&&String(r.ho||'(미입력)')!==NF.ho)return false;if(NF.typ&&tkeyOf(r,tm)!==NF.typ)return false;if(NF.status&&String(r.status||'(미입력)')!==NF.status)return false;
  if(NF.ad&&(NF.ad==='광고 없음'?hasAd(r):!new RegExp(NF.ad).test(r.ad||'')))return false;
+ if(priceOn()){const v=priceVal(r,NF.pk),a=priceNum(NF.pr1,NF.pk),b=priceNum(NF.pr2,NF.pk);if(v==null||(a!=null&&v<a)||(b!=null&&v>b))return false}
  if(NF.py1!==''||NF.py2!==''){const p=+r.pyeong;if(!(p>0)||(NF.py1!==''&&p<+NF.py1)||(NF.py2!==''&&p>+NF.py2))return false}return true};
 function opts(k){const rows=ROWS.filter(r=>(CAT==='전체'||(r.category||'오피스텔')===CAT)&&(k==='danji'||!F.danji.size||F.danji.has(r.danji)));const c={};const add=v=>{if(v!==''&&v!=null)c[v]=(c[v]||0)+1};
  if(k==='avail'){rows.forEach(r=>(r._avs||[r._avail]).forEach(add));return AVAIL.filter(a=>c[a]).map(a=>[a,c[a]])}
@@ -2517,14 +2525,14 @@ function opts(k){const rows=ROWS.filter(r=>(CAT==='전체'||(r.category||'오피
 const isOn=id=>{const e=G(id);return !!e&&(e.type==='checkbox'?e.checked:e.classList.contains('on'))};
 function hideOld(){['f-avail','f-use','f-adt','f-danji'].forEach(id=>{const e=G(id);if(!e)return;e.style.setProperty('display','none','important');const p=e.previousElementSibling;if(p&&p.tagName==='SPAN'&&p.classList.contains('mut'))p.style.setProperty('display','none','important')});
  Q.forEach(([id])=>{const e=G(id);if(!e)return;(e.type==='checkbox'?e.closest('label'):e).style.setProperty('display','none','important')})}
-function resetAll(){NF={dong:'',ho:'',typ:'',status:'',ad:'',py1:'',py2:'',cat:CAT}}
+function resetAll(){NF={dong:'',ho:'',typ:'',status:'',ad:'',py1:'',py2:'',pk:NF.pk||'sale',pr1:'',pr2:'',cat:CAT}}
 const els={};
 function mk(k){const w=D.createElement('span');w.className='nc';w.dataset.k=k;
- w.innerHTML=`<span>${KEYS[k]}</span>`+(k==='py'?`<input inputmode="decimal" placeholder="부터" data-p="py1">~<input inputmode="decimal" placeholder="까지" data-p="py2"><span>평</span>`:`<select></select>`)+`<button type="button" title="이 필터 빼기">✕</button>`;
- if(k==='py'){w.querySelectorAll('input').forEach(i=>{i.value=NF[i.dataset.p];i.oninput=()=>{NF[i.dataset.p]=i.value.trim();renderList()}})}
+ w.innerHTML=`<span>${KEYS[k]}</span>`+(k==='py'?`<input inputmode="decimal" placeholder="부터" data-p="py1">~<input inputmode="decimal" placeholder="까지" data-p="py2"><span>평</span>`:k==='price'?`<select>${PK.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select><input class="pr" placeholder="이상" data-p="pr1">~<input class="pr" placeholder="이하" data-p="pr2"><span class="prh"></span>`:`<select></select>`)+`<button type="button" title="이 필터 빼기">✕</button>`;
+ if(k==='py'||k==='price'){w.querySelectorAll('input').forEach(i=>{i.value=NF[i.dataset.p];i.oninput=()=>{NF[i.dataset.p]=i.value.trim();renderList()}});if(k==='price'){const s=w.querySelector('select');s.value=NF.pk;s.onchange=()=>{NF.pk=s.value;renderList()}}}
  else w.querySelector('select').onchange=e=>setVal(k,e.target.value);
- w.querySelector('button').onclick=()=>{if(k==='py'){NF.py1=NF.py2=''}else setVal(k,'');NFA=NFA.filter(x=>x!==k);save();renderList()};return w}
-function fill(k){const w=els[k],v=val(k);w.classList.toggle('on',k==='py'?(NF.py1!==''||NF.py2!==''):!!v);if(k==='py')return;const s=w.querySelector('select');if(D.activeElement===s)return;
+ w.querySelector('button').onclick=()=>{if(k==='py'){NF.py1=NF.py2=''}else if(k==='price'){NF.pr1=NF.pr2='';w.querySelectorAll('input').forEach(i=>i.value='')}else setVal(k,'');NFA=NFA.filter(x=>x!==k);save();renderList()};return w}
+function fill(k){const w=els[k],v=val(k);if(k==='price'){w.classList.toggle('on',priceOn());const s=w.querySelector('select');if(D.activeElement!==s)s.value=NF.pk;const f=t=>{if(!t)return'';const n=priceNum(t,NF.pk);return n==null?'?':NF.pk==='rent'?n.toLocaleString()+'만':(won(n)||'0')};const a=f(NF.pr1),b=f(NF.pr2);w.querySelector('.prh').textContent=a||b?`${a}~${b}`:(NF.pk==='rent'?'(만원)':'(예: 10억)');return}w.classList.toggle('on',k==='py'?(NF.py1!==''||NF.py2!==''):!!v);if(k==='py')return;const s=w.querySelector('select');if(D.activeElement===s)return;
  const o=opts(k),tot=o.reduce((a,b)=>a+b[1],0);s.innerHTML=`<option value="">전체</option>`+o.map(([x,n])=>`<option value="${esc(x)}">${esc(String(x).slice(0,20))} ${n}</option>`).join('');if(v&&!o.some(([x])=>x===v))s.insertAdjacentHTML('beforeend',`<option value="${esc(v)}">${esc(v)} 0</option>`);s.value=v}
 function draw(){const f=G('f-kind');if(!f||typeof META==='undefined'||!META||typeof ROWS==='undefined'||!ROWS.length)return;let w=G('nf');
  if(!w){w=D.createElement('span');w.id='nf';f.parentNode.insertBefore(w,f.nextSibling);
