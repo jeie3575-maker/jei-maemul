@@ -760,7 +760,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795768612"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795770389"></head><body>
 <style>
 /* 11/27 디자인 5번(주황) — 아래는 주간모드, 야간모드는 맨 끝 theme 스크립트가 이 색들을 어둡게 바꿔 줌 */
 :root{--navy:#231916;--gold:#E4742C;--gold2:#B4541A;--acc:#B4541A;--bg:#f8f5f3;--line:#e9e0da}
@@ -3276,7 +3276,7 @@ if(location.hash==='#smoke'){const errs=[];addEventListener('error',e=>errs.push
 </script>
 <script>/*JEI_CONTRACT 11/27 계약 안내: 단계 타임라인 + 문자 자동 작성 + 특약 카드. 문구·계좌는 DB(doctpl)에만 둠 — 여기에 적지 말 것*/
 (function(){
-const STEPS=[['pre','계약 전 문자','계약 조건과 특약을 채워 보내기'],['prep','준비물 안내','법인·개인사업자별 준비 서류'],['terms','계약서 작성하기','조항 카드를 골라 담기'],['sign','계약서 작성일','임차인·임대인 안내 문자'],['fee','수수료 안내','금액·부가세·계좌'],['bal','잔금·입주','임차인·임대인 안내 문자']];
+const STEPS=[['pre','계약 전 문자','계약 조건과 특약을 채워 보내기'],['prep','준비물 안내','법인·개인사업자별 준비 서류'],['sign','계약서 작성일 안내','임차인·임대인 안내 문자'],['terms','계약서 작성하기','조항 카드를 골라 담기'],['bal','잔금·입주','임차인·임대인 안내 문자'],['fee','수수료 안내','금액·부가세·계좌']];
 const RK={sign:[['cd3','작성일 3일 전'],['cd1','작성일 1일 전'],['mid3','중도금 3일 전']],bal:[['bal3','잔금 3일 전'],['mv1','입주 1일 전']]};
 const fit=t=>{if(!t||!t.offsetParent)return;t.style.height='auto';t.style.height=(t.scrollHeight+4)+'px'};
 const newest=(L,k)=>{const a=(L||[]).filter(x=>x.kind===k).sort((x,y)=>String(y.at).localeCompare(String(x.at))||(y.id||0)-(x.id||0));try{return a.length?JSON.parse(a[0].text):null}catch(_){return null}};
