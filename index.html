@@ -682,36 +682,40 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795756079"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795756362"></head><body>
 <style>
 /* 11/27 디자인 5번(주황) — 아래는 주간모드, 야간모드는 맨 끝 theme 스크립트가 이 색들을 어둡게 바꿔 줌 */
-:root{--navy:#231916;--gold:#EB6100;--gold2:#C24C08;--acc:#C24C08;--bg:#f8f5f3;--line:#e9e0da}
+:root{--navy:#231916;--gold:#E4742C;--gold2:#B4541A;--acc:#B4541A;--bg:#f8f5f3;--line:#e9e0da}
 body{background:#f8f5f3}
 header{background:#fff!important;color:var(--navy);border-bottom:1px solid var(--line);box-shadow:none!important;padding:8px 18px 0!important;gap:6px 10px!important}
-header #home-t{font-size:18px;color:#C24C08;margin:0 6px 0 0!important}
+header #home-t{font-size:18px;color:#B4541A;margin:0 6px 0 0!important}
 header #pl-top{order:1;flex:0 1 420px!important;max-width:420px!important;background:#f6f0ec;border:1px solid #e9e0da;border-radius:9px;padding:6px 12px;font-size:13.5px;color:var(--navy)}
-header #pl-top:focus{background:#fff;border-color:#EB6100}
+header #pl-top:focus{background:#fff;border-color:#E4742C}
 header .sp{order:2;display:block!important;flex:1 1 0!important}
 header #info{order:3;color:#8a7a70}
 header #refresh,header .fsb,header #who-b,header #theme-b{order:4;font:inherit;font-size:13px;font-weight:600;background:none;border:0;border-radius:8px;color:#5c4c43;padding:5px 9px;cursor:pointer;white-space:nowrap}
-header #theme-b{border:1px solid #EB6100;color:#C24C08;border-radius:999px;padding:4px 11px}
-header #refresh:hover,header .fsb:hover,header #who-b:hover,header #theme-b:hover{background:#fff0e5;color:#C24C08}
+header #theme-b{border:1px solid #E4742C;color:#B4541A;border-radius:999px;padding:4px 11px}
+header #refresh:hover,header .fsb:hover,header #who-b:hover,header #theme-b:hover{background:#fff0e5;color:#B4541A}
 header #who-b{color:var(--navy);font-weight:800}header #who-b[hidden]{display:none}
 header.has-who .fsb{display:none}
 header nav#tabs{order:5!important;flex:1 1 100%!important;width:100%;background:none;padding:0 0 6px;border-radius:0;gap:2px;border-top:0;margin:0 -6px}
 header nav#tabs button,header .tgrp>button{color:#7a6a60;background:none;border:1px solid transparent;border-radius:8px;padding:7px 13px;font-weight:600}
 header nav#tabs button:hover{background:#fff6f0;color:var(--navy)}
-header nav#tabs button.on{background:#fff0e5;color:#C24C08;font-weight:800;border-color:#EB6100}
-button.p,#qa-open,#drawer .hd .b.p{background:#EB6100;border-color:#EB6100;color:#fff}button.p:hover,#qa-open:hover{background:#C24C08}
-.cat.on,.chip.on,#drawer .chip.on{background:#EB6100!important;border-color:#EB6100!important;color:#fff!important;box-shadow:none!important}
-input[type=checkbox],input[type=radio]{accent-color:#EB6100}
-th{background:#fff5ee;color:#C24C08;border-bottom:2px solid #EB6100}
+header nav#tabs button.on{background:#fff0e5;color:#B4541A;font-weight:800;border-color:#E4742C}
+button.p,#qa-open,#drawer .hd .b.p{background:#E4742C;border-color:#E4742C;color:#fff}button.p:hover,#qa-open:hover{background:#B4541A}
+.cat.on,.chip.on,#drawer .chip.on{background:#E4742C!important;border-color:#E4742C!important;color:#fff!important;box-shadow:none!important}
+input[type=checkbox],input[type=radio]{accent-color:#E4742C}
+th{background:#fff5ee;color:#B4541A;border-bottom:2px solid #E4742C}
 tbody tr:hover{background:#ffe9da}
 tr.g-가능,tr.g-급매가능,tr.g-공실,tr.g-퇴거예정{background:#fff1e7}tr.g-공동가능,tr.g-공동{background:#fff8f2}
-.av-가능,.av-급매가능,.av-공실,.av-퇴거예정{background:#EB6100;color:#fff}.av-공동가능,.av-공동{background:#ffe1cc;color:#8a3a06}
-#take summary b{background:#EB6100;color:#fff}
+.av-가능,.av-급매가능,.av-공실,.av-퇴거예정{background:#E4742C;color:#fff}.av-공동가능,.av-공동{background:#ffe1cc;color:#8a3a06}
+#take summary b{background:#E4742C;color:#fff}
 #drawer .dsec h4,#cs-detail .csec>h4{background:#fff0e5}
 @media(max-width:760px){header{padding:6px 10px 0!important}header #pl-top{flex:1 1 90px!important}header .sp,header #info{display:none!important}header nav#tabs{margin:0;flex-wrap:nowrap;overflow-x:auto}header nav#tabs button,header .tgrp>button{padding:6px 8px}header #theme-b{font-size:12px;padding:3px 8px}}
+
+/* 주간모드 부드럽게: 흰색·강한 색을 살짝 가라앉히는 따뜻한 막 */
+:root:not(.dark) body::after{content:'';position:fixed;inset:0;pointer-events:none;background:#f6f2ec;mix-blend-mode:multiply;z-index:2147483647}
+@media print{body::after{display:none!important}}
 </style>
 <header><b id="home-t" style="cursor:pointer" title="메인(매물장)으로">제이부동산 매물장</b><input id="pl-top" placeholder="이름·전화·단지·메모 통합조회" title="이름·전화번호·단지·메모 등 아무거나 + Enter: 매물장·손님상담일지·문자·협력업체 전체 검색"><nav id="tabs">
 <button data-t="sise">시세</button><button data-t="today" class="on">오늘</button><button data-t="list">매물장</button><button data-t="call">전화 목록</button><button data-t="cs">손님상담일지</button><button data-t="fee">수수료</button><button data-t="cal">달력</button><button data-t="work">내 근무</button><button data-t="brief">정책·뉴스</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
