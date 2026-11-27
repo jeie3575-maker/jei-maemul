@@ -311,9 +311,10 @@ async function loadRef(name) {
   return _cache[name] = v;
 }
 
-let _base = null, _chain = Promise.resolve(), _ver = 0, _shown = 0, _pending = 0, _saveT = 0, _forceFull = false, _polls = 0;
+let _base = null, _chain = Promise.resolve(), _ver = 0, _shown = 0, _pending = 0, _saveT = 0, _forceFull = false;
 const _memo = new Map();
-const LOGCOL = 'id,listing_id,at,text';
+const LOGCOL = 'id,listing_id,at,text,updated';   // updated = 고친 시각(cloud/logs_updated.sql)
+const _maxLogUpd = (m, l) => l.updated && (!m || l.updated > m) ? l.updated : m;
 const _maxUpd = (m, r) => r.updated > m ? r.updated : m;
 function saveBase() { clearTimeout(_saveT); _saveT = setTimeout(() => { if (_base) IDB.set('base', _base) }, 1500) }
 window.jeiCacheClear = async () => { clearTimeout(_saveT); _base = null; _owner = null; await IDB.clear() };
@@ -323,7 +324,7 @@ async function fullLoad(uid) {
   const [ls, lg] = await Promise.all([
     all(() => sb.from('listings').select('*').order('notion_created', {ascending: false, nullsFirst: true}).order('id', {ascending: false})),
     all(() => sb.from('logs').select(LOGCOL).order('id'))]);
-  _base = {v: 1, uid, at: Date.now(), upd: ls.reduce(_maxUpd, ''), log: lg.reduce((m, l) => l.id > m ? l.id : m, 0), L: new Map(ls.map(r => [r.id, r])), G: new Map(lg.map(l => [l.id, l]))};
+  _base = {v: 2, logUpd: lg.reduce(_maxLogUpd, '') || new Date(Date.now() - 600000).toISOString(), uid, at: Date.now(), upd: ls.reduce(_maxUpd, ''), log: lg.reduce((m, l) => l.id > m ? l.id : m, 0), L: new Map(ls.map(r => [r.id, r])), G: new Map(lg.map(l => [l.id, l]))};
   _memo.clear(); _ver++; _pending += 1; saveBase();
 }
 // 개수가 다르면(삭제·권한 변경) 번호 목록만 받아 맞춤
@@ -340,23 +341,23 @@ async function deltaLoad(overlap, checkLogs) {
   const head = t => sb.from(t).select('id', {count: 'exact', head: true});
   const [ls, lg, c, cg] = await Promise.all([
     all(() => sb.from('listings').select('*').gt('updated', since || '1970-01-01').order('updated').order('id')),
-    all(() => sb.from('logs').select(LOGCOL).gt('id', B.log).order('id')),
+    all(() => sb.from('logs').select(LOGCOL).or(`id.gt.${B.log},updated.gt."${B.logUpd}"`).order('id')),
     head('listings'), checkLogs ? head('logs') : Promise.resolve({count: null})]);
   if (c.error || cg.error) throw new Error((c.error || cg.error).message);
   let n = 0;
   for (const r of ls) { const o = B.L.get(r.id); if (!o || o.updated !== r.updated || JSON.stringify(o) !== JSON.stringify(r)) { B.L.set(r.id, r); n++ } B.upd = _maxUpd(B.upd, r) }
-  for (const l of lg) { if (!B.G.has(l.id)) n++; B.G.set(l.id, l); if (l.id > B.log) B.log = l.id }
+  for (const l of lg) { const o = B.G.get(l.id); if (!o || o.text !== l.text || o.listing_id !== l.listing_id || o.at !== l.at) { B.G.set(l.id, l); n++ } if (l.id > B.log) B.log = l.id; B.logUpd = _maxLogUpd(B.logUpd, l) }
   if (c.count != null && c.count !== B.L.size) n += await reconcile('listings', B.L, '*');
   if (cg.count != null && cg.count !== B.G.size) n += await reconcile('logs', B.G, LOGCOL);
   if (n) { _ver++; _pending += n; saveBase() }
 }
-function sync(poll) {  // 한 번에 하나씩 실행
+function sync() {  // 한 번에 하나씩 실행
   return _chain = _chain.catch(() => {}).then(async () => {
     const uid = await cacheOwner(); let overlap = false;
     if (_forceFull) { _forceFull = false; _base = null; return fullLoad(uid) }
-    if (!_base) { const c = await IDB.get('base'); if (c && c.v === 1 && c.uid === uid && c.L?.size && Date.now() - c.at < 7 * 864e5) { _base = c; overlap = true; _ver++ } }
+    if (!_base) { const c = await IDB.get('base'); if (c && c.v === 2 && c.uid === uid && c.L?.size && Date.now() - c.at < 7 * 864e5) { _base = c; overlap = true; _ver++ } }
     if (!_base || _base.uid !== uid || Date.now() - _base.at > 7 * 864e5) return fullLoad(uid);
-    return deltaLoad(overlap, !poll || ++_polls % 6 === 0);
+    return deltaLoad(overlap, true);
   });
 }
 function buildRows() {
@@ -377,14 +378,14 @@ function buildRows() {
 }
 async function listingsAll() {
   if (!Object.keys(_names).length) await loadNames();
-  await sync(false); _shown = _ver; _pending = 0;
+  await sync(); _shown = _ver; _pending = 0;
   return _cache.listings = buildRows();
 }
 
 // ---- 실시간 동기화: 다른 사람이 고친 매물·상담일지를 30초마다 가져옴 ----
 async function pollChanges() {
   if (!_base) return null;
-  try { await sync(true) } catch (e) { return null }
+  try { await sync() } catch (e) { return null }
   return _ver === _shown ? null : {n: _pending || 1};
 }
 
@@ -677,7 +678,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795746380"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795746820"></head><body>
 <header><b id="home-t" style="cursor:pointer" title="메인(매물장)으로">🏡 제이부동산 매물장</b><span id="who-b" hidden style="margin-left:10px;font-size:12.5px;font-weight:800;background:#fff6d6;color:#14213d;border:1px solid #e0c46a;border-radius:999px;padding:2px 10px;white-space:nowrap"></span><input id="pl-top" placeholder="🔎 통합조회" title="이름·전화번호·단지·메모 등 아무거나 + Enter: 매물장·손님상담일지·문자·협력업체 전체 검색" style="width:120px;min-width:90px;margin:0 8px;padding:3px 8px;border-radius:14px;border:1px solid var(--line);font-size:13px"><nav id="tabs">
 <button data-t="sise">💹 시세</button><button data-t="today" class="on">🏠 오늘</button><button data-t="list">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 손님상담일지</button><button data-t="fee">💰 수수료</button><button data-t="cal">📅 달력</button><button data-t="work">🕘 내 근무</button><button data-t="brief">📰 정책·뉴스</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
 <span class="sp"></span><small id="info"></small><button class="fsb" id="fs-" title="글씨 작게">가−</button><button class="fsb" id="fs0" title="글씨 크기 원래대로">원본보기</button><button class="fsb" id="fs+" title="글씨 크게">가+</button><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
