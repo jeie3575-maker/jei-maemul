@@ -290,38 +290,102 @@ async function all(q) { // 1000행 제한 넘겨서 전부 가져오기
 const kst = s => { if (!s) return ''; const d = new Date(s); const p = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}` };
 
+// ---- 11/27 전송량 절약: 매물·상담일지·참고자료를 이 기기(IndexedDB)에 저장해 두고 바뀐 것만 받음. 로그아웃하면 삭제, 7일 지나면 전체를 새로 받음 ----
+const IDB = {
+  db() { return new Promise((ok, no) => { const r = indexedDB.open('jei-cache', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); r.onblocked = () => no(new Error('blocked')) }) },
+  async run(mode, fn) { try { const d = await this.db(); try { return await new Promise((ok, no) => { const t = d.transaction('kv', mode), q = fn(t.objectStore('kv')); t.oncomplete = () => ok(q && q.result); t.onerror = t.onabort = () => no(t.error) }) } finally { d.close() } } catch (e) { return null } },  // 저장이 안 되는 브라우저(비공개 창 등)에서는 그냥 매번 받음
+  get(k) { return this.run('readonly', s => s.get(k)) }, set(k, v) { return this.run('readwrite', s => s.put(v, k)) }, clear() { return this.run('readwrite', s => s.clear()) } };
+const _uid = async () => { try { return (await sb.auth.getSession()).data.session?.user.id || '' } catch (e) { return '' } };
+let _owner = null;
+async function cacheOwner() { const u = await _uid(); if (_owner === u) return u; if ((await IDB.get('uid')) !== u) { await IDB.clear(); await IDB.set('uid', u); _base = null; for (const k in _cache) _cache[k] = null } _owner = u; return u }  // 다른 계정이면 이전 저장분 삭제
+
 async function loadRef(name) {
   if (_cache[name]) return _cache[name];
+  await cacheOwner();
+  const c = await IDB.get('ref:' + name);
+  if (c) { const {data: m, error} = await sb.from('refdata').select('updated').eq('name', name).maybeSingle(); if (!error && m && m.updated === c.updated) return _cache[name] = c.v }
   const {data, error} = await sb.from('refdata').select('data,updated').eq('name', name).maybeSingle();
   if (error) throw new Error(error.message);
-  return _cache[name] = {rows: data?.data || [], time: data ? kst(data.updated).slice(5) : ''};
+  const v = {rows: data?.data || [], time: data ? kst(data.updated).slice(5) : ''};
+  if (data) IDB.set('ref:' + name, {updated: data.updated, v});
+  return _cache[name] = v;
 }
 
-async function listingsAll() {
-  await loadNames();
+let _base = null, _chain = Promise.resolve(), _ver = 0, _shown = 0, _pending = 0, _saveT = 0, _forceFull = false, _polls = 0;
+const _memo = new Map();
+const LOGCOL = 'id,listing_id,at,text';
+const _maxUpd = (m, r) => r.updated > m ? r.updated : m;
+function saveBase() { clearTimeout(_saveT); _saveT = setTimeout(() => { if (_base) IDB.set('base', _base) }, 1500) }
+window.jeiCacheClear = async () => { clearTimeout(_saveT); _base = null; _owner = null; await IDB.clear() };
+window.jeiRefresh = () => { if (_base && Date.now() - _base.at > 864e5) _forceFull = true };  // 🔄 새로고침: 하루 넘은 저장분이면 전체 새로 받음
+
+async function fullLoad(uid) {
   const [ls, lg] = await Promise.all([
     all(() => sb.from('listings').select('*').order('notion_created', {ascending: false, nullsFirst: true}).order('id', {ascending: false})),
-    all(() => sb.from('logs').select('id,listing_id,at,text').order('id'))]);
+    all(() => sb.from('logs').select(LOGCOL).order('id'))]);
+  _base = {v: 1, uid, at: Date.now(), upd: ls.reduce(_maxUpd, ''), log: lg.reduce((m, l) => l.id > m ? l.id : m, 0), L: new Map(ls.map(r => [r.id, r])), G: new Map(lg.map(l => [l.id, l]))};
+  _memo.clear(); _ver++; _pending += 1; saveBase();
+}
+// 개수가 다르면(삭제·권한 변경) 번호 목록만 받아 맞춤
+async function reconcile(table, map, cols) {
+  const ids = (await all(() => sb.from(table).select('id').order('id'))).map(x => x.id), have = new Set(ids); let n = 0;
+  for (const id of [...map.keys()]) if (!have.has(id)) { map.delete(id); n++ }
+  const miss = ids.filter(id => !map.has(id));
+  for (let i = 0; i < miss.length; i += 200) { const {data, error} = await sb.from(table).select(cols).in('id', miss.slice(i, i + 200)); if (error) throw new Error(error.message); for (const r of data) { map.set(r.id, r); n++ } }
+  return n;
+}
+async function deltaLoad(overlap, checkLogs) {
+  const B = _base; let since = B.upd;
+  if (overlap && since) since = new Date(new Date(since).getTime() - 120000).toISOString();  // 저장분으로 처음 열 때만 2분 겹쳐 받음
+  const head = t => sb.from(t).select('id', {count: 'exact', head: true});
+  const [ls, lg, c, cg] = await Promise.all([
+    all(() => sb.from('listings').select('*').gt('updated', since || '1970-01-01').order('updated').order('id')),
+    all(() => sb.from('logs').select(LOGCOL).gt('id', B.log).order('id')),
+    head('listings'), checkLogs ? head('logs') : Promise.resolve({count: null})]);
+  if (c.error || cg.error) throw new Error((c.error || cg.error).message);
+  let n = 0;
+  for (const r of ls) { const o = B.L.get(r.id); if (!o || o.updated !== r.updated || JSON.stringify(o) !== JSON.stringify(r)) { B.L.set(r.id, r); n++ } B.upd = _maxUpd(B.upd, r) }
+  for (const l of lg) { if (!B.G.has(l.id)) n++; B.G.set(l.id, l); if (l.id > B.log) B.log = l.id }
+  if (c.count != null && c.count !== B.L.size) n += await reconcile('listings', B.L, '*');
+  if (cg.count != null && cg.count !== B.G.size) n += await reconcile('logs', B.G, LOGCOL);
+  if (n) { _ver++; _pending += n; saveBase() }
+}
+function sync(poll) {  // 한 번에 하나씩 실행
+  return _chain = _chain.catch(() => {}).then(async () => {
+    const uid = await cacheOwner(); let overlap = false;
+    if (_forceFull) { _forceFull = false; _base = null; return fullLoad(uid) }
+    if (!_base) { const c = await IDB.get('base'); if (c && c.v === 1 && c.uid === uid && c.L?.size && Date.now() - c.at < 7 * 864e5) { _base = c; overlap = true; _ver++ } }
+    if (!_base || _base.uid !== uid || Date.now() - _base.at > 7 * 864e5) return fullLoad(uid);
+    return deltaLoad(overlap, !poll || ++_polls % 6 === 0);
+  });
+}
+function buildRows() {
   const g = {};
-  for (const l of lg) { const x = g[l.listing_id] ||= {n: 0, last: '', t: []}; x.n++; const a = kst(l.at); if (a > x.last) x.last = a; x.t.push(l.text) }
-  for (const r of ls) { const x = g[r.id]; r.log_n = x?.n || 0; r.log_last = x?.last || ''; r.log_txt = x ? x.t.join(' / ') : '' }
-  _sync.upd = ls.reduce((m, r) => r.updated > m ? r.updated : m, ''); _sync.log = lg.reduce((m, l) => l.id > m ? l.id : m, 0);
-  window.TRASH = ls.filter(r => r.category === '휴지통');   // 휴지통 = category '휴지통' (삭제 전 분류는 extra.삭제전분류)
-  return _cache.listings = ls.filter(r => r.category !== '휴지통');
+  for (const l of _base.G.values()) { const x = g[l.listing_id] ||= {n: 0, last: '', t: []}; x.n++; if (l.at > x.last) x.last = l.at; x.t.push(l.text) }
+  const out = [], trash = [];
+  for (const raw of _base.L.values()) {
+    const x = g[raw.id], txt = x ? x.t.join(' / ') : '', n = x?.n || 0, last = x?.last ? kst(x.last) : '';
+    let m = _memo.get(raw.id);
+    if (!m || m.raw !== raw) _memo.set(raw.id, m = {raw, row: {...raw, extra: raw.extra ? {...raw.extra} : raw.extra}});  // 바뀌지 않은 매물은 같은 객체를 다시 씀
+    m.row.log_n = n; m.row.log_last = last; m.row.log_txt = txt;
+    (raw.category === '휴지통' ? trash : out).push(m.row);
+  }
+  const k = r => r.notion_created == null ? '￿' : String(r.notion_created);
+  out.sort((a, b) => { const x = k(a), y = k(b); return x < y ? 1 : x > y ? -1 : b.id - a.id });
+  window.TRASH = trash;   // 휴지통 = category '휴지통' (삭제 전 분류는 extra.삭제전분류)
+  return out;
+}
+async function listingsAll() {
+  if (!Object.keys(_names).length) await loadNames();
+  await sync(false); _shown = _ver; _pending = 0;
+  return _cache.listings = buildRows();
 }
 
-// ---- 실시간 동기화: 다른 사람이 고친 매물·상담일지를 몇 초마다 가져옴 ----
-const _sync = {upd: '', log: 0};
+// ---- 실시간 동기화: 다른 사람이 고친 매물·상담일지를 30초마다 가져옴 ----
 async function pollChanges() {
-  if (!_sync.upd) return null;
-  const [a, b, c] = await Promise.all([
-    sb.from('listings').select('*').gt('updated', _sync.upd).order('updated'),
-    sb.from('logs').select('id,listing_id,at,text').gt('id', _sync.log).order('id'),
-    sb.from('listings').select('id', {count: 'exact', head: true})]);
-  if (a.error || b.error) return null;
-  for (const r of a.data) if (r.updated > _sync.upd) _sync.upd = r.updated;
-  for (const l of b.data) if (l.id > _sync.log) _sync.log = l.id;
-  return {ls: a.data, lg: b.data, count: c.count};
+  if (!_base) return null;
+  try { await sync(true) } catch (e) { return null }
+  return _ver === _shown ? null : {n: _pending || 1};
 }
 
 // ---- 대조 로직 (server.py 와 동일) ----
@@ -548,10 +612,10 @@ async function api(u, o = {}) {
     case '/api/trash': return chk(await sb.from('listings').select('*').eq('category', '휴지통').order('updated', {ascending: false}));
     case '/api/restore': { const id = +q.id, cur = chk(await sb.from('listings').select('category,extra').eq('id', id).single()); const ex = {...(cur.extra || {})}, cat = ex['삭제전분류'] || '오피스텔'; delete ex['삭제전분류']; delete ex['삭제자']; delete ex['삭제일'];
       const r = chk(await sb.from('listings').update({category: cat, extra: Object.keys(ex).length ? ex : null}).eq('id', id).select('id')); if (!(r || []).length) throw new Error('복원 권한이 없어요'); _cache.listings = null; return {ok: true, category: cat} }
-    case '/api/purge': { const r = chk(await sb.from('listings').delete().eq('id', +q.id).eq('category', '휴지통').select('id')); if (!(r || []).length) throw new Error('완전 삭제 권한이 없어요 (대표·박윤진 실장만 가능해요)'); _cache.listings = null; return {ok: true} }
+    case '/api/purge': { const r = chk(await sb.from('listings').delete().eq('id', +q.id).eq('category', '휴지통').select('id')); if (!(r || []).length) throw new Error('완전 삭제 권한이 없어요 (대표·박윤진 실장만 가능해요)'); _base?.L.delete(+q.id); _cache.listings = null; return {ok: true} }
     case '/api/log': { const d = JSON.parse(o.body); const r = chk(await sb.from('logs').insert({listing_id: d.listing_id, text: d.text, author: d.author, source: 'app'}).select('id').single()); _cache.listings = null; return {id: r.id} }
-    case '/api/log_delete': { const r = chk(await sb.from('logs').delete().eq('id', +q.id).select('id')); if (!(r || []).length) throw new Error('삭제 권한이 없어요 (대표·박윤진 실장만 삭제할 수 있어요)'); _cache.listings = null; return {ok: true} }
-    case '/api/log_update': { const d = JSON.parse(o.body); chk(await sb.from('logs').update({text: d.text}).eq('id', d.id)); _cache.listings = null; return {ok: true} }
+    case '/api/log_delete': { const r = chk(await sb.from('logs').delete().eq('id', +q.id).select('id')); if (!(r || []).length) throw new Error('삭제 권한이 없어요 (대표·박윤진 실장만 삭제할 수 있어요)'); _base?.G.delete(+q.id); saveBase(); _cache.listings = null; return {ok: true} }
+    case '/api/log_update': { const d = JSON.parse(o.body); chk(await sb.from('logs').update({text: d.text}).eq('id', d.id)); { const o = _base?.G.get(+d.id); if (o) { _base.G.set(+d.id, {...o, text: d.text}); saveBase() } } _cache.listings = null; return {ok: true} }
     case '/api/recon': return await recon();
     case '/api/rt': return (await loadRef('rt')).rows;
     case '/api/news': return (await loadRef('news')).rows;
@@ -613,7 +677,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795745411"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795746142"></head><body>
 <header><b id="home-t" style="cursor:pointer" title="메인(매물장)으로">🏡 제이부동산 매물장</b><span id="who-b" hidden style="margin-left:10px;font-size:12.5px;font-weight:800;background:#fff6d6;color:#14213d;border:1px solid #e0c46a;border-radius:999px;padding:2px 10px;white-space:nowrap"></span><input id="pl-top" placeholder="🔎 통합조회" title="이름·전화번호·단지·메모 등 아무거나 + Enter: 매물장·손님상담일지·문자·협력업체 전체 검색" style="width:120px;min-width:90px;margin:0 8px;padding:3px 8px;border-radius:14px;border:1px solid var(--line);font-size:13px"><nav id="tabs">
 <button data-t="sise">💹 시세</button><button data-t="today" class="on">🏠 오늘</button><button data-t="list">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 손님상담일지</button><button data-t="fee">💰 수수료</button><button data-t="cal">📅 달력</button><button data-t="work">🕘 내 근무</button><button data-t="brief">📰 정책·뉴스</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
 <span class="sp"></span><small id="info"></small><button class="fsb" id="fs-" title="글씨 작게">가−</button><button class="fsb" id="fs0" title="글씨 크기 원래대로">원본보기</button><button class="fsb" id="fs+" title="글씨 크게">가+</button><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
@@ -1423,7 +1487,7 @@ function whoShow(name,email){const b=document.getElementById('who-b');if(!b)retu
   const m=document.createElement('div');m.id='who-m';m.style.cssText='position:fixed;z-index:9999;background:#fff;border:1px solid #c9d1de;border-radius:12px;box-shadow:0 6px 24px #14213d33;padding:8px;min-width:180px';
   m.innerHTML='<div style="padding:6px 10px;font-size:13px;color:#6b7480">'+(name||'')+'<br><span style="font-size:11.5px">'+String(email||'').replace(/@jei\.local$/i,'').replace(/</g,'')+'</span></div><button type="button" class="b" data-a="work" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px">'+(window.__boss&&!window.__admin?'👥 직원근무':'🕘 내 근무')+'</button>'+(window.__admin?'<button type="button" class="b" data-a="admin" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px">🛠 관리자 페이지</button>':'')+'<button type="button" class="b" data-a="info" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px">🪪 내 정보 · 비밀번호 바꾸기</button><button type="button" class="b" data-a="out" style="display:block;width:100%;text-align:left;margin:2px 0;padding:9px 10px;color:#c0392b">로그아웃</button>';
   document.body.appendChild(m);const r=b.getBoundingClientRect();m.style.top=(r.bottom+6)+'px';m.style.left=Math.max(8,Math.min(r.left,innerWidth-m.offsetWidth-8))+'px';
-  m.onclick=async ev=>{const t=ev.target.closest('[data-a]');if(!t)return;ev.stopPropagation();if(t.dataset.a==='work'){m.remove();window.__wstaff=false;document.querySelector('#tabs button[data-t="work"]')?.click()}else if(t.dataset.a==='admin'){m.remove();adminOpen()}else if(t.dataset.a==='info'){m.remove();myInfoOpen()}else if(confirm('로그아웃할까요?')){try{await sb.auth.signOut()}catch(x){}try{localStorage.removeItem('author')}catch(x){}location.reload()}};
+  m.onclick=async ev=>{const t=ev.target.closest('[data-a]');if(!t)return;ev.stopPropagation();if(t.dataset.a==='work'){m.remove();window.__wstaff=false;document.querySelector('#tabs button[data-t="work"]')?.click()}else if(t.dataset.a==='admin'){m.remove();adminOpen()}else if(t.dataset.a==='info'){m.remove();myInfoOpen()}else if(confirm('로그아웃할까요?')){try{await window.jeiCacheClear?.()}catch(x){}try{await sb.auth.signOut()}catch(x){}try{localStorage.removeItem('author')}catch(x){}location.reload()}};
   setTimeout(()=>document.addEventListener('click',function f(){m.remove();document.removeEventListener('click',f)}),0)}}
 function adminOpen(){const el=simpleModal('🛠 관리자 페이지','<div style="display:flex;flex-direction:column;gap:10px;min-width:260px"><button class="b p" id="ad-mem" style="padding:12px;text-align:left">👤 회원 관리 <span class="mut" style="font-size:12px">가입 승인·거절·비번 재설정·삭제</span></button><button class="b p" id="ad-staff" style="padding:12px;text-align:left">👥 직원근무 <span class="mut" style="font-size:12px">직원 근무표·업무일지 승인</span></button></div>');
  const cl=()=>{try{el.remove()}catch(_){}};
@@ -2217,15 +2281,12 @@ $('#rotate').onclick=async()=>{if(!confirm('비밀 링크를 바꿀까요? 지�
 // ---------- 실시간 동기화 (클라우드 버전에서만 동작) ----------
 let SYNCING=false;
 async function liveSync(){if(SYNCING||document.hidden||typeof pollChanges!=='function'||!ROWS)return;SYNCING=true;try{
- const ch=await pollChanges();if(!ch)return;let n=0;
- for(const r of ch.ls){const i=ROWS.findIndex(x=>x.id===r.id);if(r.category==='휴지통'){if(i>=0){ROWS.splice(i,1);n++}window.TRASH=(window.TRASH||[]).filter(x=>x.id!==r.id).concat([r]);continue}if(window.TRASH)window.TRASH=window.TRASH.filter(x=>x.id!==r.id);const o=i>=0?ROWS[i]:null;r.log_n=o?.log_n||0;r.log_last=o?.log_last||'';r.log_txt=o?.log_txt||'';if(i>=0)ROWS[i]=r;else ROWS.unshift(r);n++}
- for(const l of ch.lg){const r=ROWS.find(x=>x.id===l.listing_id);if(!r)continue;r.log_n=(r.log_n||0)+1;const a=kst(l.at);if(a>(r.log_last||''))r.log_last=a;r.log_txt=(r.log_txt?r.log_txt+' / ':'')+l.text;n++}
- if(ch.count!=null&&ch.count<ROWS.length){_cache.listings=null;ROWS=await api('/api/listings');n++}
- if(!n)return;if(!(window.__rcSkip&&Date.now()-window.__rcSkip<20000))RECON=null;if(!$('#drawer').classList.contains('on')&&!$('#t-list').hidden)renderList();
- $('#info').textContent=`매물 ${ROWS.length.toLocaleString()}건 · 실시간 ${new Date().toTimeString().slice(0,5)}`;toast(`새 변경 ${n}건 반영`)}catch(e){}finally{SYNCING=false}}
-setInterval(liveSync,10000);window.addEventListener('focus',liveSync);
+ const ch=await pollChanges();if(!ch)return;ROWS=await api('/api/listings');
+ if(!(window.__rcSkip&&Date.now()-window.__rcSkip<20000))RECON=null;if(!$('#drawer').classList.contains('on')&&!$('#t-list').hidden)renderList();
+ $('#info').textContent=`매물 ${ROWS.length.toLocaleString()}건 · 실시간 ${new Date().toTimeString().slice(0,5)}`;toast(`새 변경 ${ch.n}건 반영`)}catch(e){}finally{SYNCING=false}}
+let LASTSYNC=0;setInterval(liveSync,30000);window.addEventListener('focus',()=>{if(Date.now()-LASTSYNC>10000){LASTSYNC=Date.now();liveSync()}});
 $('#refresh').onclick=async()=>{const b=$('#refresh');if(b.disabled)return;b.disabled=true;b.textContent='⏳ 불러오는 중…';
- try{if(typeof _cache!=='undefined'){_cache.listings=null;_cache.naver=null;_cache.rt=null}
+ try{if(typeof _cache!=='undefined'){window.jeiRefresh?.();_cache.listings=null;_cache.naver=null;_cache.rt=null}
   ROWS=await api('/api/listings');try{RT=await api('/api/rt');rtIndex()}catch(e){}RECON=null;
   $('#info').textContent=`매물 ${ROWS.length.toLocaleString()}건 · ${new Date().toTimeString().slice(0,5)} 새로고침`;
   const t=document.querySelector('#tabs button.on')?.dataset.t;RTA=null;RTAIDX=null;({today:renderToday,recon:loadRecon,manki:renderManki,list:renderList,co:renderCo,rta:renderRta,call:renderCall})[t]?.();toast('최신 내용으로 새로고침했습니다')}
@@ -2332,7 +2393,7 @@ async function boot(){const g=$('#gate'),m=$('#gate-msg');
     if(error||data!=='ok'){sm.textContent=error?'신청에 실패했어요: '+error.message:(msg[data]||'신청에 실패했어요.');if(!error&&data==='captcha'||data==='exists')loadCap();return}
     m.innerHTML='<div style="margin-top:6px;line-height:1.7"><b>신청이 완료됐어요 ✅</b><br>관리자가 승인하면 방금 만든 아이디로 들어올 수 있어요.</div><button type="button" id="su-ok" class="b" style="padding:10px;font-size:16px;margin-top:8px">로그인 화면으로</button>';$('#su-ok').onclick=showLogin}};
   showLogin();return}
- try{const {data:st}=await sb.rpc('my_status');if(st==='pending'||st==='none'){m.innerHTML='<div style="margin-top:6px;line-height:1.7"><b>'+(st==='pending'?'승인 대기 중이에요 ⏳':'이 계정은 아직 사용 권한이 없어요')+'</b><br>관리자(실장)가 승인하면 쓸 수 있어요.</div><div style="display:flex;gap:8px;margin-top:8px"><button type="button" id="st-rf" class="b" style="padding:10px;font-size:16px">새로고침</button><button type="button" id="st-lo" class="b" style="padding:10px;font-size:16px;background:#fff;color:#14213d;border:1px solid #c9d1de">로그아웃</button></div>';$('#st-rf').onclick=()=>location.reload();$('#st-lo').onclick=async()=>{await sb.auth.signOut();location.reload()};return}}catch(e){}
+ try{const {data:st}=await sb.rpc('my_status');if(st==='pending'||st==='none'){m.innerHTML='<div style="margin-top:6px;line-height:1.7"><b>'+(st==='pending'?'승인 대기 중이에요 ⏳':'이 계정은 아직 사용 권한이 없어요')+'</b><br>관리자(실장)가 승인하면 쓸 수 있어요.</div><div style="display:flex;gap:8px;margin-top:8px"><button type="button" id="st-rf" class="b" style="padding:10px;font-size:16px">새로고침</button><button type="button" id="st-lo" class="b" style="padding:10px;font-size:16px;background:#fff;color:#14213d;border:1px solid #c9d1de">로그아웃</button></div>';$('#st-rf').onclick=()=>location.reload();$('#st-lo').onclick=async()=>{await window.jeiCacheClear?.();await sb.auth.signOut();location.reload()};return}}catch(e){}
  try{window.__admin=(await sb.rpc('is_admin')).data===true}catch(e){window.__admin=false}
  try{window.__boss=(await sb.rpc('is_boss')).data===true}catch(e){window.__boss=false}try{window.__admin=window.__boss&&(await sb.rpc('is_admin')).data===true}catch(e){window.__admin=false}
  const nm=session.user.user_metadata?.name;const full=((nm||'')+' '+(session.user.user_metadata?.role||'')).trim();try{whoShow(full,session.user.email)}catch(e){}if(!nm)loadNames().then(()=>{try{whoShow(uname(session.user.email),session.user.email)}catch(e){}});if(nm)localStorage.author=full;
