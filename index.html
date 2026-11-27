@@ -613,7 +613,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795744311"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795744370"></head><body>
 <header><b id="home-t" style="cursor:pointer" title="메인(매물장)으로">🏡 제이부동산 매물장</b><span id="who-b" hidden style="margin-left:10px;font-size:12.5px;font-weight:800;background:#fff6d6;color:#14213d;border:1px solid #e0c46a;border-radius:999px;padding:2px 10px;white-space:nowrap"></span><input id="pl-top" placeholder="🔎 통합조회" title="이름·전화번호·단지·메모 등 아무거나 + Enter: 매물장·손님상담일지·문자·협력업체 전체 검색" style="width:120px;min-width:90px;margin:0 8px;padding:3px 8px;border-radius:14px;border:1px solid var(--line);font-size:13px"><nav id="tabs">
 <button data-t="sise">💹 시세</button><button data-t="today" class="on">🏠 오늘</button><button data-t="list">매물장</button><button data-t="call">📞 전화 목록</button><button data-t="cs">📒 손님상담일지</button><button data-t="fee">💰 수수료</button><button data-t="cal">📅 달력</button><button data-t="work">🕘 내 근무</button><button data-t="brief">📰 정책·뉴스</button><button data-t="recon">네이버 광고 대조</button><button data-t="manki">만기 알림</button><button data-t="io">백업</button></nav>
 <span class="sp"></span><small id="info"></small><button class="fsb" id="fs-" title="글씨 작게">가−</button><button class="fsb" id="fs0" title="글씨 크기 원래대로">원본보기</button><button class="fsb" id="fs+" title="글씨 크게">가+</button><button id="refresh" title="최신 내용 다시 불러오기" style="font:inherit;font-size:13px;padding:5px 12px;border:1px solid #ffffff55;border-radius:6px;background:#ffffff1a;color:#fff;cursor:pointer">🔄 새로고침</button></header>
@@ -2322,7 +2322,7 @@ async function boot(){const g=$('#gate'),m=$('#gate-msg');
  try{const {data:st}=await sb.rpc('my_status');if(st==='pending'||st==='none'){m.innerHTML='<div style="margin-top:6px;line-height:1.7"><b>'+(st==='pending'?'승인 대기 중이에요 ⏳':'이 계정은 아직 사용 권한이 없어요')+'</b><br>관리자(실장)가 승인하면 쓸 수 있어요.</div><div style="display:flex;gap:8px;margin-top:8px"><button type="button" id="st-rf" class="b" style="padding:10px;font-size:16px">새로고침</button><button type="button" id="st-lo" class="b" style="padding:10px;font-size:16px;background:#fff;color:#14213d;border:1px solid #c9d1de">로그아웃</button></div>';$('#st-rf').onclick=()=>location.reload();$('#st-lo').onclick=async()=>{await sb.auth.signOut();location.reload()};return}}catch(e){}
  try{window.__admin=(await sb.rpc('is_admin')).data===true}catch(e){window.__admin=false}
  try{window.__boss=(await sb.rpc('is_boss')).data===true}catch(e){window.__boss=false}try{window.__admin=window.__boss&&(await sb.rpc('is_admin')).data===true}catch(e){window.__admin=false}
- const nm=session.user.user_metadata?.name;const full=((nm||'')+' '+(session.user.user_metadata?.role||'')).trim();try{whoShow(full,session.user.email)}catch(e){}if(nm)localStorage.author=full;
+ const nm=session.user.user_metadata?.name;const full=((nm||'')+' '+(session.user.user_metadata?.role||'')).trim();try{whoShow(full,session.user.email)}catch(e){}if(!nm)loadNames().then(()=>{try{whoShow(uname(session.user.email),session.user.email)}catch(e){}});if(nm)localStorage.author=full;
  if(!/[?&]pane=/.test(location.search))sb.from('access_log').insert({email:session.user.email,name:nm||'',kind:isNew?'login':'open',ua:navigator.userAgent.slice(0,200)}).then(()=>{});
  g.remove();try{await load()}catch(err){alert('불러오기 실패: '+err.message)}}
 boot();
