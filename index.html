@@ -760,7 +760,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795770389"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795770615"></head><body>
 <style>
 /* 11/27 디자인 5번(주황) — 아래는 주간모드, 야간모드는 맨 끝 theme 스크립트가 이 색들을 어둡게 바꿔 줌 */
 :root{--navy:#231916;--gold:#E4742C;--gold2:#B4541A;--acc:#B4541A;--bg:#f8f5f3;--line:#e9e0da}
@@ -1320,7 +1320,7 @@ const VD_CATS=['평면도','분양대행사','인테리어','철거','이사·�
 async function vendorOpen(){let V=[];const load=async()=>{try{V=(await api('/api/vendor_list'))||[]}catch(e){alert('불러오지 못했어요: '+e.message)}};await load();let cat='전체',edit=null;
  const el=simpleModal('🏢 협력업체',`<div id="vd-b"></div>`),B0=el.querySelector('#vd-b');
  const save=async v=>{await api('/api/vendor_set',{method:'POST',body:JSON.stringify({v})});await load()};
- const draw=()=>{const L=V.filter(v=>cat==='전체'||v.cat===cat);
+ const draw=()=>{const ci=c=>{const i=VD_CATS.indexOf(c);return i<0?99:i},L=V.filter(v=>cat==='전체'||v.cat===cat).sort((a,b)=>ci(a.cat)-ci(b.cat)||String(a.name||'').localeCompare(String(b.name||''),'ko'));
   if(edit){const v=edit;B0.innerHTML=`<div style="display:grid;gap:6px;grid-template-columns:repeat(auto-fill,minmax(180px,1fr))"><label>분류<select id="vd-cat" style="width:100%">${VD_CATS.map(c=>`<option ${v.cat===c?'selected':''}>${c}</option>`).join('')}</select></label><label>상호<input id="vd-name" value="${esc(v.name||'')}" style="width:100%"></label><label>담당자<input id="vd-person" value="${esc(v.person||'')}" style="width:100%"></label><label>연락처<input id="vd-tel" value="${esc(v.tel||'')}" style="width:100%"></label></div><label style="display:block;margin-top:6px">상품·서비스 설명<textarea id="vd-desc" rows="2" style="width:100%">${esc(v.desc||'')}</textarea></label><div style="margin-top:8px;display:flex;gap:6px"><button class="b p" id="vd-ok">저장</button><button class="b" id="vd-cancel">취소</button>${v.id?'<button class="b" id="vd-del" style="color:#e03131">삭제</button>':''}</div>`;
    B0.querySelector('#vd-cancel').onclick=()=>{edit=null;draw()};
    B0.querySelector('#vd-ok').onclick=async()=>{const o={...v,cat:B0.querySelector('#vd-cat').value,name:B0.querySelector('#vd-name').value.trim(),person:B0.querySelector('#vd-person').value.trim(),tel:vdFmt(B0.querySelector('#vd-tel').value.trim()),desc:B0.querySelector('#vd-desc').value.trim()};if(!o.name)return alert('상호를 적어 주세요');o.id=o.id||('v'+Date.now().toString(36));try{await save(o);edit=null;draw()}catch(e){alert('저장 실패: '+e.message)}};
