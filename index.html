@@ -764,7 +764,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795838457"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795838805"></head><body>
 <style>
 /* 11/27 디자인 5번(주황) — 아래는 주간모드, 야간모드는 맨 끝 theme 스크립트가 이 색들을 어둡게 바꿔 줌 */
 :root{--navy:#231916;--gold:#E4742C;--gold2:#B4541A;--acc:#B4541A;--bg:#f8f5f3;--line:#e9e0da}
@@ -1305,7 +1305,7 @@ window.addEventListener('popstate',async e=>{if(window.__popres){const r=window.
  try{const pm=document.getElementById('promo');if(pm&&s.jv!=='modal')pm.remove();
   if($('#drawer').classList.contains('on')&&s.jv!=='drawer')await closeDrawer();
   const tab=t=>{if(t&&curTabId()!==t){window.__keepScroll=true;document.querySelector(`#tabs button[data-t="${t}"]`)?.click();window.__keepScroll=false}};
-  if(s.jv==='tab'){tab(s.t);if(s.t==='cs'&&CSP&&$('#cs-detail')){CSP='';$('#cs-detail').innerHTML=''}}
+  if(s.jv==='tab'){tab(s.t);if(s.t==='cs'&&CSP&&$('#cs-detail')){CSP='';csKeep($('#cs-detail'));$('#cs-detail').innerHTML=''}}
   else if(s.jv==='cs'){tab('cs');drawCSDetail(s.p,true)}
   else if(s.jv==='modal'){tab(s.t);if(!document.getElementById('promo')){if(s.pl!=null)phoneLookupOpen(s.pl);else history.back()}else if(pm&&s.pl==null){}}
   else if(s.jv==='drawer'){if(!$('#drawer').classList.contains('on'))history.back()}
@@ -1855,6 +1855,10 @@ function csPagesBind(el,phone){const re=()=>drawCSDetail(phone);
  el.querySelectorAll('[data-cpph]').forEach(b=>b.onclick=async()=>{const ph=(prompt('손님 전화번호를 고쳐 주세요. (비밀번호는 그대로예요)')||'').replace(/\D/g,'');if(!ph)return;if(ph.length<8)return alert('전화번호를 다시 확인해 주세요');try{await api('/api/client_setphone',{method:'POST',body:JSON.stringify({token:b.dataset.cpph,phone:ph})});toast('전화번호를 고쳤어요');CSL=await api('/api/consult_list');drawCSDetail(ph)}catch(e){alert('실패: '+e.message)}});
  el.querySelectorAll('[data-cpl]').forEach(b=>b.onclick=()=>navigator.clipboard.writeText(CP_SITE+b.dataset.cpl).then(()=>toast('링크를 복사했어요 (비밀번호는 따로)')));
  el.querySelectorAll('[data-cpd]').forEach(b=>b.onclick=async()=>{if(!confirm('이 손님 페이지를 지울까요? 링크가 바로 닫혀요.'))return;await api('/api/client_delete?token='+encodeURIComponent(b.dataset.cpd),{method:'POST'});toast('지웠어요');re()})}
+// 저장 전에 적어 둔 칸은 화면을 다시 그리거나 다른 손님에 갔다 와도 남김 (새로고침하면 사라짐)
+const CSDRAFT={},CS_KEEP=['cs-name','cs-ph','cs-cat','cs-deal','cs-staff','cs-stage','cs-stq','cs-first','cs-move','cs-dep','cs-rent','cs-text','cs-note','cs-pw','cs-d-tp','cs-d-amt','cs-d-dd','cs-d-cd','cs-d-cdt','cs-d-mid','cs-d-bal','cs-d-balt'];
+function csKeep(el){const k=el.dataset.csk;if(!k)return;for(const i of CS_KEEP){const e=el.querySelector('#'+i);if(!e||e.type==='hidden')continue;const d=e.options?(([...e.options].find(o=>o.defaultSelected)||e.options[0])||{}).value:e.defaultValue,m=CSDRAFT[k]||(CSDRAFT[k]={});if(e.value!==d)m[i]=e.value;else delete m[i]}}
+function csRestore(el){const m=CSDRAFT[el.dataset.csk]||{};for(const i in m){const e=el.querySelector('#'+i);if(!e||e.type==='hidden')continue;e.value=m[i];e.dispatchEvent(new Event('input',{bubbles:true}));if(e.options)e.dispatchEvent(new Event('change',{bubbles:true}))}}
 let CSB=null;   // 지금 손님 화면에서 '보여줄 매물' (담기 바구니와 합침)
 async function drawCSDetail(phone,fromPop){CSP=phone;const el=$('#cs-detail');if(phone&&!fromPop&&!window.__inPop&&(history.state||{}).p!==phone){try{history.pushState({jv:'cs',p:phone,t:'cs'},'')}catch(_){}}let L=[],P=[];
  if(phone){try{[L,P]=await Promise.all([api('/api/consult_get?phone='+encodeURIComponent(phone)),api('/api/client_list')]);P=P.filter(p=>p.phone===phone)}catch(e){el.textContent='못 불러왔어요: '+e.message;return}}
@@ -1875,6 +1879,7 @@ async function drawCSDetail(phone,fromPop){CSP=phone;const el=$('#cs-detail');if
   <label>처음 문의한 매물 <span class="mut">(손님이 처음 연락한 매물 · 단지 동 호로 찾거나 그대로 적기)</span><input id="cs-first" list="cs-first-dl" value="${esc(csLast(L,'first'))}" placeholder="예: 써밋 102 3815 / 네이버 광고 보고 문의" style="width:100%"><datalist id="cs-first-dl"></datalist></label>
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px"><label>입주일<input id="cs-move" value="${esc(live?.move_in||last('move_in'))}" placeholder="예: 12월 중" style="width:100%"></label>
   <label>희망보증금<input id="cs-dep" value="${esc(live?.want_deposit||last('want_deposit'))}" placeholder="예: 5억 이하" style="width:100%"></label><label>희망월세<input id="cs-rent" value="${esc(live?.want_rent||last('want_rent'))}" placeholder="예: 250 이하" style="width:100%"></label></div>`;
+ csKeep(el);el.dataset.csk=phone||'new';
  el.innerHTML=`<div class="cshd"><button class="b cs-back" id="cs-back">← 목록</button><h4 style="margin:0">${phone?esc(name||'이름 없음')+' · '+esc(fmtPh(phone)):'새 상담'}</h4>${csP2(last2(L)).map(x=>`<a href="tel:${esc(x.p)}" class="mut">${esc(fmtPh(x.p)+(x.l?' '+x.l:''))}</a>`).join('')}${phone?`<a href="tel:${esc(phone)}" class="mut">전화 걸기</a>`:''}<span style="margin-left:auto;display:flex;gap:6px">${phone?`<button class="b d" id="cs-delall">🗑 전체 삭제</button>`:''}<button class="b p" id="cs-add">저장</button></span></div>
  ${phone?`<div class="csec"><h4>📌 손님 정보·진행 상황</h4>${csStaffHtml(L)}<div style="display:grid;gap:8px;margin:8px 0;padding:8px 10px;border:1px solid var(--line);border-radius:6px">${infoH}
   </div>${csNextHtml(L)}${csStageHtml(phone,L)}${csCheckHtml(phone,L)}${csPagesHtml(P)}</div>${!window.SB_URL||window.__boss?csDocHtml(L):''}`:''}
@@ -1916,7 +1921,7 @@ ${phone?'':`<div class="csec"><h4>👤 손님 정보·조건</h4><div style="dis
   const det=[k==='mf'?'잔금일 '+bal+' · 관리사무소에 관리비 정산 요청':'',$('#cs-d-amt').value.trim()?'계약금액 '+$('#cs-d-amt').value.trim():'',bal&&k!=='bal'?'잔금일 '+bal:''].filter(Boolean).join('\n');
   b.disabled=true;api('/api/gcal_add',{method:'POST',body:JSON.stringify({tag:phone+'-'+k,title:ttl,date:d,details:det,time:k==='cd'?$('#cs-d-cdt').value:k==='bal'?$('#cs-d-balt').value:'',dur:60})}).then(r=>{if(r&&r.error)throw new Error(r.error);toast('호반제이 캘린더에 넣었어요 · '+d+(k==='cd'&&$('#cs-d-cdt').value?' '+$('#cs-d-cdt').value:k==='bal'&&$('#cs-d-balt').value?' '+$('#cs-d-balt').value:''))}).catch(e=>alert('캘린더 저장 실패: '+e.message)).finally(()=>b.disabled=false)});
  $('#cs-text-save').onclick=()=>$('#cs-add').click();
- $('#cs-back').onclick=()=>{if((history.state||{}).jv==='cs')history.back();else{CSP='';el.innerHTML=''}};if(innerWidth<=760)window.scrollTo(0,0);
+ $('#cs-back').onclick=()=>{csKeep(el);if((history.state||{}).jv==='cs')history.back();else{CSP='';el.innerHTML=''}};if(innerWidth<=760)window.scrollTo(0,0);
  $('#cs-text').onkeydown=e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)){e.preventDefault();$('#cs-add').click()}};
 
  const sg=$('#cs-stage');if(sg){sg.onchange=()=>{$('#cs-stl').hidden=!csCt(sg.value)};const sq=$('#cs-stq');sq.oninput=()=>{const ws=sq.value.trim().split(/\s+/);if(sq.value.trim().length<2)return;$('#cs-stq-dl').innerHTML=ROWS.filter(r=>ws.every(x=>cpUnit(r).includes(x))).slice(0,30).map(r=>`<option value="${esc(cpUnit(r))}">`).join('')}}
@@ -1924,7 +1929,7 @@ ${phone?'':`<div class="csec"><h4>👤 손님 정보·조건</h4><div style="dis
  const aq=$('#cs-add-q');aq.oninput=()=>{const w=aq.value.trim();const r=ROWS.find(r=>cpUnit(r)===w);if(r){if(!CSB.includes(r.id))CSB.push(r.id);aq.value='';drawB();return}
   if(w.length<2)return;const ws=w.split(/\s+/);$('#cs-add-dl').innerHTML=ROWS.filter(r=>ws.every(x=>cpUnit(r).includes(x))).slice(0,30).map(r=>`<option value="${esc(cpUnit(r))}">`).join('')};
  el.querySelectorAll('[data-csopen]').forEach(a=>a.onclick=e=>{e.preventDefault();openDrawer(+a.dataset.csopen)});
- const csAfterDel=async ph=>{try{CSL=await api('/api/consult_list');drawCSList()}catch(_){}drawCSDetail(ph)};
+ const csAfterDel=async ph=>{if(!ph){delete CSDRAFT[el.dataset.csk];el.dataset.csk=''}try{CSL=await api('/api/consult_list');drawCSList()}catch(_){}drawCSDetail(ph)};
  el.querySelectorAll('[data-csdel]').forEach(a=>a.onclick=async e=>{e.preventDefault();if(!confirm('이 기록 한 줄을 지울까요? 되돌릴 수 없어요.'))return;try{await api('/api/consult_delete',{method:'POST',body:JSON.stringify({id:+a.dataset.csdel})});toast('기록을 지웠어요');csAfterDel(phone)}catch(er){alert('실패: '+er.message)}});
  el.querySelectorAll('[data-csedit]').forEach(a=>a.onclick=e=>{e.preventDefault();const id=+a.dataset.csedit,box=el.querySelector(`[data-cstx="${id}"]`),x=L.find(y=>y.id===id);if(!box||box.querySelector('textarea'))return;
   box.style.whiteSpace='normal';box.innerHTML=`<textarea rows="3" style="width:100%">${esc(x?.text||'')}</textarea><button class="b p">저장</button> <button class="b">취소</button>`;const [ta]=box.getElementsByTagName('textarea'),[sv,cc]=box.getElementsByTagName('button');ta.focus();
@@ -1954,10 +1959,11 @@ ${phone?'':`<div class="csec"><h4>👤 손님 정보·조건</h4><div style="dis
    if(dCh)await api('/api/consult_deal_set',{method:'POST',body:JSON.stringify({phone:ph,...D1})});
    if(sgV!=='상담중'){await api('/api/consult_stage_set',{method:'POST',body:JSON.stringify({phone:ph,stage:sgV,listing_id:sgL})});CST={};for(const x of await api('/api/consult_stage'))CST[x.phone]=x;await csOurSync(ph,sgV,sgL||(CST[ph]||{}).listing_id)}
    const sf=$('#cs-staff')?.value;if(sf)await api('/api/consult_staff_set',{method:'POST',body:JSON.stringify({phone:ph,staff:sf})});
+   delete CSDRAFT[el.dataset.csk];el.dataset.csk='';
    CSL=await api('/api/consult_list');drawCSList();await drawCSDetail(ph);toast('저장했어요');
    if(txt){$('#cs-result').innerHTML=`<div class="note" style="margin-top:8px;white-space:pre-wrap;background:#fff7e6;padding:8px;border-radius:6px">${esc(txt)}</div><button class="b p" id="cs-copy">손님에게 보낼 문구 복사</button>`;$('#cs-copy').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('복사했어요'));navigator.clipboard.writeText(txt).catch(()=>{})}}
   catch(e){btn.disabled=false;alert('저장 실패: '+e.message)}};
- if(CSL)drawCSList()}
+ csRestore(el);if(CSL)drawCSList()}
 const CS_NOEDIT=['check','deal','stage','staff','cat','next','phone2'];
 const csDealOf=L=>{let s=null;for(const x of L)if(x.kind==='deal')s=x.text;try{return s?JSON.parse(s):{}}catch(_){return {}}};
 const csDealTxt=t=>{let v={};try{v=JSON.parse(t)}catch(_){}return [['계약 거래유형','tp'],['계약금액','amt'],['계약금 입금일','dd'],['계약서 작성일','cd'],['중도금일','mid'],['입주일(잔금일)','bal']].map(([l,k])=>l+' '+(v[k]||'-')+((k==='cd'&&v.cdt)||(k==='bal'&&v.balt)?' '+(k==='cd'?v.cdt:v.balt):'')).join(' · ')};
