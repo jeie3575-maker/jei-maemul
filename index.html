@@ -304,9 +304,10 @@ const CLOUD = true;
 let _cache = {listings: null, logs: null, naver: null, rt: null};
 
 async function all(q) { // 1000행 제한 넘겨서 전부 가져오기
-  const out = []; for (let i = 0; ; i += 1000) {
-    const {data, error} = await q().range(i, i + 999); if (error) throw new Error(error.message);
-    out.push(...data); if (data.length < 1000) return out;
+  const page = async i => { const {data, error} = await q().range(i, i + 999); if (error) throw new Error(error.message); return data };
+  const out = await page(0); if (out.length < 1000) return out;
+  for (let i = 1000; ; i += 8000) {   // 11/28 첫 묶음이 꽉 차면 다음부터 8묶음씩 동시에 받음
+    for (const d of await Promise.all(Array.from({length: 8}, (_, n) => page(i + n * 1000)))) { out.push(...d); if (d.length < 1000) return out }
   }
 }
 const kst = s => { if (!s) return ''; const d = new Date(s); const p = n => String(n).padStart(2, '0');
@@ -322,8 +323,9 @@ function jeiDevOk() { try { return localStorage.getItem('jei_device') === '1' } 
 async function jeiDevice(on) { try { localStorage.setItem('jei_device', on ? '1' : '0'); if (on) { localStorage.setItem('jei_dev_at', String(Date.now())); const k = Object.keys(sessionStorage).find(x => x.startsWith('sb-') && _isTok(x)); if (k) _store.setItem(k, sessionStorage.getItem(k)) } else { const t = localStorage.getItem('jei_auth'); if (t) sessionStorage.setItem(sb.auth.storageKey, t); localStorage.removeItem('jei_auth'); localStorage.removeItem('jei_dev_at') } } catch (e) {} if (!on) return IDB.clear(); if (_owner) await IDB.set('uid', _owner); if (_base) saveBase() }
 if (!jeiDevOk()) IDB.clear();
 const _uid = async () => { try { return (await sb.auth.getSession()).data.session?.user.id || '' } catch (e) { return '' } };
-let _owner = null;
-async function cacheOwner() { const u = await _uid(); if (_owner === u) return u; if ((await IDB.get('uid')) !== u) { await IDB.clear(); await IDB.set('uid', u); _base = null; for (const k in _cache) _cache[k] = null } _owner = u; return u }  // 다른 계정이면 이전 저장분 삭제
+let _owner = null, _ownerP = null;
+function cacheOwner() { return _ownerP ||= _cacheOwner().finally(() => { _ownerP = null }) }  // 동시에 불려도 한 번만 확인
+async function _cacheOwner() { const u = await _uid(); if (_owner === u) return u; if ((await IDB.get('uid')) !== u) { await IDB.clear(); await IDB.set('uid', u); _base = null; for (const k in _cache) _cache[k] = null } _owner = u; return u }  // 다른 계정이면 이전 저장분 삭제
 
 async function loadRef(name) {
   if (_cache[name]) return _cache[name];
@@ -760,7 +762,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795834999"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795835201"></head><body>
 <style>
 /* 11/27 디자인 5번(주황) — 아래는 주간모드, 야간모드는 맨 끝 theme 스크립트가 이 색들을 어둡게 바꿔 줌 */
 :root{--navy:#231916;--gold:#E4742C;--gold2:#B4541A;--acc:#B4541A;--bg:#f8f5f3;--line:#e9e0da}
@@ -939,7 +941,7 @@ document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{if(!window._
 function chips(el,opts,set,cb,counts){el.innerHTML=opts.map(o=>`<span class="chip ${set.has(o)?'on':''}" data-v="${esc(o)}">${esc(o)}${counts?`<i>${counts[o]||0}</i>`:''}</span>`).join('');
  el.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{const v=c.dataset.v;set.has(v)?set.delete(v):set.add(v);cb()})}
 
-async function load(){META=await api('/api/meta');fltLoad();ROWS=await api('/api/listings');try{RT=await api('/api/rt');rtIndex()}catch(e){RT=[]};$('#info').textContent=`매물 ${ROWS.length.toLocaleString()}건`;
+async function load(){META=await api('/api/meta');fltLoad();const rtP=api('/api/rt').catch(()=>[]);ROWS=await api('/api/listings');try{RT=await rtP;rtIndex()}catch(e){RT=[]};$('#info').textContent=`매물 ${ROWS.length.toLocaleString()}건`;
  renderList()}
 
 // ---- 세부 필터: 타입(끝 글자 묶음)·동·층·향·평형, 검색 대상 ----
@@ -2546,8 +2548,7 @@ async function boot(){const g=$('#gate'),m=$('#gate-msg');
     m.innerHTML='<div style="margin-top:6px;line-height:1.7"><b>신청이 완료됐어요 ✅</b><br>관리자가 승인하면 방금 만든 아이디로 들어올 수 있어요.</div><button type="button" id="su-ok" class="b" style="padding:10px;font-size:16px;margin-top:8px">로그인 화면으로</button>';$('#su-ok').onclick=showLogin}};
   showLogin();return}
  try{const {data:st}=await sb.rpc('my_status');if(st==='pending'||st==='none'){m.innerHTML='<div style="margin-top:6px;line-height:1.7"><b>'+(st==='pending'?'승인 대기 중이에요 ⏳':'이 계정은 아직 사용 권한이 없어요')+'</b><br>관리자(실장)가 승인하면 쓸 수 있어요.</div><div style="display:flex;gap:8px;margin-top:8px"><button type="button" id="st-rf" class="b" style="padding:10px;font-size:16px">새로고침</button><button type="button" id="st-lo" class="b" style="padding:10px;font-size:16px;background:#fff;color:#14213d;border:1px solid #c9d1de">로그아웃</button></div>';$('#st-rf').onclick=()=>location.reload();$('#st-lo').onclick=async()=>{await window.jeiCacheClear?.();await sb.auth.signOut();location.reload()};return}}catch(e){}
- try{window.__admin=(await sb.rpc('is_admin')).data===true}catch(e){window.__admin=false}
- try{window.__boss=(await sb.rpc('is_boss')).data===true}catch(e){window.__boss=false}try{window.__admin=window.__boss&&(await sb.rpc('is_admin')).data===true}catch(e){window.__admin=false}
+ {const yes=async f=>{try{return (await sb.rpc(f)).data===true}catch(e){return false}};const [bs,ad]=await Promise.all([yes('is_boss'),yes('is_admin')]);window.__boss=bs;window.__admin=bs&&ad}
  const nm=session.user.user_metadata?.name;const full=((nm||'')+' '+(session.user.user_metadata?.role||'')).trim();try{whoShow(full,session.user.email)}catch(e){}if(!nm)loadNames().then(()=>{try{whoShow(uname(session.user.email),session.user.email)}catch(e){}});if(nm)localStorage.author=full;
  if(!/[?&]pane=/.test(location.search))sb.from('access_log').insert({email:session.user.email,name:nm||'',kind:isNew?'login':'open',ua:navigator.userAgent.slice(0,200)}).then(()=>{});
  g.remove();try{await load()}catch(err){alert('불러오기 실패: '+err.message)}
