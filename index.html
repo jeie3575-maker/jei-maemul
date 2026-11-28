@@ -760,7 +760,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795778145"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795833116"></head><body>
 <style>
 /* 11/27 디자인 5번(주황) — 아래는 주간모드, 야간모드는 맨 끝 theme 스크립트가 이 색들을 어둡게 바꿔 줌 */
 :root{--navy:#231916;--gold:#E4742C;--gold2:#B4541A;--acc:#B4541A;--bg:#f8f5f3;--line:#e9e0da}
@@ -815,7 +815,7 @@ tr.g-가능,tr.g-급매가능,tr.g-공실,tr.g-퇴거예정{background:#fff1e7}t
   <div class="bar" id="fx-box" hidden style="display:none!important"><span class="mut">층</span><div class="chips" id="f-flp"></div><input id="fl1" inputmode="numeric" placeholder="부터" style="width:52px">~<input id="fl2" inputmode="numeric" placeholder="까지" style="width:52px"><span class="mut">| 향</span><div class="chips" id="f-dir"></div><span class="mut">| 평형</span><input id="py1" inputmode="decimal" placeholder="부터" style="width:52px">~<input id="py2" inputmode="decimal" placeholder="까지" style="width:52px"></div>
  <div class="bar" id="f-on" hidden style="display:none!important"></div>
  <div class="bar"><span class="mut">가능여부</span><div class="chips" id="f-avail"></div><span class="mut" hidden>| 광고타입</span><div class="chips" id="f-adt" hidden></div><span class="mut">| 용도</span><div class="chips" id="f-use"></div>
-  <span class="sp" style="flex:1"></span><span class="mut" style="font-size:12px">칸을 더블클릭하면 바로 수정</span> <span id="cnt" class="mut"></span><button class="b" id="cp-open" title="담은 매물을 들고 📒 상담일지로 가서 손님 페이지를 같이 만듭니다">👤 손님 페이지</button><button class="b" id="dir-open" title="동·라인별로 방향을 정하면 그 라인의 빈 방향 호실을 한 번에 채웁니다">🧭 라인별 방향표</button><button class="b p" id="new">+ 매물 등록</button></div>
+  <span class="sp" style="flex:1"></span><span class="mut" style="font-size:12px">칸을 더블클릭하면 바로 수정</span> <span id="cnt" class="mut"></span><button class="b" id="cp-open" title="담은 매물을 들고 📒 상담일지로 가서 손님 페이지를 같이 만듭니다">👤 손님 페이지</button><button class="b" id="bd-open" onclick="boardOpen()" title="단지별 동·호 배치표를 색으로 봅니다">🏢 동·호 배치표</button><button class="b" id="dir-open" title="동·라인별로 방향을 정하면 그 라인의 빈 방향 호실을 한 번에 채웁니다">🧭 라인별 방향표</button><button class="b p" id="new">+ 매물 등록</button></div>
  <div id="dirpanel" hidden></div><div id="list"></div>
 </section>
 <div id="t-co" hidden><input type="checkbox" id="co-empty" hidden><div id="co"></div></div>
