@@ -760,7 +760,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795833116"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795833236"></head><body>
 <style>
 /* 11/27 디자인 5번(주황) — 아래는 주간모드, 야간모드는 맨 끝 theme 스크립트가 이 색들을 어둡게 바꿔 줌 */
 :root{--navy:#231916;--gold:#E4742C;--gold2:#B4541A;--acc:#B4541A;--bg:#f8f5f3;--line:#e9e0da}
@@ -1649,7 +1649,7 @@ async function memOpen(){
 // ---- 11/17 상단 메뉴 묶음: 매물장 · 상담일지 · 매물관리▾ · 정보실▾ ----
 (function(){const nav=document.getElementById('tabs');if(!nav)return;
  const B=t=>nav.querySelector(`button[data-t="${t}"]`),cloud=!!window.SB_URL;
- const G=[{n:'매물관리',items:[['@box','📨 문자함'],['@ct','계약 안내·특약'],['@vd','협력업체'],['@bd','🏢 동·호 배치표'],['call','전화 목록'],['recon','네이버 광고 대조'],['manki','만기 알림']]},{n:'정보실',items:[['brief','정책·뉴스'],['@dir','라인별 방향표'],['sise','시세'],['io','백업']]},{n:'설정',items:[['@man','매물장 사용설명서'],['@rc','광고 대조 확인 설정'],['@sms','문자 문구 관리'],['@qr','홈페이지 QR'],['@home','폰 홈 화면에 추가']]}];
+ const G=[{n:'매물관리',items:[['@box','📨 문자함'],['@ct','계약 안내·특약'],['@vd','협력업체'],['call','전화 목록'],['recon','네이버 광고 대조'],['manki','만기 알림']]},{n:'정보실',items:[['brief','정책·뉴스'],['@dir','라인별 방향표'],['sise','시세'],['io','백업']]},{n:'설정',items:[['@man','매물장 사용설명서'],['@rc','광고 대조 확인 설정'],['@sms','문자 문구 관리'],['@qr','홈페이지 QR'],['@home','폰 홈 화면에 추가']]}];
  const grp=new Set();G.forEach(g=>g.items.forEach(([t])=>{if(!t.startsWith('@')){grp.add(t);const b=B(t);if(b)b.dataset.g='1'}}));
  [B('list'),B('cs'),B('fee'),B('cal')].forEach(b=>b&&nav.appendChild(b));
  const dirb=document.getElementById('dir-open');if(dirb)dirb.style.display='none';
