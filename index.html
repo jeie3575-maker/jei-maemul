@@ -765,7 +765,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795840307"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795851323"></head><body>
 <style>
 /* 11/27 디자인 5번(주황) — 아래는 주간모드, 야간모드는 맨 끝 theme 스크립트가 이 색들을 어둡게 바꿔 줌 */
 :root{--navy:#231916;--gold:#E4742C;--gold2:#B4541A;--acc:#B4541A;--bg:#f8f5f3;--line:#e9e0da}
@@ -2883,7 +2883,7 @@ const t=setInterval(()=>{if(typeof META!=='undefined'&&META&&typeof ROWS!=='unde
     const tt=e.target.closest('.tt[data-tid]');if(tt){const t=TK.find(x=>x.id===tt.dataset.tid);if(t)tmodal(t);return}
     if(e.target.id==='tk-p'){const b=e.target;b.dataset.p=b.dataset.p==='personal'?'shared':'personal';b.textContent=b.dataset.p==='personal'?'🔒':'👥';return}});
    sd.addEventListener('change',e=>{const ly=e.target.dataset.ly;if(ly){LY[ly]=e.target.checked;try{localStorage.caly=JSON.stringify(LY)}catch(_){}if(ly==='hol'&&e.target.checked){load()}else draw(true);return}const ck=e.target.dataset.tck;if(ck)tToggle(ck)});
-   sd.addEventListener('keydown',async e=>{if(e.target.id!=='tk-t'||e.key!=='Enter')return;const ti=e.target.value.trim();if(!ti)return;const due=document.getElementById('tk-d').value||null,sc=document.getElementById('tk-p').dataset.p==='personal'?'personal':'shared';e.target.value='';const pp=tkParse(ti,'');const r=await sb.from('cal_tasks').insert({title:pp.ti,due,note:tkMk('',pp.tm),scope:sc,by_name:ME||'',owner:UID||undefined}).select().single();if(r.error)return alert('할 일을 만들 수 없어요: '+r.error.message);TK.unshift(r.data);gSync(r.data);draw(true)});
+   sd.addEventListener('keydown',async e=>{if(e.target.id!=='tk-t'||e.key!=='Enter'||e.isComposing)return;const ti=e.target.value.trim();if(!ti)return;const due=document.getElementById('tk-d').value||null,sc=document.getElementById('tk-p').dataset.p==='personal'?'personal':'shared';e.target.value='';const pp=tkParse(ti,'');const r=await sb.from('cal_tasks').insert({title:pp.ti,due,note:tkMk('',pp.tm),scope:sc,by_name:ME||'',owner:UID||undefined}).select().single();if(r.error)return alert('할 일을 만들 수 없어요: '+r.error.message);TK.unshift(r.data);gSync(r.data);{const cur=document.getElementById('tk-t'),had=!!cur&&document.activeElement===cur,v=cur?cur.value:'';if(had)cur.blur();draw(true);const nx=document.getElementById('tk-t');if(nx){nx.value=v;if(had)nx.focus({preventScroll:true})}}});
    {let wl=false,wt=null;cv.addEventListener('wheel',e=>{if(V!=='month'||SQ||e.ctrlKey)return;const d=e.target.closest('.gc-dots');if(d&&d.scrollHeight>d.clientHeight+2)return;e.preventDefault();clearTimeout(wt);wt=setTimeout(()=>{wl=false},200);if(wl||Math.abs(e.deltaY)<6)return;wl=true;document.getElementById(e.deltaY>0?'cal-n':'cal-p').click()},{passive:false})}
    cv.addEventListener('mousedown',e=>{if(e.target.closest('[data-tck]')){e.preventDefault();return}if(e.target.closest('#tsc'))timeDrag(e);else if(V==='month'&&!SQ)monthDrag(e)});
    cv.addEventListener('click',e=>{if(window.__gcNoClick)return;const ck=e.target.closest('[data-tck]');if(ck){e.stopPropagation();tToggle(ck.dataset.tck);return}if(e.target.id==='cal-retry'){load();return}
