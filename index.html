@@ -580,8 +580,8 @@ async function unitInfo(id) {
   const names = DN[L.danji || ''] || []; const hm = /(\d{3,4})/.exec(L.ho || ''); const dong = normDong(L.dong); const fl = hoFloor(L.ho);
   const exact = [], sameFloor = [];
   const K = ['단지', '거래', '계약일', '층', '전용㎡', '예상호실', '후보수', '매매가(만)', '보증금(만)', '월세(만)', '계약기간', '만기', '신규/갱신'];
-  for (const r of rt) { if (!names.includes(r['단지'])) continue; let hit = false;
-    if (hm) for (const x of String(r['예상호실'] || '').split(',').map(s => s.trim())) { const m = /^(?:([A-Z0-9]+)동\s*)?(\d{3,4})호/.exec(x); if (m && m[2] === hm[1] && (!m[1] || !dong || m[1] === dong)) hit = true }
+  for (const r of rt) { const od = r['장부'] ? rtOwn(L, r) : null; if (r['장부'] ? od === null : !(names.includes(r['단지']) || (L.danji === '에테르' && r['단지'] === '에테르나인용산'))) continue; let hit = false; const dg = r['장부'] ? od : dong; const rd = r['동'] && !String(r['단지']).endsWith('2단지') ? String(r['동']).replace(/동$/, '') : '';
+    if (hm) for (const x of String(r['예상호실'] || '').split(',').map(s => s.trim())) { const m = /^(?:([A-Z0-9]+)동\s*)?(\d{3,4})호/.exec(x); if (m && m[2] === hm[1] && (!(m[1] || rd) || !dg || (m[1] || rd) === dg)) hit = true }
     const row = Object.fromEntries(K.map(k => [k, r[k]])); if (hit) exact.push(row); else if (fl && r['층'] === fl) sameFloor.push(row) }
   exact.sort((a, b) => b['계약일'] < a['계약일'] ? -1 : 1); sameFloor.sort((a, b) => b['계약일'] < a['계약일'] ? -1 : 1);
   const ads = rows.filter(n => names.includes(n['단지']) && danjiMatch(L, n['단지']) && dongOk(L, n) && floorOk(fl, n['층'], n['총층']) && typeOk(L.typ, n['타입']))
@@ -760,7 +760,7 @@ async function api(u, o = {}) {
   }
 }
 </script>
-<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795833508"></head><body>
+<style>#tabs button[data-t=io],#tg{display:none}</style><meta name="jei-build" content="1795834999"></head><body>
 <style>
 /* 11/27 디자인 5번(주황) — 아래는 주간모드, 야간모드는 맨 끝 theme 스크립트가 이 색들을 어둡게 바꿔 줌 */
 :root{--navy:#231916;--gold:#E4742C;--gold2:#B4541A;--acc:#B4541A;--bg:#f8f5f3;--line:#e9e0da}
@@ -882,13 +882,16 @@ const won=v=>{if(v==null||v==='')return'';v=Math.round(v);const e=Math.floor(v/1
 const kinds=d=>{d=(d||'').replace('매매완료','');const k=[];if(/매매|급매/.test(d))k.push('매매');if(d.includes('임대전세'))k.push('전세');if(/임대월세|반전세|단기/.test(d))k.push('월세');return k};
 // ---- 실거래 연결 ----
 let RT=null,RTIDX=null;const DNM={"래미안":["래미안용산더센트럴"],"써밋":["용산푸르지오써밋"],"호반":["용산호반써밋에이디션"],"DK":["DK밸리뷰용산"],"시티파크":["용산시티파크1단지","용산시티파크2단지"],"파크타워":["파크타워"],"아스테리움":["아스테리움용산"],"에테르":["에테르나인용산"]};
+// rt_complexes.py 추가 단지: 신고 행의 '장부'=[[장부 단지, 장부 동 칸 정규식]] → 이 매물의 것이면 비교할 동, 아니면 null
+function rtOwn(r,x){for(const [dj,pat] of x['장부']||[]){if(dj!==r.danji)continue;const s=r.dong||'';if(pat&&!new RegExp(pat).test(s))continue;const m=pat?/([A-Za-z]|\d+)\s*동(?!자)/.exec(s):/^\s*([A-Za-z]|\d+)/.exec(s);return m?m[1].toUpperCase():''}return null}
 const nDong=s=>{const m=/^\s*([A-Za-z]|\d+)/.exec(s||'');return m?m[1].toUpperCase():''};
-function rtIndex(){RTIDX={};for(const r of RT){(RTIDX[r['단지']]||=[]).push(r);r._hos=String(r['예상호실']||'').split(',').map(x=>/^\s*(?:([A-Z0-9]+)동\s*)?(\d{3,4})호/.exec(x.trim())).filter(Boolean).map(m=>[m[1]||'',m[2]])}}
+function rtIndex(){RTIDX={};for(const r of RT){(RTIDX[r['단지']]||=[]).push(r);const od=r['동']&&!String(r['단지']).endsWith('2단지')?String(r['동']).replace(/동$/,''):'';r._hos=String(r['예상호실']||'').split(',').map(x=>/^\s*(?:([A-Z0-9]+)동\s*)?(\d{3,4})호/.exec(x.trim())).filter(Boolean).map(m=>[m[1]||od,m[2]])}}
 const rtPrice=r=>r['거래']==='매매'?'매 '+won(r['매매가(만)']):r['거래']==='전세'?'전 '+won(r['보증금(만)']):'월 '+won(r['보증금(만)'])+'/'+(r['월세(만)']||0);
 const med=a=>{if(!a.length)return null;a=a.slice().sort((x,y)=>x-y);return a[Math.floor(a.length/2)]};
-function rtFor(r){if(r._rt)return r._rt;const names=DNM[r.danji]||[];let pool=[];for(const n of names)pool=pool.concat(RTIDX?.[n]||[]);
+function rtFor(r){if(r._rt)return r._rt;const names=DNM[r.danji]||[];let pool=[];for(const n of names)pool=pool.concat((RTIDX?.[n]||[]).filter(x=>!x['장부']));
+ const ext=(RT||[]).filter(x=>x['장부']&&rtOwn(r,x)!==null);pool=pool.concat(ext);
  if(r.danji==='시티파크'){const d=r.dong||'';if(d.includes('1단지'))pool=pool.filter(x=>x['단지'].endsWith('1단지'));if(d.includes('2단지'))pool=pool.filter(x=>x['단지'].endsWith('2단지'))}
- const hm=/(\d{3,4})/.exec(r.ho||''),dg=nDong(r.dong);
+ const hm=/(\d{3,4})/.exec(r.ho||''),dg=ext.length?rtOwn(r,ext[0]):nDong(r.dong);
  const exact=hm?pool.filter(x=>x._hos.some(([d,h])=>h===hm[1]&&(!d||!dg||d===dg))).sort((a,b)=>a['계약일']<b['계약일']?1:-1):[];
  const area=r.pyeong&&(r.category||'오피스텔')!=='아파트'?r.pyeong*3.3058:null;
  const same=area?pool.filter(x=>Math.abs((x['전용㎡']||0)-area)<=1).sort((a,b)=>a['계약일']<b['계약일']?1:-1):[];
@@ -2197,10 +2200,11 @@ let BAND=null;function renderDir(){const P=$('#dirpanel');if(BAND===null){BAND={
  P.querySelectorAll('.dapply').forEach(b=>b.onclick=()=>{const tr=b.closest('tr'),d=tr.querySelector('.dsel').value;if(!d)return alert('방향을 먼저 골라 주세요');apply([[tr.dataset.k,d]])});
  const all=$('#dir-all');if(all)all.onclick=()=>{const list=[...P.querySelectorAll('tbody tr')].filter(tr=>tr.dataset.sg).map(tr=>[tr.dataset.k,tr.dataset.sg]);if(confirm(`추천값이 있는 ${list.length}개 라인의 빈 방향을 채울까요?`))apply(list)}}
 
-function rtaIndex(){RTAIDX={};for(const x of RTA||[]){if(!x['예상호실'])continue;for(const c of String(x['예상호실']).split(', ')){const m=/^(?:(\S+?)동\s*)?(\d+)호/.exec(c.trim());if(!m)continue;const k=x['단지']+'|'+(m[1]||'').toUpperCase()+'|'+m[2];(RTAIDX[k]||=[]).push(x)}}
+function rtaIndex(){RTAIDX={};for(const x of RTA||[]){if(!x['예상호실']||x['장부'])continue;for(const c of String(x['예상호실']).split(', ')){const m=/^(?:(\S+?)동\s*)?(\d+)호/.exec(c.trim());if(!m)continue;const k=x['단지']+'|'+(m[1]||'').toUpperCase()+'|'+m[2];(RTAIDX[k]||=[]).push(x)}}
  for(const k in RTAIDX)RTAIDX[k].sort((a,b)=>a['계약일']<b['계약일']?1:-1)}
 function aptRtAll(r){if(!RTA)return [];if(!RTAIDX)rtaIndex();const hm=/(\d{3,4})/.exec(String(r.ho||''));if(!hm)return [];const ho=String(+hm[1]);let d=nDong(r.dong);if(r.danji==='시티파크'&&/2단지/.test(r.dong||''))d='2단지';
- return (RTAIDX[r.danji+'|'+d+'|'+ho]||[]).concat(d?(RTAIDX[r.danji+'||'+ho]||[]):[]).slice().sort((a,b)=>a['계약일']<b['계약일']?1:-1)}
+ const ext=RTA.filter(x=>{if(!x['장부'])return false;const od=rtOwn(r,x);return od!==null&&String(x['예상호실']||'').split(', ').some(c=>{const m=/^(?:(\S+?)동\s*)?(\d+)호/.exec(c);return m&&m[2]===ho&&(!m[1]||m[1].toUpperCase()===od)})});
+ return (RTAIDX[r.danji+'|'+d+'|'+ho]||[]).concat(d?(RTAIDX[r.danji+'||'+ho]||[]):[],ext).slice().sort((a,b)=>a['계약일']<b['계약일']?1:-1)}
 function leaseFor(r){if(!RTA)return null;if(!RTAIDX)rtaIndex();const hm=/(\d{3,4})/.exec(String(r.ho||''));if(!hm)return null;const ho=String(+hm[1]);
  let d=nDong(r.dong);if(r.danji==='시티파크'&&/2단지/.test(r.dong||''))d='2단지';
  const xs=aptRtAll(r).filter(y=>y['거래']!=='매매');if(!xs.length)return null;
@@ -2226,7 +2230,7 @@ async function renderRta(){if(!RTA){$('#rta').innerHTML='<div class="empty">불�
  const q=$('#rta-q').value.trim();if(q){const ws=q.split(/\s+/);rs=rs.filter(r=>ws.every(w=>{const f=/^(\d+)층$/.exec(w);return f?String(r['층'])===f[1]:String(r['예상호실']).replace(/동|호/g,' ').includes(w.replace(/동|호/g,''))}))}
  rs.sort((a,b)=>($('#rta-cur').checked||lim)?(a['만기']<b['만기']?-1:a['만기']>b['만기']?1:0):(a['계약일']<b['계약일']?1:-1));
  const apt=ROWS.filter(r=>r.category==='아파트');const led=r=>{if(r['후보수']!==1)return null;const m=/^(?:(\S+)동\s*)?(\d+)호/.exec(r['예상호실']);if(!m)return null;
-  return apt.find(x=>x.danji===r['단지']&&String(x.ho||'').replace(/\D/g,'')===m[2]&&(!m[1]||nDong(x.dong)===m[1].toUpperCase()||(m[1]==='2단지'&&/^2/.test(x.dong||''))))};
+  return apt.find(x=>{const od=r['장부']?rtOwn(x,r):(x.danji===r['단지']?nDong(x.dong):null);return od!==null&&String(x.ho||'').replace(/\D/g,'')===m[2]&&(!m[1]||od===m[1].toUpperCase()||(m[1]==='2단지'&&/^2/.test(x.dong||'')))})};
  const pr=r=>r['거래']==='매매'?won(r['매매가(만)']):r['거래']==='전세'?won(r['보증금(만)']):won(r['보증금(만)'])+' / '+(r['월세(만)']||0);
  const prev=r=>r['종전보증금(만)']!==''&&r['종전보증금(만)']!=null&&r['신규/갱신']==='갱신'?won(r['종전보증금(만)'])+(r['종전월세(만)']?' / '+r['종전월세(만)']:''):'';
  $('#rta-cnt').textContent=`${rs.length.toLocaleString()}건`;const show=rs.slice(0,1500);
